@@ -1,3 +1,5 @@
+> **Hinweis:** Dieses Dokument ist ein konzeptionelles UX/UI-Leitdokument. Bei Konflikten gilt der kanonische Produktmasterplan in `MASTERPLAN.md`.
+
 # Spannungsatlas – UX/UI Blaupause
 
 Dieses Dokument enthält die konzeptionellen UI- und UX-Ideen für den Spannungsatlas, die den epistemischen Reflexionsraum visuell und interaktiv abbilden.
@@ -57,8 +59,8 @@ Ziel: Veränderung des Denkens wird explizit erfahrbar.
 
 👉 Beispiel:
 Zeit →
-T1: „Ali provoziert absichtlich“
-T2: „Ali reagiert auf Unsicherheit“
+T1: „X zeigt provokatives Verhalten“
+T2: „X reagiert auf Unsicherheit“
 T3: „Beides möglich“
 
 ## 5. Widerspruchs-UI
