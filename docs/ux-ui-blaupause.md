@@ -17,7 +17,7 @@ Zonen müssen in folgender zwingender Reihenfolge durchlaufen werden:
    → Bei Verneinung: Hinweis „Formulierung enthält Deutung – bitte trennen“
 3. Deutung (erst möglich, wenn Beobachtung vorhanden)
    → Jede Deutung zeigt sichtbar ihren Evidenztyp (beobachtungsnah, abgeleitet, spekulativ)
-4. Gegen-Deutung (zwingend nach Deutung)
+4. Gegen-Deutung (Nach jeder Deutung fordert das System aktiv eine alternative Erklärung ein. Ohne Gegen-Deutung kann der Denkstand nicht abgeschlossen werden.)
 5. Unsicherheit (zwingend vor Abschluss)
 6. Spannungsnetz
 
@@ -46,9 +46,14 @@ UI zeigt Hinweis: „Mögliche Musterbildung – prüfen, ob kontextabhängig“
 
 ## 4. Drift-Ansicht (entscheidend)
 
-Zeigt als Vergleichsansicht (nicht nur Timeline):
-- WAS sich geändert hat
-- WARUM (neue Beobachtung / Intervention / Kontext) inkl. Klassifikation
+Drift ist kein Archiv, sondern ein Vergleichsraum.
+
+UI:
+- Zwei oder mehr Denkstände werden nebeneinander gezeigt
+- Unterschiede werden aktiv hervorgehoben
+- Klassifikation sichtbar: neue Beobachtung, neue Perspektive, Neubewertung
+
+Ziel: Veränderung des Denkens wird explizit erfahrbar.
 
 👉 Beispiel:
 Zeit →
@@ -65,18 +70,47 @@ Das System erzwingt mindestens eine Gegen-Deutung bei jeder Deutung.
    • enthält sie eine echte alternative Erklärung?
 
 👉 Wenn nicht: Hinweis anzeigen „Keine echte Gegen-Deutung – bitte alternative Erklärung formulieren“.
-👉 Wenn keine gültige Gegen-Deutung existiert: Blockiere Abschluss.
+👉 Wenn keine gültige Gegen-Deutung existiert: System zeigt Irritationshinweis und bietet alternative Einstiegsfragen:
+   - „Welche andere Erklärung wäre denkbar?“
+   - „Was könnte gegen deine Deutung sprechen?“
+Blockade bleibt möglich, wird aber als Denkhemmnis erklärt, nicht als Systemfehler.
 
 ## 6. Unsicherheits-UI
 
 Nicht nur ein Slider, sondern:
 - Jede Deutung benötigt zwingend einen Unsicherheitsgrad
 - Jede Deutung benötigt eine kurze, verpflichtende Begründung
+- Unsicherheit wird visuell repräsentiert (Hohe Unsicherheit → weichere Darstellung/unscharfe Karten, Niedrige Unsicherheit → klare Konturen)
 
-👉 Ohne Begründung: keine Speicherung.
+👉 Ohne Begründung: keine Speicherung. Der Nutzer sieht die Qualität seiner eigenen Deutung.
 
 ## 7. Multi-Perspektiven-Modul (Erweiterung)
 
 - Mehrere Fachkräfte reflektieren dieselbe Situation
 - Perspektiven dürfen NICHT aggregiert werden
 - Unterschiede und Abweichungen in der Deutung bleiben visuell nebeneinandergestellt und sichtbar
+
+
+## 8. Denkfluss und Interaktionsrhythmus
+
+Das System strukturiert nicht nur Inhalte, sondern den Denkprozess selbst.
+
+Prinzipien:
+- Übergänge sind bewusst gesetzt (keine fließende Formularlogik)
+- Jede Deutung ist ein „Commit“ (bewusster Denkakt)
+- Zwischen Deutung und Gegen-Deutung entsteht eine gewollte Irritation
+- Das System verlangsamt bewusst vorschnelle Urteilsbildung
+
+UI-Implikation:
+- keine sofort sichtbaren Folgefelder
+- stattdessen schrittweise Freigabe
+- kurze Übergangsmomente (visuell/zeitlich)
+
+## 9. Produktive Irritation
+
+Das System arbeitet bewusst mit Irritation:
+- leichte Unterbrechung nach Deutung
+- gezielte Rückfragen
+- Konfrontation mit Gegenhypothesen
+
+Ziel: Nicht Bestätigung erzeugen, sondern Erkenntnisbewegung.

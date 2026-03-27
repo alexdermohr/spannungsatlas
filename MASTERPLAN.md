@@ -1,7 +1,7 @@
 # Spannungsatlas – Kanonischer Produktmasterplan
 
-Status: verbindliches Produktdokument für dieses Repository<br>
-Primärer Nutzungskontext: pädagogische Praxis<br>
+Status: verbindliches Produktdokument für dieses Repository
+Primärer Nutzungskontext: pädagogische Praxis
 Produktcharakter: Dokumentations-, Reflexions- und Vordiagnostiksystem
 
 ## 1. Produktdefinition
@@ -18,7 +18,7 @@ Der Produktkern lautet:
 Spannungsatlas ist **kein** klinisches Diagnosetool, kein starres Persönlichkeitsinventar und kein Defizitregister.
 
 Das System ist **NICHT** für:
-- ad hoc Entscheidungen
+- ad-hoc Entscheidungen
 - Echtzeitbewertung von Situationen
 
 Das System ist **NUR** für:
