@@ -71,6 +71,8 @@ Eine konkrete Szene oder Beobachtungseinheit.
 
 Aggregierte, revidierbare Arbeitsverdichtung zu einer Person über mehrere Fälle und Zeitpunkte.
 
+Ein **starker Profileintrag** ist eine Verdichtung, die als wiederkehrendes Muster oder belastbare pädagogische Arbeitshypothese formuliert wird. Er setzt mehrere Fälle über Zeit, mehrere Kontexte oder eine belastbare Mehrquellenlage voraus. Einzelereignisse dürfen nur als schwacher oder spekulativer Hinweis eingehen.
+
 **MUSS-Felder in V1**
 
 - verdichtete Musterbeschreibung
@@ -93,7 +95,9 @@ Aggregierte, revidierbare Arbeitsverdichtung zu einer Person über mehrere Fäll
 
 Aggregierte Situations- oder Beziehungskonstellation, die wiederkehrend Druck verstärkt oder entlastet.
 
-**MUSS in V1 nicht voll ausgebaut**, aber als Konzept kanonisch.
+Es ist ein kanonisches Top-Level-Objekt des Produkts.
+
+**MUSS in V1 nicht als eigenständiger vollwertiger Workflow vorliegen.** V1 bildet Konstellationsbezug zunächst implizit über Fälle und textliche Konstellationshinweise ab. Ein eigenständiges Konstellationsprofil mit eigener Verdichtungslogik ist **SPÄTER** vorgesehen.
 
 **SOLL-Felder später**
 
@@ -137,6 +141,7 @@ V1 ist bewusst eng. Es liefert eine belastbare Minimalfassung für pädagogische
 - einfachen Verlauf pro Person anzeigen
 - einfaches Spannungsprofil aus mehreren Fällen formulieren
 - Gegenbelege und Revisionsdatum im Spannungsprofil führen
+- Konstellationsbezug in Fällen textlich oder markierend erfassbar machen, ohne bereits einen eigenständigen Konstellationsprofil-Workflow zu verlangen
 
 **SOLL in V1 enthalten sein**
 
@@ -164,7 +169,8 @@ V1 ist nur dann erfüllt, wenn alle folgenden Minimalgrenzen gelten:
 - Ein Spannungsprofil setzt mehrere Fälle voraus.
 - Jedes Spannungsprofil zeigt Gegenbelege und Revisionsdatum.
 - Jede Person hat einen einfachen Verlauf über dokumentierte Fälle.
-- Konstellationsbezug ist mindestens textlich erfassbar, auch wenn das Konstellationsprofil noch nicht voll ausgebaut ist.
+- Konstellationsbezug ist mindestens textlich oder markierend erfassbar.
+- Das Konstellationsprofil ist in V1 nur implizit vorbereitet, nicht als eigener vollständiger Workflow umgesetzt.
 
 ## 6. Dokumentationsökonomie
 
@@ -225,20 +231,23 @@ Personenprofile erzeugen Macht. Diese Macht wird architektonisch geregelt.
 
 | Aktion | Beobachter | Fachkraft | Teamleitung | Supervision |
 |---|---|---|---|---|
-| Fall anlegen | MUSS | MUSS | MUSS | SOLL |
-| Fall bearbeiten | SOLL eigene | MUSS | MUSS | SOLL kommentierend |
-| Spannungsprofil vorschlagen | NEIN | MUSS | MUSS | SOLL |
-| Spannungsprofil freigeben | NEIN | NEIN | MUSS | NEIN |
-| Spannungsprofil revidieren | NEIN | SOLL mit Vorschlag | MUSS | SOLL kommentierend |
-| Widerspruchseintrag setzen | SOLL | MUSS | MUSS | MUSS |
-| sensible Inhalte sehen | SOLL eingeschränkt | MUSS begrenzt | MUSS | SOLL begrenzt |
-| Export auslösen | NEIN | SOLL begrenzt | MUSS | NEIN |
+| Fall anlegen | JA | JA | JA | JA |
+| Fall bearbeiten | nur eigene | JA | JA | kommentierend |
+| Spannungsprofil vorschlagen | NEIN | JA | JA | kommentierend |
+| Spannungsprofil freigeben | NEIN | NEIN | JA | NEIN |
+| Spannungsprofil revidieren | NEIN | freigabepflichtig | JA | kommentierend |
+| Widerspruchseintrag setzen | JA | JA | JA | JA |
+| sensible Inhalte sehen | eingeschränkt | eingeschränkt | JA | eingeschränkt |
+| Export auslösen | NEIN | freigabepflichtig | JA | NEIN |
 
 ### 7.3 Berechtigungsprinzipien
 
 - **MUSS:** Profilfreigabe und Profilrevision dürfen nicht an reine Beobachtungsrechte gekoppelt sein.
 - **MUSS:** Widerspruchseinträge dürfen nicht exklusiv auf Leitungsrollen beschränkt sein.
 - **MUSS:** Exportrechte sind restriktiver als Leserechte.
+- **MUSS:** Ein Spannungsprofil darf in V1 nur freigegeben werden, wenn mehr als ein Fall oder eine belastbare Mehrquellenlage vorliegt.
+- **MUSS:** Gegenbelege dürfen bei Freigabe nicht leer bleiben; wenn keine Gegenbelege vorliegen, muss die Leerstelle explizit markiert werden.
+- **MUSS:** Revisionsdatum ist Freigabevoraussetzung.
 
 ## 8. Kanonische Taxonomie V1
 
@@ -300,6 +309,8 @@ Diese vier Ebenen dürfen nicht vermischt werden.
 - **MUSS:** Erweiterungen bleiben innerhalb der vier Ebenen.
 - **SOLL:** Neue Unterkategorien werden nur ergänzt, wenn V1-Begriffe wiederholt nicht ausreichen.
 - **KANN:** Spätere Versionen können domänenspezifische Untertaxonomien ergänzen.
+- **MUSS:** V1 bevorzugt sparsame Markierungen statt vollständiger taxonomischer Ausdekoration.
+- **KANN:** Pro Ebene sind mehrere Markierungen erlaubt, wenn sie für den Fall wirklich relevant sind.
 
 ## 9. Schutzmechanismen
 
