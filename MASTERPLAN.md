@@ -31,6 +31,9 @@ Die folgenden Invarianten sind **MUSS**-Regeln. Sie dürfen in späteren Konzept
 8. **MUSS:** Sprache bleibt funktional, beobachtungsnah und nicht essenzialisierend.
 9. **MUSS:** Profilverfall wird sichtbar, wenn Verdichtungen veralten oder nicht mehr gestützt sind.
 10. **MUSS:** Rollen und Berechtigungen begrenzen, wer sehen, verdichten, revidieren und exportieren darf.
+11. **MUSS:** Keine Verdichtungsebene darf ohne dokumentierte Fallbasis entstehen oder fortgeschrieben werden.
+12. **MUSS:** Interventionsergebnisse müssen als Bestätigung, Widerspruch oder Relativierung dokumentiert werden.
+13. **MUSS:** Neue Gegenbelege oder widersprechende Interventionsergebnisse müssen Revision auslösen.
 
 Die folgenden Leitplanken sind **SOLL**:
 
@@ -73,6 +76,16 @@ Aggregierte, revidierbare Arbeitsverdichtung zu einer Person über mehrere Fäll
 
 Ein **starker Profileintrag** ist eine Verdichtung, die als wiederkehrendes Muster oder belastbare pädagogische Arbeitshypothese formuliert wird. Er setzt mehrere Fälle über Zeit, mehrere Kontexte oder eine belastbare Mehrquellenlage voraus. Einzelereignisse dürfen nur als schwacher oder spekulativer Hinweis eingehen.
 
+#### Verbindliche Evidenz- und Schwellenlogik
+
+- **MUSS:** Ein Spannungsprofil als Objekt darf erst entstehen, wenn mindestens **2 Fälle** zur gleichen Person dokumentiert sind.
+- **MUSS:** Jeder Profileintrag wird als **schwach**, **moderat** oder **stark** markiert.
+- **MUSS:** Ein **schwacher** Profileintrag stützt sich auf genau **2 Fälle** mit gleicher Richtung oder auf **1 Fall** plus belastbare Mehrquellenlage.
+- **MUSS:** Ein **moderater** Profileintrag stützt sich auf mindestens **3 Fälle** und zeigt dieselbe Dynamik über mindestens **2 Zeitpunkte** oder **2 Kontexte**.
+- **MUSS:** Ein **starker** Profileintrag stützt sich auf mindestens **4 Fälle** und zeigt dieselbe Dynamik über mindestens **2 Zeitpunkte** und **2 Kontexte** oder über belastbare Mehrquellenlage mit Gegenbelegprüfung.
+- **MUSS:** Ein starker Profileintrag darf nicht freigegeben werden, wenn kein Gegenbeleg dokumentiert oder die Leerstelle eines fehlenden Gegenbelegs nicht explizit markiert ist.
+- **MUSS:** Widersprechende neue Fälle oder Interventionsergebnisse lösen Revision aus; ein Profileintrag verliert Gültigkeit, wenn **180 Tage** lang kein stützender Fall dokumentiert wird oder die **2 letzten relevanten Fälle** ihm widersprechen.
+
 **MUSS-Felder in V1**
 
 - verdichtete Musterbeschreibung
@@ -98,6 +111,18 @@ Aggregierte Situations- oder Beziehungskonstellation, die wiederkehrend Druck ve
 Es ist ein kanonisches Top-Level-Objekt des Produkts.
 
 **Ein eigenständiger vollwertiger Workflow für das Konstellationsprofil ist in V1 nicht erforderlich.** V1 erfasst Konstellationsbezug zunächst innerhalb von Fällen über textliche oder markierende Konstellationshinweise. Ein eigenständiges Konstellationsprofil mit eigener Verdichtungslogik ist **SPÄTER** vorgesehen.
+
+Konstellationsprofile unterliegen denselben Qualitätsanforderungen wie Spannungsprofile. Sie dürfen nicht weicher behandelt werden als personenbezogene Verdichtungen.
+
+- **MUSS:** Ein Konstellationsprofil darf erst entstehen, wenn mindestens **2 Fälle** eine vergleichbare situative Logik zeigen.
+- **MUSS:** Jedes Konstellationsprofil hat **Evidenzstufe**, **Gegenbelege** und **Revisionsdatum**.
+- **MUSS:** Neue Gegenbelege oder widersprechende Interventionsergebnisse lösen Revision aus.
+
+**MUSS-Felder später**
+
+- Evidenzstufe
+- Gegenbelege
+- Revisionsdatum
 
 **SOLL-Felder später**
 
@@ -133,9 +158,19 @@ Pädagogische Qualität entsteht erst aus dem Zusammenspiel von Spannungsprofil 
 
 Diese Leitidee ist **verbindliche Orientierung**. Konkrete Produktpflichten werden jedoch durch die Invarianten, V1-Grenzen und Schutzmechanismen bestimmt.
 
-## 5. Produktscope V1
+## 5. Ebenen-Interaktion
 
-### 5.1 V1 umfasst
+Implizite Übergänge zwischen Fall, Spannungsprofil, Konstellationsprofil und späterer Spannungskonstellation sind unzulässig.
+
+- **MUSS:** Keine Verdichtungsebene darf ohne Fallbasis entstehen; Fälle bleiben die einzige primäre Beobachtungseinheit.
+- **MUSS:** Ein Fall speist ein Spannungsprofil nur mit dokumentierter Beobachtung, Deutung, Gegenhypothese und Unsicherheitsmarkierung; der Bezug muss personennah markiert oder begründet ableitbar sein.
+- **MUSS:** Ein Fall speist ein Konstellationsprofil nur mit konstellationsnah markiertem oder begründet ableitbarem Druck; ein Konstellationsprofil entsteht nur aus mindestens **2 Fällen** mit vergleichbarer situativer Logik.
+- **MUSS:** Eine Spannungskonstellation entsteht nur aus dokumentierten Fällen, verlinkt zu Fällen und beteiligten Spannungsprofilen und darf keinen neuen starken Profileintrag ohne zusätzliche Fallbasis erzeugen.
+- **MUSS:** Neue Fälle, Gegenbelege und Interventionsergebnisse fließen in Revision ein; sichtbare Widersprüche dürfen nicht durch Verdichtung geglättet werden.
+
+## 6. Produktscope V1
+
+### 6.1 V1 umfasst
 
 V1 ist bewusst eng. Es liefert eine belastbare Minimalfassung für pädagogische Praxis.
 
@@ -157,7 +192,7 @@ V1 ist bewusst eng. Es liefert eine belastbare Minimalfassung für pädagogische
 - einfache Exportfunktion für Dokumentation
 - knapper Überblick je Person mit letzter Revision und offenen Fragen
 
-### 5.2 V1 umfasst nicht
+### 6.2 V1 umfasst nicht
 
 Folgendes liegt **nicht** in V1:
 
@@ -170,7 +205,7 @@ Folgendes liegt **nicht** in V1:
 - klinische Diagnostik
 - starre Scores oder scheingenaue Persönlichkeitswerte
 
-### 5.3 V1-Minimalgrenzen
+### 6.3 V1-Minimalgrenzen
 
 V1 ist nur dann erfüllt, wenn alle folgenden Minimalgrenzen gelten:
 
@@ -181,11 +216,11 @@ V1 ist nur dann erfüllt, wenn alle folgenden Minimalgrenzen gelten:
 - Konstellationsbezug ist mindestens textlich oder markierend erfassbar.
 - V1 erfasst Konstellationsbezug innerhalb von Fällen, aber noch nicht als eigenen vollständigen Konstellationsprofil-Workflow.
 
-## 6. Dokumentationsökonomie
+## 7. Dokumentationsökonomie
 
 Spannungsatlas ist nur tragfähig, wenn Fälle auch unter Zeitdruck dokumentierbar bleiben.
 
-### 6.1 Erfassungsmodi
+### 7.1 Erfassungsmodi
 
 **MUSS:** V1 unterstützt zwei Modi:
 
@@ -194,7 +229,7 @@ Spannungsatlas ist nur tragfähig, wenn Fälle auch unter Zeitdruck dokumentierb
 2. **Tiefenreflexions-Modus** für Fallbesprechungen, Teamreflexion oder spätere Verdichtung  
    Ziel: differenziertere Deutung, Gegenhypothesen und Verlaufseinordnung
 
-### 6.2 Pflichtfelder vs. optionale Felder
+### 7.2 Pflichtfelder vs. optionale Felder
 
 **Quick-Capture MUSS**
 
@@ -221,15 +256,15 @@ Spannungsatlas ist nur tragfähig, wenn Fälle auch unter Zeitdruck dokumentierb
 - offene Fragen
 - Revisionsnotiz
 
-### 6.3 Leitprinzip
+### 7.3 Leitprinzip
 
 **MUSS:** Das System bevorzugt weniger, aber sauber getrennte Eingaben gegenüber umfassender, aber ritualisierter Dokumentation.
 
-## 7. Rollen- und Berechtigungsmodell V1
+## 8. Rollen- und Berechtigungsmodell V1
 
 Personenprofile erzeugen Macht. Diese Macht wird architektonisch geregelt.
 
-### 7.1 Rollen
+### 8.1 Rollen
 
 **Annotierend** bedeutet in V1: Kommentare, Rückfragen, Gegenperspektiven und Widerspruchseinträge zu bestehenden Fällen oder Profilvorschlägen ergänzen. Annotierende Rechte erlauben kein eigenständiges Anlegen, Umschreiben oder Freigeben von Spannungsprofilen oder Fällen.
 
@@ -238,7 +273,7 @@ Personenprofile erzeugen Macht. Diese Macht wird architektonisch geregelt.
 - **Teamleitung**: darf Profile freigeben, revidieren und Exporte auslösen
 - **Supervision**: darf reflektieren, annotieren und Widerspruch eintragen, aber nicht allein finalisieren
 
-### 7.2 Berechtigungsmatrix V1
+### 8.2 Berechtigungsmatrix V1
 
 | Aktion | Beobachter | Fachkraft | Teamleitung | Supervision |
 |---|---|---|---|---|
@@ -251,7 +286,7 @@ Personenprofile erzeugen Macht. Diese Macht wird architektonisch geregelt.
 | sensible Inhalte sehen | eingeschränkt | eingeschränkt | JA | eingeschränkt |
 | Export auslösen | NEIN | freigabepflichtig | JA | NEIN |
 
-### 7.3 Berechtigungsprinzipien
+### 8.3 Berechtigungsprinzipien
 
 - **MUSS:** Profilfreigabe und Profilrevision dürfen nicht an reine Beobachtungsrechte gekoppelt sein.
 - **MUSS:** Widerspruchseinträge dürfen nicht exklusiv auf Leitungsrollen beschränkt sein.
@@ -261,11 +296,11 @@ Personenprofile erzeugen Macht. Diese Macht wird architektonisch geregelt.
 - **MUSS:** Gegenbelege dürfen bei Freigabe nicht leer bleiben; wenn keine Gegenbelege vorliegen, muss die Leerstelle explizit markiert werden.
 - **MUSS:** Revisionsdatum ist Freigabevoraussetzung.
 
-## 8. Kanonische Taxonomie V1
+## 9. Kanonische Taxonomie V1
 
 V1 startet mit bewusst begrenzter, aber trennscharfer Taxonomie. Die Taxonomie ist erweiterbar, aber die Kategorien bleiben getrennt.
 
-### 8.1 Trennregel
+### 9.1 Trennregel
 
 - **Bedürfnis** = worauf der Mensch drängt
 - **Determinante** = was den Drang verstärkt oder dämpft
@@ -274,7 +309,7 @@ V1 startet mit bewusst begrenzter, aber trennscharfer Taxonomie. Die Taxonomie i
 
 Diese vier Ebenen dürfen nicht vermischt werden.
 
-### 8.2 Bedürfnisse – Minimalcluster V1
+### 9.2 Bedürfnisse – Minimalcluster V1
 
 - Sicherheit und Schutz
 - Bindung und Zugehörigkeit
@@ -283,7 +318,7 @@ Diese vier Ebenen dürfen nicht vermischt werden.
 - Orientierung und Vorhersagbarkeit
 - Gerechtigkeit und Fairness
 
-### 8.3 Determinanten – Minimalcluster V1
+### 9.3 Determinanten – Minimalcluster V1
 
 - Zeitdruck oder Überlastung
 - Unklarheit oder Ambiguität
@@ -294,7 +329,7 @@ Diese vier Ebenen dürfen nicht vermischt werden.
 - Müdigkeit oder Erschöpfung
 - Beziehungsanspannung
 
-### 8.4 Ausdrucksformen – Minimalcluster V1
+### 9.4 Ausdrucksformen – Minimalcluster V1
 
 - Rückzug
 - Gegenkontrolle
@@ -305,7 +340,7 @@ Diese vier Ebenen dürfen nicht vermischt werden.
 - Erstarren
 - Hilfesuche
 
-### 8.5 Umweltreaktionen – Minimalcluster V1
+### 9.5 Umweltreaktionen – Minimalcluster V1
 
 - Beruhigung
 - Korrektur
@@ -316,7 +351,7 @@ Diese vier Ebenen dürfen nicht vermischt werden.
 - Sanktion
 - Ignorieren
 
-### 8.6 Erweiterungsprinzip
+### 9.6 Erweiterungsprinzip
 
 - **MUSS:** Erweiterungen bleiben innerhalb der vier Ebenen.
 - **SOLL:** Neue Unterkategorien werden nur ergänzt, wenn V1-Begriffe wiederholt nicht ausreichen.
@@ -324,21 +359,42 @@ Diese vier Ebenen dürfen nicht vermischt werden.
 - **MUSS:** V1 bevorzugt sparsame Markierungen statt vollständiger taxonomischer Ausdekoration.
 - **KANN:** Pro Ebene sind mehrere Markierungen erlaubt, wenn sie für den Fall wirklich relevant sind.
 
-## 9. Schutzmechanismen
+## 10. Schutzmechanismen
 
 Die Schutzmechanismen sind Produktkern, nicht Beiwerk.
 
-### 9.1 Verbindliche Schutzregeln
+### 10.1 Verbindliche Schutzregeln
 
 - **MUSS:** jedes Spannungsprofil hat Evidenzstufe
 - **MUSS:** jedes Spannungsprofil hat Gegenbelege
 - **MUSS:** jedes Spannungsprofil hat Revisionsdatum
+- **MUSS:** jedes Konstellationsprofil hat Evidenzstufe
+- **MUSS:** jedes Konstellationsprofil hat Gegenbelege
+- **MUSS:** jedes Konstellationsprofil hat Revisionsdatum
 - **MUSS:** jede Verdichtung zeigt Unsicherheit
 - **MUSS:** Spekulation wird sichtbar markiert
 - **MUSS:** epistemische Leere bleibt explizit benennbar
 - **MUSS:** personennah und konstellationsnah werden getrennt markiert
 
-### 9.2 Sprachregeln
+### 10.2 Epistemische Markierung
+
+Das System verwendet eine einfache epistemische Markierung, um stille Überinterpretation zu reduzieren.
+
+- **beobachtungsnah** = unmittelbar dokumentierte Beobachtung oder wörtlich belegbare Äußerung
+- **plausibel** = interpretative Verdichtung mit dokumentierter Fallbasis und ohne direkten Gegenbeleg
+- **spekulativ** = Deutung mit unzureichender Fallbasis, starker Alternativerklärung oder offener Datenlücke
+- **MUSS:** Jede Deutung in Fällen sowie jeder Profil- oder Konstellationseintrag trägt eine dieser Markierungen oder ist aus der Trennung von Beobachtung und Deutung eindeutig ableitbar.
+- **MUSS:** Starke Profileinträge und freigegebene Konstellationsprofile dürfen nicht als spekulativ markiert sein.
+
+### 10.3 Intervention als Erkenntnismodul
+
+Interventionen sind nicht nur Maßnahmen, sondern Hypothesentests im Feld.
+
+- **MUSS:** Jede dokumentierte Intervention wird als **bestätigend**, **widersprechend** oder **relativierend** zur zugrunde liegenden Hypothese markiert.
+- **MUSS:** Interventionsergebnisse werden im Fall dokumentiert und in die nächste Profil- oder Konstellationsrevision übernommen.
+- **MUSS:** Wiederholt widersprechende Interventionsergebnisse senken die Evidenzstufe der betroffenen Verdichtung oder machen Revision zwingend.
+
+### 10.4 Sprachregeln
 
 Unzulässige Sprache:
 
@@ -356,18 +412,18 @@ Zulässige Richtung:
 - zeigt in Konkurrenzsituationen erhöhten Drang auf Anerkennung oder Gerechtigkeit
 - alternative Deutung: Überforderung / Bindungstest / Ambiguitätsstress
 
-## 10. Ausbaupfade nach V1
+## 11. Ausbaupfade nach V1
 
 Die folgenden Ausbaustufen sind **SPÄTER** und nicht Teil des harten V1-Scope.
 
-### 10.1 Spannungsprofil-Ausbau
+### 11.1 Spannungsprofil-Ausbau
 
 - Profilhistorie
 - Profilverfallslogik
 - offene Datenlücken
 - robustere Evidenz- und Widerspruchslogik
 
-### 10.2 Konstellationsanalyse
+### 11.2 Konstellationsanalyse
 
 - eigenständiges Konstellationsprofil
 - Triggerkarte
@@ -375,11 +431,11 @@ Die folgenden Ausbaustufen sind **SPÄTER** und nicht Teil des harten V1-Scope.
 - Entlastungspfade
 - Kontextvergleich
 
-### 10.3 Spannungskonstellation
+### 11.3 Spannungskonstellation
 
 Als **Phase-3-Modul** kann Spannungsatlas eine reduzierte Spannungskonstellation ergänzen. Dieses Modul erweitert das System um eine systemische Perspektive, ohne Vollständigkeit oder Systemsimulation anzustreben.
 
-#### 10.3.1 Ziel
+#### 11.3.1 Ziel
 
 - Sichtbar machen, wie mehrere Personenprofile und situative Determinanten gemeinsam eine Spannungsdynamik erzeugen
 - relevante Wechselwirkungen verdichten statt alle Beteiligten vollständig zu modellieren
@@ -389,7 +445,7 @@ Nicht Ziel:
 - vollständige Systemsimulation
 - vollständige Bedürfnisabbildung aller Beteiligten
 
-#### 10.3.2 Kernstruktur
+#### 11.3.2 Kernstruktur
 
 **MUSS** in reduzierter Form abbildbar sein:
 
@@ -400,7 +456,7 @@ Nicht Ziel:
 - typische Eskalations- und Entlastungspfade
 - Interventionspunkte bei Personen, Setting, Timing oder Kommunikation
 
-#### 10.3.3 Verbindliche Produktprinzipien
+#### 11.3.3 Verbindliche Produktprinzipien
 
 - **MUSS:** Nur relevante Spannungsfaktoren werden erfasst; kein vollständiges Bedürfnis-Mapping aller Beteiligten
 - **MUSS:** Die Darstellung bleibt heuristisch und interpretativ; es gibt keine algorithmische Systemwahrheit
@@ -408,7 +464,7 @@ Nicht Ziel:
 - **MUSS:** Systemische Sicht darf individuelle Verantwortung nicht aufheben
 - **MUSS:** Spannungskonstellationen bleiben mit beteiligten Spannungsprofilen und zugrunde liegenden Fällen verknüpft
 
-#### 10.3.4 Entstehung und Nutzung
+#### 11.3.4 Entstehung und Nutzung
 
 Spannungskonstellationen entstehen aus mehreren Fällen oder aus einem komplexen Mehrpersonenfall.
 
@@ -418,7 +474,7 @@ Sie dienen vor allem:
 - Teamgespräch
 - Interventionsplanung
 
-#### 10.3.5 Minimaldarstellung und Einführungsstrategie
+#### 11.3.5 Minimaldarstellung und Einführungsstrategie
 
 - **Nicht Teil von V1**
 - Einführung erst nach stabiler Fallarbeit, funktionierenden Spannungsprofilen und ersten belastbaren Konstellationsmustern
@@ -433,14 +489,14 @@ Pflichtansicht in einer frühen Fassung:
 - Entlastungspunkte
 - Unsicherheit
 
-#### 10.3.6 Typische Fehlannahmen
+#### 11.3.6 Typische Fehlannahmen
 
 - Nicht alle Profile zusammen ergeben automatisch Verständnis; nur relevante Wechselwirkungen zählen
 - Die Konstellation erklärt nicht die Person, sondern ergänzt die Perspektive
 - Systemisch heißt nicht, dass Verantwortung verschwindet
 - Nicht nur Profile prägen Konstellationen; Konstellationen erzeugen auch Profileindrücke
 
-#### 10.3.7 Qualitätskriterien und Erweiterbarkeit
+#### 11.3.7 Qualitätskriterien und Erweiterbarkeit
 
 Das Modul ist gut, wenn:
 
@@ -460,14 +516,14 @@ Nicht zulässig:
 - automatische Typisierung von Beziehungssystemen
 - deterministische Systemmodelle
 
-### 10.4 Teammodus
+### 11.4 Teammodus
 
 - Teamkommentare
 - konkurrierende Hypothesen
 - Review-Workflow
 - Fallkonferenzmodus
 
-### 10.5 Interventionsintelligenz
+### 11.5 Interventionsintelligenz
 
 - Maßnahmenbibliothek
 - Vergleich kurzfristig/langfristig
@@ -475,7 +531,7 @@ Nicht zulässig:
 - Entwicklungswirkung
 - Nebenwirkungen
 
-### 10.6 Assistenz
+### 11.6 Assistenz
 
 - fragt nach Gegenbelegen
 - markiert fehlende Daten
@@ -487,7 +543,7 @@ Nicht zulässig, auch später nicht:
 - automatische Menschentypisierung
 - scheinobjektive Charakterurteile
 
-## 11. Qualitätskriterien
+## 12. Qualitätskriterien
 
 Spannungsatlas ist nur dann gut, wenn:
 
@@ -500,7 +556,7 @@ Spannungsatlas ist nur dann gut, wenn:
 - Widersprüche sichtbar bleiben
 - Sprache funktional statt moralisch bleibt
 
-## 12. Offene Produktfragen
+## 13. Offene Produktfragen
 
 Die folgenden Fragen sind bewusst noch nicht abschließend kanonisiert:
 
