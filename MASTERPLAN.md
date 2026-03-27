@@ -83,8 +83,10 @@ Ein **starker Profileintrag** ist eine Verdichtung, die als wiederkehrendes Must
 - **MUSS:** Ein **schwacher** Profileintrag stützt sich auf genau **2 Fälle** mit gleicher Richtung oder auf **1 Fall** plus belastbare Mehrquellenlage.
 - **MUSS:** Ein **moderater** Profileintrag stützt sich auf mindestens **3 Fälle** und zeigt dieselbe Dynamik über mindestens **2 Zeitpunkte** oder **2 Kontexte**.
 - **MUSS:** Ein **starker** Profileintrag stützt sich auf mindestens **4 Fälle** und zeigt dieselbe Dynamik über mindestens **2 Zeitpunkte** und **2 Kontexte** oder über belastbare Mehrquellenlage mit Gegenbelegprüfung.
-- **MUSS:** Ein starker Profileintrag darf nicht freigegeben werden, wenn kein Gegenbeleg dokumentiert oder die Leerstelle eines fehlenden Gegenbelegs nicht explizit markiert ist.
-- **MUSS:** Widersprechende neue Fälle oder Interventionsergebnisse lösen Revision aus; ein Profileintrag verliert Gültigkeit, wenn **180 Tage** lang kein stützender Fall dokumentiert wird oder die **2 letzten relevanten Fälle** ihm widersprechen.
+- **MUSS:** Ein starker Profileintrag darf nicht freigegeben werden, wenn kein Gegenbeleg dokumentiert oder die Leerstelle eines fehlenden Gegenbelegs nicht explizit markiert ist, zum Beispiel als „kein Gegenbeleg nach Prüfung am 2026-03-27“.
+- **MUSS:** Widersprechende neue Fälle oder Interventionsergebnisse lösen Revision aus.
+- **MUSS:** Ein Profileintrag verliert Gültigkeit, wenn **180 Tage** lang kein stützender Fall dokumentiert wird.
+- **MUSS:** Ein Profileintrag verliert Gültigkeit, wenn die **2 letzten relevanten Fälle** ihm widersprechen.
 
 **MUSS-Felder in V1**
 
@@ -165,7 +167,9 @@ Implizite Übergänge zwischen Fall, Spannungsprofil, Konstellationsprofil und s
 - **MUSS:** Keine Verdichtungsebene darf ohne Fallbasis entstehen; Fälle bleiben die einzige primäre Beobachtungseinheit.
 - **MUSS:** Ein Fall speist ein Spannungsprofil nur mit dokumentierter Beobachtung, Deutung, Gegenhypothese und Unsicherheitsmarkierung; der Bezug muss personennah markiert oder begründet ableitbar sein.
 - **MUSS:** Ein Fall speist ein Konstellationsprofil nur mit konstellationsnah markiertem oder begründet ableitbarem Druck; ein Konstellationsprofil entsteht nur aus mindestens **2 Fällen** mit vergleichbarer situativer Logik.
-- **MUSS:** Eine Spannungskonstellation entsteht nur aus dokumentierten Fällen, verlinkt zu Fällen und beteiligten Spannungsprofilen und darf keinen neuen starken Profileintrag ohne zusätzliche Fallbasis erzeugen.
+- **MUSS:** Eine Spannungskonstellation entsteht nur aus dokumentierten Fällen.
+- **MUSS:** Eine Spannungskonstellation verlinkt zu den zugrunde liegenden Fällen und beteiligten Spannungsprofilen.
+- **MUSS:** Eine Spannungskonstellation darf keinen neuen starken Profileintrag ohne zusätzliche Fallbasis erzeugen.
 - **MUSS:** Neue Fälle, Gegenbelege und Interventionsergebnisse fließen in Revision ein; sichtbare Widersprüche dürfen nicht durch Verdichtung geglättet werden.
 
 ## 6. Produktscope V1
@@ -292,8 +296,8 @@ Personenprofile erzeugen Macht. Diese Macht wird architektonisch geregelt.
 - **MUSS:** Widerspruchseinträge dürfen nicht exklusiv auf Leitungsrollen beschränkt sein.
 - **MUSS:** Exportrechte sind restriktiver als Leserechte.
 - **MUSS:** Annotierende Rechte erlauben Ergänzung und Widerspruch, aber kein eigenständiges Umschreiben oder Finalisieren von Profilen.
-- **MUSS:** Ein Spannungsprofil darf in V1 nur freigegeben werden, wenn mehr als ein Fall oder eine belastbare Mehrquellenlage vorliegt.
-- **MUSS:** Gegenbelege dürfen bei Freigabe nicht leer bleiben; wenn keine Gegenbelege vorliegen, muss die Leerstelle explizit markiert werden.
+- **MUSS:** Ein Spannungsprofil darf in V1 nur freigegeben werden, wenn mindestens zwei Fälle oder eine belastbare Mehrquellenlage vorliegen.
+- **MUSS:** Für die Freigabe gelten die Gegenbelegregeln aus Abschnitt 3.2 verbindlich.
 - **MUSS:** Revisionsdatum ist Freigabevoraussetzung.
 
 ## 9. Kanonische Taxonomie V1
