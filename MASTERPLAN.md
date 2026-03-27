@@ -51,6 +51,7 @@ Die folgenden Invarianten sind **MUSS**-Regeln. Sie dürfen in späteren Konzept
 19. **MUSS:** Beobachtungen müssen rein beschreibend sein, als könnten sie von einer neutralen Kamera erfasst werden. Interpretative Begriffe sind unzulässig.
 20. **MUSS:** Gegen-Deutungen müssen sich explizit auf dieselbe Beobachtung beziehen und eine alternative Erklärung liefern. Reine Relativierungen („vielleicht anders“, „unklar“) sind nicht ausreichend.
 21. **MUSS:** **Drift** (Veränderung von Deutungen über Zeit bei gleicher oder ähnlicher Fallbasis) braucht immer zwingenden Bezug zu einer konkreten Situation, dem vorherigen Denkstand, und muss klassifiziert werden als: durch neue Beobachtung entstanden, durch neue Perspektive entstanden oder durch Neubewertung gleicher Daten entstanden.
+22. **MUSS:** Es ist zu markieren, ob und welche Aspekte einer Beobachtung als wiederkehrend eingeschätzt werden. Wiederholung bezieht sich ausschließlich auf Teilaspekte oder Konstellationselemente, nicht auf ganze Situationen. (Beispiele für Aspekte: Interaktionsmuster, Reaktionsformen, Auslöser, Beziehungskonstellationen)
 
 Die folgenden Leitplanken sind **SOLL**:
 
