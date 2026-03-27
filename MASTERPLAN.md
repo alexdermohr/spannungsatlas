@@ -17,6 +17,15 @@ Der Produktkern lautet:
 
 Spannungsatlas ist **kein** klinisches Diagnosetool, kein starres Persönlichkeitsinventar und kein Defizitregister.
 
+Das System ist **NICHT** für:
+- ad-hoc Entscheidungen
+- Echtzeitbewertung von Situationen
+
+Das System ist **NUR** für:
+- nachträgliche Reflexion
+- provisorische Hypothesenbildung
+- planende Rekonstruktion
+
 ## 2. Produktinvarianten
 
 Die folgenden Invarianten sind **MUSS**-Regeln. Sie dürfen in späteren Konzepten, UI-Entwürfen oder Implementierungen nicht verletzt werden.
@@ -36,12 +45,15 @@ Die folgenden Invarianten sind **MUSS**-Regeln. Sie dürfen in späteren Konzept
 13. **MUSS:** Neue Gegenbelege oder widersprechende Interventionsergebnisse müssen Revision auslösen.
 14. **MUSS:** Reflexionen und Revisionen sind zeitlich markierte Denkstände; spätere Deutungen überschreiben frühere nicht still.
 15. **MUSS:** Gegenhypothesen und Widersprüche dürfen nicht geglättet werden; sie bleiben als Irritation bestehen.
+16. **MUSS:** Jede Deutung muss als vorläufiger Denkstand markiert sein und darf nicht als stabile Eigenschaft einer Person formuliert werden.
+17. **MUSS:** **Drift** (Veränderung von Deutungen über Zeit bei gleicher oder ähnlicher Fallbasis) braucht immer zwingenden Bezug zu einer konkreten Situation und dem vorherigen Denkstand.
 
 Die folgenden Leitplanken sind **SOLL**:
 
 - **SOLL:** Das System soll Kontinuität über Zeit schaffen, ohne Einzelfälle zu überstimmen.
 - **SOLL:** Teams sollen differenzierter urteilen, nicht schneller verfestigen.
 - **SOLL:** Interventionen sollen nach kurzfristiger Wirkung, langfristiger Wirkung und Nebenwirkung reflektierbar sein.
+- **SOLL:** Formulierungen müssen spannungs- oder konstellationsbezogen sein, nicht eigenschaftszuschreibend. (Falsch: „Ali ist aggressiv“ / Richtig: „Spannung zeigt sich in Interaktion X unter Bedingung Y“)
 
 ## 3. Kanonische Kernobjekte
 
