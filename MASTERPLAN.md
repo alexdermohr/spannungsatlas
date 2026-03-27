@@ -78,14 +78,16 @@ Ein **starker Profileintrag** ist eine Verdichtung, die als wiederkehrendes Must
 
 #### Verbindliche Evidenz- und Schwellenlogik
 
+Die Stufen **schwach**, **moderat** und **stark** dienen als Schutzmechanismus gegen vorschnelle Verdichtung, nicht als Messsystem.
+
 - **MUSS:** Ein Spannungsprofil als Objekt darf erst entstehen, wenn mindestens **2 Fälle** zur gleichen Person dokumentiert sind.
 - **MUSS:** Jeder Profileintrag wird als **schwach**, **moderat** oder **stark** markiert.
-- **MUSS:** Ein **schwacher** Profileintrag stützt sich auf genau **2 Fälle** mit gleicher Richtung oder auf **1 Fall** plus belastbare Mehrquellenlage.
-- **MUSS:** Ein **moderater** Profileintrag stützt sich auf mindestens **3 Fälle** und zeigt dieselbe Dynamik über mindestens **2 Zeitpunkte** oder **2 Kontexte**.
-- **MUSS:** Ein **starker** Profileintrag stützt sich auf mindestens **4 Fälle** und zeigt dieselbe Dynamik über mindestens **2 Zeitpunkte** und **2 Kontexte** oder über belastbare Mehrquellenlage mit Gegenbelegprüfung.
-- **MUSS:** Ein starker Profileintrag darf nicht freigegeben werden, wenn kein Gegenbeleg dokumentiert oder die Leerstelle eines fehlenden Gegenbelegs nicht explizit markiert ist, zum Beispiel als „kein Gegenbeleg nach Prüfung am 2026-03-27“.
+- **MUSS:** Ein **schwacher** Profileintrag gilt nur als erster belastbarer Hinweis und setzt genau **2 Fälle** mit gleicher Richtung oder **1 Fall** plus belastbare Mehrquellenlage voraus.
+- **MUSS:** Ein **moderater** Profileintrag setzt mindestens **3 Fälle** voraus und zeigt dieselbe Dynamik über mindestens **2 Zeitpunkte** oder **2 Kontexte**.
+- **MUSS:** Ein **starker** Profileintrag setzt mindestens **4 Fälle** voraus und zeigt dieselbe Dynamik über mindestens **2 Zeitpunkte** und **2 Kontexte** oder über belastbare Mehrquellenlage mit Gegenbelegprüfung.
+- **MUSS:** Ein starker Profileintrag darf nicht freigegeben werden, wenn kein Gegenbeleg dokumentiert oder die Leerstelle eines fehlenden Gegenbelegs nicht explizit markiert ist, zum Beispiel als „kein Gegenbeleg nach Prüfung am [Datum]“.
 - **MUSS:** Widersprechende neue Fälle oder Interventionsergebnisse lösen Revision aus.
-- **MUSS:** Ein Profileintrag verliert Gültigkeit, wenn **180 Tage** lang kein stützender Fall dokumentiert wird.
+- **MUSS:** Wenn **180 Tage** lang kein stützender Fall dokumentiert wird, wird der Profileintrag in V1 revisionspflichtig oder mit Verfallsmarkierung versehen; fehlende Dokumentation gilt dabei nicht als Gegenbeleg.
 - **MUSS:** Ein Profileintrag verliert Gültigkeit, wenn die **2 letzten relevanten Fälle** ihm widersprechen.
 
 **MUSS-Felder in V1**
@@ -102,7 +104,7 @@ Ein **starker Profileintrag** ist eine Verdichtung, die als wiederkehrendes Must
 **SOLL-Felder später**
 
 - Profilhistorie
-- Profilverfall
+- technische Verfallslogik
 - offene Datenlücken
 - Trennung personennah vs. konstellationsnah auf Eintragebene
 
@@ -282,13 +284,13 @@ Personenprofile erzeugen Macht. Diese Macht wird architektonisch geregelt.
 | Aktion | Beobachter | Fachkraft | Teamleitung | Supervision |
 |---|---|---|---|---|
 | Fall anlegen | JA | JA | JA | NEIN |
-| Fall bearbeiten | nur eigene | JA | JA | annotierend |
-| Spannungsprofil vorschlagen | NEIN | JA | JA | annotierend |
+| Fall bearbeiten | JA (nur eigene) | JA | JA | JA (annotierend) |
+| Spannungsprofil vorschlagen | NEIN | JA | JA | JA (annotierend) |
 | Spannungsprofil freigeben | NEIN | NEIN | JA | NEIN |
-| Spannungsprofil revidieren | NEIN | freigabepflichtig | JA | annotierend |
+| Spannungsprofil revidieren | NEIN | JA (freigabepflichtig) | JA | JA (annotierend) |
 | Widerspruchseintrag setzen | JA | JA | JA | JA |
-| sensible Inhalte sehen | eingeschränkt | eingeschränkt | JA | eingeschränkt |
-| Export auslösen | NEIN | freigabepflichtig | JA | NEIN |
+| sensible Inhalte sehen | JA (eingeschränkt) | JA (eingeschränkt) | JA | JA (eingeschränkt) |
+| Export auslösen | NEIN | JA (freigabepflichtig) | JA | NEIN |
 
 ### 8.3 Berechtigungsprinzipien
 
@@ -369,16 +371,16 @@ Die Schutzmechanismen sind Produktkern, nicht Beiwerk.
 
 ### 10.1 Verbindliche Schutzregeln
 
-- **MUSS:** jedes Spannungsprofil hat Evidenzstufe
-- **MUSS:** jedes Spannungsprofil hat Gegenbelege
-- **MUSS:** jedes Spannungsprofil hat Revisionsdatum
-- **MUSS:** jedes Konstellationsprofil hat Evidenzstufe
-- **MUSS:** jedes Konstellationsprofil hat Gegenbelege
-- **MUSS:** jedes Konstellationsprofil hat Revisionsdatum
-- **MUSS:** jede Verdichtung zeigt Unsicherheit
-- **MUSS:** Spekulation wird sichtbar markiert
-- **MUSS:** epistemische Leere bleibt explizit benennbar
-- **MUSS:** personennah und konstellationsnah werden getrennt markiert
+- **MUSS:** Jedes Spannungsprofil hat Evidenzstufe.
+- **MUSS:** Jedes Spannungsprofil hat Gegenbelege.
+- **MUSS:** Jedes Spannungsprofil hat Revisionsdatum.
+- **MUSS:** Jedes Konstellationsprofil hat Evidenzstufe.
+- **MUSS:** Jedes Konstellationsprofil hat Gegenbelege.
+- **MUSS:** Jedes Konstellationsprofil hat Revisionsdatum.
+- **MUSS:** Jede Verdichtung zeigt Unsicherheit.
+- **MUSS:** Spekulation wird sichtbar markiert.
+- **MUSS:** Epistemische Leere bleibt explizit benennbar.
+- **MUSS:** Personennahe und konstellationsnahe Muster werden getrennt markiert.
 
 ### 10.2 Epistemische Markierung
 
@@ -423,7 +425,7 @@ Die folgenden Ausbaustufen sind **SPÄTER** und nicht Teil des harten V1-Scope.
 ### 11.1 Spannungsprofil-Ausbau
 
 - Profilhistorie
-- Profilverfallslogik
+- technische Profilverfallslogik
 - offene Datenlücken
 - robustere Evidenz- und Widerspruchslogik
 
