@@ -46,7 +46,7 @@ Die folgenden Invarianten sind **MUSS**-Regeln. Sie dürfen in späteren Konzept
 14. **MUSS:** Reflexionen und Revisionen sind zeitlich markierte Denkstände; spätere Deutungen überschreiben frühere nicht still.
 15. **MUSS:** Gegenhypothesen und Widersprüche dürfen nicht geglättet werden; sie bleiben als Irritation bestehen.
 16. **MUSS:** Jede Deutung muss als vorläufiger Denkstand markiert sein und darf nicht als stabile Eigenschaft einer Person formuliert werden.
-17. **MUSS:** Jede Deutung muss einem Evidenztyp zugeordnet werden: direkt beobachtungsnah, abgeleitet (Interpretation) oder spekulativ.
+17. **MUSS:** Jede Deutung muss einem Evidenztyp zugeordnet werden: direkt beobachtungsnah, abgeleitet (Interpretation) oder spekulativ. Der Evidenztyp muss konsistent mit der zugrunde liegenden Beobachtung sein. Deutungen dürfen nur dann als beobachtungsnah klassifiziert werden, wenn sie unmittelbar aus der dokumentierten Beobachtung hervorgehen. (Beispiel: Beobachtung: „X schlägt mit der Hand auf den Tisch“ -> zulässig beobachtungsnah: „X zeigt körperliche Anspannung“ -> nicht zulässig beobachtungsnah: „X ist aggressiv“)
 18. **MUSS:** Wiederkehrende Deutungen dürfen nicht ohne Kontextprüfung als Muster oder Eigenschaft interpretiert werden.
 19. **MUSS:** Beobachtungen müssen rein beschreibend sein, als könnten sie von einer neutralen Kamera erfasst werden. Interpretative Begriffe sind unzulässig.
 20. **MUSS:** Gegen-Deutungen müssen sich explizit auf dieselbe Beobachtung beziehen und eine alternative Erklärung liefern. Reine Relativierungen („vielleicht anders“, „unklar“) sind nicht ausreichend.
