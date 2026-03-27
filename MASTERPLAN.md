@@ -6,7 +6,7 @@ Produktcharakter: Dokumentations-, Reflexions- und Vordiagnostiksystem
 
 ## 1. Produktdefinition
 
-Spannungsatlas ist ein pädagogisches System zur Dokumentation, Reflexion und reflexiven Vordiagnostik. Es erfasst Fälle, revidierbare Spannungsprofile von Personen und Konstellationsprofile von Situationen im Zeitverlauf, um wiederkehrende Spannungsdynamiken sichtbar und hinterfragbar zu machen.
+Spannungsatlas ist ein pädagogisches System zur Dokumentation, Reflexion und reflexiven Vordiagnostik. Es erfasst Fälle, revidierbare Spannungsprofile von Personen und Konstellationsprofile von Situationen im Zeitverlauf, um wiederkehrende Spannungsdynamiken sichtbar und hinterfragbar zu machen. Spätere Ausbaustufen können zusätzlich reduzierte Spannungskonstellationen als systemischen Zusatzlayer abbilden.
 
 Der Produktkern lautet:
 
@@ -40,7 +40,7 @@ Die folgenden Leitplanken sind **SOLL**:
 
 ## 3. Kanonische Kernobjekte
 
-Nur diese drei Objekte sind kanonische Top-Level-Objekte des Produkts:
+Diese drei Objekte bilden den kanonischen Kern des Produkts. Spätere Ausbaustufen können klar begrenzte zusätzliche Analyseobjekte ergänzen, ohne den Kern zu ersetzen.
 
 ### 3.1 Fall
 
@@ -110,6 +110,14 @@ Es ist ein kanonisches Top-Level-Objekt des Produkts.
 
 Bedürfnisse, Determinanten, Ausdrucksformen und Umweltreaktionen sind keine eigenen Top-Level-Objekte, sondern Unteraspekte von Fall, Spannungsprofil und Konstellationsprofil.
 
+### 3.4 Späteres Analyseobjekt: Spannungskonstellation
+
+Eine **Spannungskonstellation** ist die verdichtete Darstellung der Wechselwirkungen mehrerer Personenprofile unter spezifischen situativen Bedingungen.
+
+Sie ist **keine** Erweiterung eines Spannungsprofils, sondern ein eigenständiges Analyseobjekt auf Systemebene. Sie verdichtet nur spannungsrelevante Wechselwirkungen und bildet weder ganze Profile noch das gesamte System vollständig ab.
+
+**Nicht Teil von V1.** Die Spannungskonstellation ist als bewusst begrenzter Zusatzlayer für eine spätere Ausbauphase vorgesehen.
+
 ## 4. Nicht verhandelbare Leitidee
 
 Die zentrale Produktlogik lautet:
@@ -155,6 +163,7 @@ Folgendes liegt **nicht** in V1:
 
 - komplexe Assistenzfunktionen oder KI-gestützte Verdichtung
 - ausgebaute Konstellationscluster oder automatische Musterbildung
+- Spannungskonstellationen als eigenständigen Systemlayer
 - tiefe Interventionsintelligenz
 - komplexe Visualisierungslandschaft
 - automatische Menschentypisierung
@@ -366,14 +375,99 @@ Die folgenden Ausbaustufen sind **SPÄTER** und nicht Teil des harten V1-Scope.
 - Entlastungspfade
 - Kontextvergleich
 
-### 10.3 Teammodus
+### 10.3 Spannungskonstellation
+
+Als **Phase-3-Modul** kann Spannungsatlas eine reduzierte Spannungskonstellation ergänzen. Dieses Modul erweitert das System um eine systemische Perspektive, ohne Vollständigkeit oder Systemsimulation anzustreben.
+
+#### 10.3.1 Ziel
+
+- Sichtbar machen, wie mehrere Personenprofile und situative Determinanten gemeinsam eine Spannungsdynamik erzeugen
+- relevante Wechselwirkungen verdichten statt alle Beteiligten vollständig zu modellieren
+
+Nicht Ziel:
+
+- vollständige Systemsimulation
+- vollständige Bedürfnisabbildung aller Beteiligten
+
+#### 10.3.2 Kernstruktur
+
+**MUSS** in reduzierter Form abbildbar sein:
+
+- Beteiligte mit nur spannungsrelevanten Anteilen aus ihren Spannungsprofilen
+- aktivierte Bedürfnisse in überlagerter Form
+- gemeinsame Determinanten
+- Interaktionslogik als zirkuläre Dynamik, nicht als lineare Ursache-Wirkung
+- typische Eskalations- und Entlastungspfade
+- Interventionspunkte bei Personen, Setting, Timing oder Kommunikation
+
+#### 10.3.3 Verbindliche Produktprinzipien
+
+- **MUSS:** Nur relevante Spannungsfaktoren werden erfasst; kein vollständiges Bedürfnis-Mapping aller Beteiligten
+- **MUSS:** Die Darstellung bleibt heuristisch und interpretativ; es gibt keine algorithmische Systemwahrheit
+- **MUSS:** Jede Spannungskonstellation zeigt Unsicherheitsgrad und alternative Deutungen
+- **MUSS:** Systemische Sicht darf individuelle Verantwortung nicht aufheben
+- **MUSS:** Spannungskonstellationen bleiben mit beteiligten Spannungsprofilen und zugrunde liegenden Fällen verknüpft
+
+#### 10.3.4 Entstehung und Nutzung
+
+Spannungskonstellationen entstehen aus mehreren Fällen oder aus einem komplexen Mehrpersonenfall.
+
+Sie dienen vor allem:
+
+- Fallreflexion
+- Teamgespräch
+- Interventionsplanung
+
+#### 10.3.5 Minimaldarstellung und Einführungsstrategie
+
+- **Nicht Teil von V1**
+- Einführung erst nach stabiler Fallarbeit, funktionierenden Spannungsprofilen und ersten belastbaren Konstellationsmustern
+- MVP zunächst rein textbasiert
+- komplexe Visualisierung oder automatisches Clustering erst später
+
+Pflichtansicht in einer frühen Fassung:
+
+- Beteiligte
+- Interaktionslogik
+- Verstärker
+- Entlastungspunkte
+- Unsicherheit
+
+#### 10.3.6 Typische Fehlannahmen
+
+- Nicht alle Profile zusammen ergeben automatisch Verständnis; nur relevante Wechselwirkungen zählen
+- Die Konstellation erklärt nicht die Person, sondern ergänzt die Perspektive
+- Systemisch heißt nicht, dass Verantwortung verschwindet
+- Nicht nur Profile prägen Konstellationen; Konstellationen erzeugen auch Profileindrücke
+
+#### 10.3.7 Qualitätskriterien und Erweiterbarkeit
+
+Das Modul ist gut, wenn:
+
+- Dynamiken verständlicher werden
+- Interventionen klarer werden
+- Komplexität reduziert statt erhöht wird
+- Profile relativiert, aber nicht ersetzt werden
+
+Später möglich:
+
+- Konstellationscluster
+- wiederkehrende Beziehungsmuster
+- Visualisierung von Interaktionsnetzwerken
+
+Nicht zulässig:
+
+- automatische Typisierung von Beziehungssystemen
+- deterministische Systemmodelle
+
+### 10.4 Teammodus
 
 - Teamkommentare
 - konkurrierende Hypothesen
 - Review-Workflow
 - Fallkonferenzmodus
 
-### 10.4 Interventionsintelligenz
+### 10.5 Interventionsintelligenz
 
 - Maßnahmenbibliothek
 - Vergleich kurzfristig/langfristig
@@ -381,7 +475,7 @@ Die folgenden Ausbaustufen sind **SPÄTER** und nicht Teil des harten V1-Scope.
 - Entwicklungswirkung
 - Nebenwirkungen
 
-### 10.5 Assistenz
+### 10.6 Assistenz
 
 - fragt nach Gegenbelegen
 - markiert fehlende Daten
