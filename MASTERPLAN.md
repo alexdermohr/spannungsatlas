@@ -97,7 +97,7 @@ Aggregierte Situations- oder Beziehungskonstellation, die wiederkehrend Druck ve
 
 Es ist ein kanonisches Top-Level-Objekt des Produkts.
 
-**MUSS in V1 nicht als eigenständiger vollwertiger Workflow vorliegen.** V1 bildet Konstellationsbezug zunächst implizit über Fälle und textliche Konstellationshinweise ab. Ein eigenständiges Konstellationsprofil mit eigener Verdichtungslogik ist **SPÄTER** vorgesehen.
+**Ein eigenständiger vollwertiger Workflow für das Konstellationsprofil ist in V1 nicht erforderlich.** V1 erfasst Konstellationsbezug zunächst innerhalb von Fällen über textliche oder markierende Konstellationshinweise. Ein eigenständiges Konstellationsprofil mit eigener Verdichtungslogik ist **SPÄTER** vorgesehen.
 
 **SOLL-Felder später**
 
@@ -170,7 +170,7 @@ V1 ist nur dann erfüllt, wenn alle folgenden Minimalgrenzen gelten:
 - Jedes Spannungsprofil zeigt Gegenbelege und Revisionsdatum.
 - Jede Person hat einen einfachen Verlauf über dokumentierte Fälle.
 - Konstellationsbezug ist mindestens textlich oder markierend erfassbar.
-- Das Konstellationsprofil ist in V1 nur implizit vorbereitet, nicht als eigener vollständiger Workflow umgesetzt.
+- V1 erfasst Konstellationsbezug innerhalb von Fällen, aber noch nicht als eigenen vollständigen Konstellationsprofil-Workflow.
 
 ## 6. Dokumentationsökonomie
 
@@ -225,17 +225,19 @@ Personenprofile erzeugen Macht. Diese Macht wird architektonisch geregelt.
 - **Beobachter**: darf Beobachtungen erfassen, aber keine Profile verdichten
 - **Fachkraft**: darf Fälle anlegen und Spannungsprofile vorschlagen
 - **Teamleitung**: darf Profile freigeben, revidieren und Exporte auslösen
-- **Supervision**: darf reflektieren, kommentieren und Widerspruch eintragen, aber nicht allein finalisieren
+- **Supervision**: darf reflektieren, annotieren und Widerspruch eintragen, aber nicht allein finalisieren
+
+**Annotierend** bedeutet in V1: Kommentare, Rückfragen, Gegenperspektiven und Widerspruchseinträge zu bestehenden Fällen oder Profilvorschlägen ergänzen. Annotierende Rechte erlauben kein eigenständiges Anlegen, Umschreiben oder Freigeben von Spannungsprofilen.
 
 ### 7.2 Berechtigungsmatrix V1
 
 | Aktion | Beobachter | Fachkraft | Teamleitung | Supervision |
 |---|---|---|---|---|
 | Fall anlegen | JA | JA | JA | JA |
-| Fall bearbeiten | nur eigene | JA | JA | kommentierend |
-| Spannungsprofil vorschlagen | NEIN | JA | JA | kommentierend |
+| Fall bearbeiten | nur eigene | JA | JA | annotierend |
+| Spannungsprofil vorschlagen | NEIN | JA | JA | annotierend |
 | Spannungsprofil freigeben | NEIN | NEIN | JA | NEIN |
-| Spannungsprofil revidieren | NEIN | freigabepflichtig | JA | kommentierend |
+| Spannungsprofil revidieren | NEIN | freigabepflichtig | JA | annotierend |
 | Widerspruchseintrag setzen | JA | JA | JA | JA |
 | sensible Inhalte sehen | eingeschränkt | eingeschränkt | JA | eingeschränkt |
 | Export auslösen | NEIN | freigabepflichtig | JA | NEIN |
@@ -245,6 +247,7 @@ Personenprofile erzeugen Macht. Diese Macht wird architektonisch geregelt.
 - **MUSS:** Profilfreigabe und Profilrevision dürfen nicht an reine Beobachtungsrechte gekoppelt sein.
 - **MUSS:** Widerspruchseinträge dürfen nicht exklusiv auf Leitungsrollen beschränkt sein.
 - **MUSS:** Exportrechte sind restriktiver als Leserechte.
+- **MUSS:** Annotierende Rechte erlauben Ergänzung und Widerspruch, aber kein eigenständiges Umschreiben oder Finalisieren von Profilen.
 - **MUSS:** Ein Spannungsprofil darf in V1 nur freigegeben werden, wenn mehr als ein Fall oder eine belastbare Mehrquellenlage vorliegt.
 - **MUSS:** Gegenbelege dürfen bei Freigabe nicht leer bleiben; wenn keine Gegenbelege vorliegen, muss die Leerstelle explizit markiert werden.
 - **MUSS:** Revisionsdatum ist Freigabevoraussetzung.
