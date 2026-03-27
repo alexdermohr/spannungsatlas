@@ -222,18 +222,18 @@ Personenprofile erzeugen Macht. Diese Macht wird architektonisch geregelt.
 
 ### 7.1 Rollen
 
+**Annotierend** bedeutet in V1: Kommentare, Rückfragen, Gegenperspektiven und Widerspruchseinträge zu bestehenden Fällen oder Profilvorschlägen ergänzen. Annotierende Rechte erlauben kein eigenständiges Anlegen, Umschreiben oder Freigeben von Spannungsprofilen oder Fällen.
+
 - **Beobachter**: darf Beobachtungen erfassen, aber keine Profile verdichten
 - **Fachkraft**: darf Fälle anlegen und Spannungsprofile vorschlagen
 - **Teamleitung**: darf Profile freigeben, revidieren und Exporte auslösen
 - **Supervision**: darf reflektieren, annotieren und Widerspruch eintragen, aber nicht allein finalisieren
 
-**Annotierend** bedeutet in V1: Kommentare, Rückfragen, Gegenperspektiven und Widerspruchseinträge zu bestehenden Fällen oder Profilvorschlägen ergänzen. Annotierende Rechte erlauben kein eigenständiges Anlegen, Umschreiben oder Freigeben von Spannungsprofilen.
-
 ### 7.2 Berechtigungsmatrix V1
 
 | Aktion | Beobachter | Fachkraft | Teamleitung | Supervision |
 |---|---|---|---|---|
-| Fall anlegen | JA | JA | JA | JA |
+| Fall anlegen | JA | JA | JA | NEIN |
 | Fall bearbeiten | nur eigene | JA | JA | annotierend |
 | Spannungsprofil vorschlagen | NEIN | JA | JA | annotierend |
 | Spannungsprofil freigeben | NEIN | NEIN | JA | NEIN |
