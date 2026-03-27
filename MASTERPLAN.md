@@ -18,7 +18,7 @@ Der Produktkern lautet:
 Spannungsatlas ist **kein** klinisches Diagnosetool, kein starres Persönlichkeitsinventar und kein Defizitregister.
 
 Das System ist **NICHT** für:
-- ad-hoc Entscheidungen
+- ad hoc Entscheidungen
 - Echtzeitbewertung von Situationen
 
 Das System ist **NUR** für:
