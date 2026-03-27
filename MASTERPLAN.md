@@ -1,7 +1,7 @@
 # Spannungsatlas – Kanonischer Produktmasterplan
 
-Status: verbindliches Produktdokument für dieses Repository
-Primärer Nutzungskontext: pädagogische Praxis
+Status: verbindliches Produktdokument für dieses Repository<br>
+Primärer Nutzungskontext: pädagogische Praxis<br>
 Produktcharakter: Dokumentations-, Reflexions- und Vordiagnostiksystem
 
 ## 1. Produktdefinition
