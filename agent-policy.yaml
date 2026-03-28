@@ -1,0 +1,61 @@
+# agent-policy.yaml — Agentenrichtlinie für spannungsatlas
+# Version: 1.0
+
+# Sichere Lesepfade (Agenten dürfen immer lesen)
+read_paths:
+  - "**/*.md"
+  - "**/*.yaml"
+  - "**/*.json"
+  - "scripts/**"
+  - "contracts/**"
+
+# Vorsichtige Schreibpfade (Agenten dürfen schreiben, mit Sorgfalt)
+write_paths:
+  - docs/*.md
+  - contracts/*.json
+  - scripts/docmeta/*.py
+  - scripts/docmeta/*.sh
+  - repo.meta.yaml
+  - agent-policy.yaml
+  - AGENTS.md
+
+# Verbotene / geschützte Pfade
+protected_paths:
+  # Generierte Dateien dürfen NUR durch Generatorlauf geschrieben werden
+  - docs/_generated/*
+
+# Regeln für generierte Artefakte
+generated_files:
+  path_prefix: docs/_generated/
+  rule: >
+    Dateien unter docs/_generated/ dürfen niemals direkt von Hand oder
+    durch Agenten editiert werden. Änderungen erfolgen ausschließlich
+    durch Ausführung der zugehörigen Generatoren unter scripts/docmeta/.
+
+# Frontmatter-Pflicht
+frontmatter:
+  required_for:
+    - docs/*.md
+    - MASTERPLAN.md
+    - README.md
+  schema: contracts/docmeta.schema.json
+  rule: >
+    Jedes kanonische Markdown-Dokument muss ein YAML-Frontmatter mit
+    mindestens id, title, doc_type, status und canonicality enthalten.
+
+# Konfliktregelung
+conflict_resolution:
+  rule: >
+    Bei Widersprüchen zwischen Dokumenten gilt die Wahrheitshierarchie
+    aus repo.meta.yaml (truth_hierarchy). MASTERPLAN.md hat höchste Priorität.
+  no_silent_changes: >
+    Keine stillen Änderungen an kanonischen Dokumenten. Jede inhaltliche
+    Änderung muss begründet und nachvollziehbar sein.
+  no_silent_interpolation: >
+    Agenten dürfen keine Informationen erfinden, interpolieren oder
+    aus anderen Quellen stillschweigend einfügen.
+
+# Navigation vs. Wahrheit
+navigation_rule: >
+  docs/index.md ist ein Navigationsdokument, kein kanonisches Fachdokument.
+  Bei Widersprüchen haben die verlinkten kanonischen Dokumente Vorrang.

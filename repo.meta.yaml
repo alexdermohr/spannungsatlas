@@ -1,0 +1,44 @@
+# repo.meta.yaml — Kanonische Repo-Identität für spannungsatlas
+# Version: 1.0
+
+name: spannungsatlas
+description: >
+  Pädagogisches Dokumentations-, Reflexions- und Vordiagnostiksystem.
+  Verbindet Fallarbeit, revidierbare Spannungsprofile und Konstellationsanalyse.
+
+# Kanonische Einstiegspfade (Lesereihenfolge)
+reading_order:
+  - README.md
+  - MASTERPLAN.md
+  - docs/ux-ui-blaupause.md
+  - docs/icf-integration-blaupause.md
+
+# Wahrheitshierarchie bei Konflikten
+truth_hierarchy:
+  - MASTERPLAN.md
+  - docs/ux-ui-blaupause.md
+  - docs/icf-integration-blaupause.md
+  - README.md
+
+# Navigation (nicht kanonisch)
+navigation:
+  - docs/index.md
+
+# Generierte Artefakte (nicht handkanonisch)
+generated_paths:
+  - docs/_generated/
+
+# Repo-Bereiche
+areas:
+  docs:
+    description: Kanonische Produktdokumentation und UX/UI-Konzepte
+    path: docs/
+  contracts:
+    description: Schemata und Validierungsverträge
+    path: contracts/
+  scripts:
+    description: Generatoren, Validierung und Tooling
+    path: scripts/
+  root:
+    description: README, MASTERPLAN und Repo-Meta
+    path: /
