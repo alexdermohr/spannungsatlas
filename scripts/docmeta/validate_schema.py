@@ -99,8 +99,6 @@ def validate_against_schema(meta: dict, schema: dict) -> list[str]:
         prop = properties[key]
 
         # Enum check
-        if "enum" in prop and value in (str,):
-            pass
         if "enum" in prop and isinstance(value, str) and value not in prop["enum"]:
             errors.append(f"Field '{key}': value '{value}' not in allowed values {prop['enum']}")
 
