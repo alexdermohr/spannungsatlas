@@ -6,6 +6,15 @@ Weak-links are documents that are referenced *only* from navigation documents
 (e.g. ``docs/index.md``) but not from any content document — they are
 technically linked but not inhaltlich eingebettet.
 
+**What counts as "inhaltliche Einbettung" (content embedding)?**
+
+- Markdown-Links from non-navigation documents, **and**
+- valid ``related_docs`` entries from non-navigation documents.
+
+Navigation documents (``canonicality: navigation`` or ``doc_type: navigation``)
+contribute only *navigational* links.  Unknown ``related_docs`` IDs are ignored
+(they do not count as embedding).
+
 Usage: python scripts/docmeta/generate_orphans.py
 """
 
@@ -74,9 +83,36 @@ def extract_link_targets(filepath: Path) -> set[str]:
     return targets
 
 
+def _build_id_to_path(files: list[Path]) -> dict[str, str]:
+    """Map frontmatter ``id`` → repo-relative path for all scanned files."""
+    mapping: dict[str, str] = {}
+    for filepath in files:
+        meta = parse_frontmatter(filepath)
+        if meta and meta.get("id"):
+            mapping[meta["id"]] = filepath.relative_to(REPO_ROOT).as_posix()
+    return mapping
+
+
+def _extract_related_targets(filepath: Path, id_to_path: dict[str, str]) -> set[str]:
+    """Return repo-relative paths for valid ``related_docs`` entries."""
+    meta = parse_frontmatter(filepath)
+    if not meta:
+        return set()
+    related = meta.get("related_docs")
+    if not isinstance(related, list):
+        return set()
+    targets: set[str] = set()
+    for doc_id in related:
+        if isinstance(doc_id, str) and doc_id in id_to_path:
+            targets.add(id_to_path[doc_id])
+    return targets
+
+
 def main():
     files = collect_files()
     now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    id_to_path = _build_id_to_path(files)
 
     all_files: set[str] = set()
     # targets reached from content (non-navigation) documents
@@ -87,11 +123,15 @@ def main():
     for filepath in files:
         rel = filepath.relative_to(REPO_ROOT).as_posix()
         all_files.add(rel)
-        targets = extract_link_targets(filepath)
+
+        md_targets = extract_link_targets(filepath)
+        rel_targets = _extract_related_targets(filepath, id_to_path)
+        combined = md_targets | rel_targets
+
         if _is_navigation_doc(filepath):
-            nav_targets.update(targets)
+            nav_targets.update(combined)
         else:
-            content_targets.update(targets)
+            content_targets.update(combined)
 
     all_targets = content_targets | nav_targets
 
@@ -99,7 +139,9 @@ def main():
     orphans = sorted(all_files - all_targets - ENTRY_POINTS)
 
     # Weak links: files linked ONLY from navigation (not content), excluding
-    # entry points and orphans
+    # entry points and orphans.
+    # "Content" includes both Markdown-Links AND valid related_docs from
+    # non-navigation documents.
     nav_only = nav_targets - content_targets
     weak = sorted((nav_only & all_files) - ENTRY_POINTS)
 
@@ -141,10 +183,11 @@ def main():
         "# Schwach eingebundene Dokumente",
         "",
         "Dokumente, die nur über Navigationsdokumente (z. B. `docs/index.md`) referenziert werden,",
-        "aber von keinem inhaltlichen Dokument verlinkt sind.",
+        "aber von keinem inhaltlichen Dokument eingebunden sind.",
         "",
-        "> Navigation ≠ inhaltliche Einbettung. Diese Dokumente sind formal verlinkt,",
-        "> aber nicht inhaltlich in andere Dokumente eingebunden.",
+        "> **Was zählt als inhaltliche Einbettung?**",
+        "> Markdown-Links *und* gültige `related_docs`-Einträge aus Nicht-Navigationsdokumenten.",
+        "> Navigation (z. B. `docs/index.md`) zählt nicht als inhaltliche Einbettung.",
         "",
     ]
 

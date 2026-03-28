@@ -10,6 +10,7 @@ No external YAML or JSON-Schema library is used.
 Usage: python scripts/docmeta/validate_schema.py [--strict]
 """
 
+import datetime
 import json
 import re
 import sys
@@ -90,12 +91,19 @@ def validate_against_schema(meta: dict, schema: dict) -> list[str]:
                     f"Field '{key}': length {len(value)} is below minimum {prop['minLength']}"
                 )
 
-            # format: date  (ISO 8601 YYYY-MM-DD)
+            # format: date  (ISO 8601 YYYY-MM-DD, calendar-valid)
             if prop.get("format") == "date":
                 if not _ISO_DATE_RE.fullmatch(value):
                     errors.append(
                         f"Field '{key}': value '{value}' is not a valid ISO date (YYYY-MM-DD)"
                     )
+                else:
+                    try:
+                        datetime.date.fromisoformat(value)
+                    except ValueError:
+                        errors.append(
+                            f"Field '{key}': value '{value}' is not a valid calendar date"
+                        )
 
         # type: array
         elif expected_type == "array":
