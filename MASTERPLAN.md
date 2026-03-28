@@ -26,6 +26,18 @@ Das System ist **NUR** für:
 - provisorische Hypothesenbildung
 - planende Rekonstruktion
 
+
+## Externe Assessments als Vorinformation
+
+Der Spannungsatlas kann strukturierte externe Assessments als Vorinformation importieren.
+
+Dabei gilt:
+
+- Externe Assessments dienen ausschließlich als Reflexionsinput, nicht als automatische Deutung.
+- Importierte Fremddaten bleiben als Quelle sichtbar.
+- Beobachtung, Deutung, Gegen-Deutung und Unsicherheit dürfen durch Import nicht still vorentschieden werden.
+- Externe Klassifikationen sind nicht identisch mit Bedürfnissen, Determinanten oder Spannungsprofilen.
+
 ## 2. Produktinvarianten
 
 Die folgenden Invarianten sind **MUSS**-Regeln. Sie dürfen in späteren Konzepten, UI-Entwürfen oder Implementierungen nicht verletzt werden.

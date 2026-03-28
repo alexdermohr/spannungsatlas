@@ -206,3 +206,25 @@ interface Revision {
 - **Phase 3 – Revision / Drift:** Vergleichsansicht, Denkstände nebeneinander, Drift-Klassifikation.
 - **Phase 4 – Spannungsnetz:** Einfacher Graph, auf Fallkontext beschränkt.
 - **Phase 5 – Profile / Konstellation:** Spannungsprofil, später Konstellationsprofil und Team-/Rollenlogik.
+
+## 9. ICF-Import-Assistent (Erweiterung)
+
+Zusätzlicher Einstiegspfad:
+- Neuer Fall aus ICF-Export
+
+Ablauf:
+1. ICF-Datei laden
+2. Metadaten prüfen
+3. Ratings als Importkarten anzeigen
+4. pro Rating auswählen:
+   - als Kontext übernehmen
+   - als Beobachtungsrohstoff vormerken
+   - als Reflexionsanker vormerken
+   - ignorieren
+5. Übergang in den normalen Reflexionsraum
+
+Regeln:
+- keine automatische Bedürfniszuweisung
+- keine automatische Determinantenzuweisung
+- keine automatische Deutung
+- importierte Inhalte bleiben als externe Quelle markiert
