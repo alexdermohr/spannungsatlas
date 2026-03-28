@@ -110,21 +110,31 @@ Zonen müssen in zwingender Reihenfolge durchlaufen werden. Die Übergänge sind
 ```typescript
 type EvidenceType = "observational" | "derived" | "speculative";
 type DriftType = "new_observation" | "new_perspective" | "reinterpretation";
+type UncertaintyLevel = 0 | 1 | 2 | 3 | 4 | 5; // 0 = sicher, 5 = stark spekulativ
+
+interface CaseParticipant {
+  id: string;
+  role?: "primary" | "secondary" | "staff" | "contextual";
+}
 
 interface Case {
   id: string;
-  personId: string;
+  participants: CaseParticipant[];
   context: string;
   observedAt?: string;
-  reflectedAt: string;
   observation: Observation;
+  currentReflection: ReflectionSnapshot;
+  revisions: Revision[];
+}
+
+interface ReflectionSnapshot {
+  reflectedAt: string;
   selectedNeeds: NeedSelection[];
   selectedDeterminants: DeterminantSelection[];
   interpretation: Interpretation;
   counterInterpretation: Interpretation;
   uncertainty: Uncertainty;
   tensions: TensionEdge[];
-  revisions: Revision[];
 }
 
 interface Observation {
@@ -167,7 +177,7 @@ interface Interpretation {
 }
 
 interface Uncertainty {
-  level: number;
+  level: UncertaintyLevel;
   rationale: string;
 }
 
@@ -176,16 +186,16 @@ interface TensionEdge {
   target: string;
   label: string;
   context: string;
-  direction: "source_to_target" | "target_to_source" | "bidirectional";
+  direction: "unidirectional" | "bidirectional";
   timestamp?: string;
 }
 
 interface Revision {
   at: string;
-  previousInterpretation: string;
-  newInterpretation: string;
   driftType: DriftType;
   reason: string;
+  from: ReflectionSnapshot;
+  to: ReflectionSnapshot;
 }
 ```
 
