@@ -27,7 +27,7 @@ Das System ist **NUR** für:
 - planende Rekonstruktion
 
 
-## Externe Assessments als Vorinformation
+### 1.1 Externe Assessments als Vorinformation
 
 Der Spannungsatlas kann strukturierte externe Assessments als Vorinformation importieren.
 

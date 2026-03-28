@@ -215,7 +215,7 @@ Zusätzlicher Einstiegspfad:
 Der ICF-Import-Assistent ist ein alternativer Einstieg **vor** dem regulären Reflexionsraum. Nach Abschluss des Assistenten folgt der normale Flow.
 
 Ablauf:
-1. ICF-Datei laden
+1. ICF-JSON-Datei laden
 2. Metadaten prüfen
 3. Ratings als Importkarten anzeigen
 4. pro Rating auswählen:

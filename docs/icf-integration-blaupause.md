@@ -1,6 +1,10 @@
 # Spannungsatlas – ICF-Integrations-Blaupause
 
-> Hinweis: Dieses Dokument beschreibt die konzeptionelle Integration von `icf-tool` in den Spannungsatlas. Bei Konflikten gelten `MASTERPLAN.md` und `docs/ux-ui-blaupause.md`.
+> Hinweis: Dieses Dokument beschreibt die konzeptionelle Integration von `icf-tool` in den Spannungsatlas.
+> Bei Konflikten gilt folgende Priorität:
+> 1. MASTERPLAN.md (kanonische Produktdefinition)
+> 2. docs/ux-ui-blaupause.md (UX/UI-Spezifikation)
+> 3. Dieses Dokument (Integrationskonzept)
 
 ## 1. Ziel der Integration
 
