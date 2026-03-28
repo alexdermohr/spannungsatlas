@@ -1,3 +1,16 @@
+---
+id: ux-ui-blaupause
+title: "Spannungsatlas – UX/UI Blaupause"
+doc_type: ux-ui
+status: active
+canonicality: canonical
+summary: "Konzeptionelle UX/UI-Prinzipien, Ebenen, Nutzerfluss und Informationsarchitektur."
+related_docs:
+  - masterplan
+  - icf-integration-blaupause
+last_reviewed: "2026-03-28"
+---
+
 > **Hinweis:** Dieses Dokument ist ein konzeptionelles UX/UI-Leitdokument. Bei Konflikten gilt der kanonische Produktmasterplan in `MASTERPLAN.md`.
 
 # Spannungsatlas – UX/UI Blaupause

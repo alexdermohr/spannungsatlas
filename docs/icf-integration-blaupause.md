@@ -1,3 +1,16 @@
+---
+id: icf-integration-blaupause
+title: "Spannungsatlas – ICF-Integrations-Blaupause"
+doc_type: integration
+status: active
+canonicality: canonical
+summary: "Konzeptionelle Integration von icf-tool in den Spannungsatlas als strukturierte Vorinformation."
+related_docs:
+  - masterplan
+  - ux-ui-blaupause
+last_reviewed: "2026-03-28"
+---
+
 # Spannungsatlas – ICF-Integrations-Blaupause
 
 > Hinweis: Dieses Dokument beschreibt die konzeptionelle Integration von `icf-tool` in den Spannungsatlas.

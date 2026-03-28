@@ -1,3 +1,16 @@
+---
+id: masterplan
+title: "Spannungsatlas – Kanonischer Produktmasterplan"
+doc_type: product-canon
+status: active
+canonicality: canonical
+summary: "Verbindliches Produktdokument: Produktdefinition, Invarianten, Kernobjekte, Taxonomie, Scope V1."
+related_docs:
+  - ux-ui-blaupause
+  - icf-integration-blaupause
+last_reviewed: "2026-03-28"
+---
+
 # Spannungsatlas – Kanonischer Produktmasterplan
 
 Status: verbindliches Produktdokument für dieses Repository

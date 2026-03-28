@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "docmeta.schema.json",
+  "title": "Spannungsatlas Document Metadata",
+  "description": "Schema for YAML frontmatter in canonical Markdown documents",
+  "type": "object",
+  "required": ["id", "title", "doc_type", "status", "canonicality"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique document identifier (kebab-case)",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+    },
+    "title": {
+      "type": "string",
+      "description": "Human-readable document title",
+      "minLength": 1
+    },
+    "doc_type": {
+      "type": "string",
+      "description": "Document type classification",
+      "enum": [
+        "product-canon",
+        "ux-ui",
+        "integration",
+        "navigation",
+        "readme",
+        "roadmap",
+        "data-model",
+        "architecture"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "description": "Current document status",
+      "enum": ["draft", "active", "deprecated", "superseded"]
+    },
+    "canonicality": {
+      "type": "string",
+      "description": "How authoritative this document is",
+      "enum": ["canonical", "derived", "navigation", "informational"]
+    },
+    "summary": {
+      "type": "string",
+      "description": "One-line summary of the document's purpose"
+    },
+    "related_docs": {
+      "type": "array",
+      "description": "List of related document IDs",
+      "items": {
+        "type": "string"
+      }
+    },
+    "last_reviewed": {
+      "type": "string",
+      "description": "ISO 8601 date of last review",
+      "format": "date"
+    },
+    "supersedes": {
+      "type": "array",
+      "description": "Document IDs this document supersedes",
+      "items": {
+        "type": "string"
+      }
+    },
+    "superseded_by": {
+      "type": "string",
+      "description": "Document ID that supersedes this one"
+    }
+  },
+  "additionalProperties": false
+}
