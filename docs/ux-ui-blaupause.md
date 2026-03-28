@@ -212,6 +212,8 @@ interface Revision {
 Zusätzlicher Einstiegspfad:
 - Neuer Fall aus ICF-Export
 
+Der ICF-Import-Assistent ist ein alternativer Einstieg **vor** dem regulären Reflexionsraum. Nach Abschluss des Assistenten folgt der normale Flow.
+
 Ablauf:
 1. ICF-Datei laden
 2. Metadaten prüfen

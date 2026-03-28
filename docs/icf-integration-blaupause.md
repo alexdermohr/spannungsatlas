@@ -54,7 +54,7 @@ Folgende Felder können als Kontext- oder Kopfbereich eines Falls vorbefüllt we
 - `metadata.personOther`
 
 Regel:
-Diese Felder sind Kontext, nicht automatisch Beobachtung.
+Diese Felder sind Kontext, nicht automatisch Beobachtung. Insbesondere `metadata.personImpression` und `metadata.personDiagnosis` sind stark interpretationsgeladen. Sie gelten als sekundärer Kontext und dürfen weder als direkte Beobachtung noch als unhinterfragte Deutungsvorgabe behandelt werden.
 
 ### 4.2 Bewertungsdaten
 
@@ -171,7 +171,7 @@ interface ExternalAssessmentRating {
 }
 ```
 
-Dieses Objekt ist bewusst getrennt von Beobachtung, Deutung und Unsicherheit.
+Dieses Objekt ist bewusst getrennt von Beobachtung, Deutung und Unsicherheit. Je nach `selectedUsage` werden importierte Inhalte entweder im Fallkontext sichtbar gemacht oder als überprüfbare Vorbefüllung in nachfolgende Arbeitsschritte eingespeist. Auch in vorbefüllter Form bleiben sie als externe Quelle markiert und sind nicht automatisch eine Beobachtung oder Deutung.
 
 ## 9. Semantische Schutzregeln
 - ICF bleibt ICF; Spannungsatlas bleibt Spannungsatlas.
