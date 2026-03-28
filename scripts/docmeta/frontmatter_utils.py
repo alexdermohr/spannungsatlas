@@ -53,8 +53,8 @@ def _parse_simple_yaml(raw: str) -> dict:
         if not stripped or stripped.startswith("#"):
             continue
 
-        # List item
-        if stripped.startswith("- ") and current_key:
+        # List item — only valid when an explicit list mode was opened (key: with no value)
+        if stripped.startswith("- ") and current_list is not None:
             if current_list is None:
                 current_list = []
             value = stripped[2:].strip().strip('"').strip("'")
@@ -76,7 +76,7 @@ def _parse_simple_yaml(raw: str) -> dict:
                 result[key] = value
                 current_list = None
             else:
-                # Value may follow as a list
-                current_list = None
+                # No inline value — open list mode; items may follow on subsequent lines
+                current_list = []
 
     return result

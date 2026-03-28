@@ -75,6 +75,8 @@ def extract_link_targets(filepath: Path) -> set[str]:
         if not target:
             continue
         resolved = (filepath.parent / target).resolve()
+        if not resolved.exists() or not resolved.is_file():
+            continue
         try:
             rel = resolved.relative_to(REPO_ROOT).as_posix()
             targets.add(rel)
