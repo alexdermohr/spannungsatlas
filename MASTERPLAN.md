@@ -1,7 +1,7 @@
 # Spannungsatlas – Kanonischer Produktmasterplan
 
-Status: verbindliches Produktdokument für dieses Repository  
-Primärer Nutzungskontext: pädagogische Praxis  
+Status: verbindliches Produktdokument für dieses Repository
+Primärer Nutzungskontext: pädagogische Praxis
 Produktcharakter: Dokumentations-, Reflexions- und Vordiagnostiksystem
 
 ## 1. Produktdefinition
@@ -16,6 +16,15 @@ Der Produktkern lautet:
 - Beobachtung, Deutung, Widerspruch und Revision bleiben sichtbar.
 
 Spannungsatlas ist **kein** klinisches Diagnosetool, kein starres Persönlichkeitsinventar und kein Defizitregister.
+
+Das System ist **NICHT** für:
+- ad-hoc Entscheidungen
+- Echtzeitbewertung von Situationen
+
+Das System ist **NUR** für:
+- nachträgliche Reflexion
+- provisorische Hypothesenbildung
+- planende Rekonstruktion
 
 ## 2. Produktinvarianten
 
@@ -34,12 +43,22 @@ Die folgenden Invarianten sind **MUSS**-Regeln. Sie dürfen in späteren Konzept
 11. **MUSS:** Keine Verdichtungsebene darf ohne dokumentierte Fallbasis entstehen oder fortgeschrieben werden.
 12. **MUSS:** Interventionsergebnisse müssen als Bestätigung, Widerspruch oder Relativierung dokumentiert werden.
 13. **MUSS:** Neue Gegenbelege oder widersprechende Interventionsergebnisse müssen Revision auslösen.
+14. **MUSS:** Reflexionen und Revisionen sind zeitlich markierte Denkstände; spätere Deutungen überschreiben frühere nicht still.
+15. **MUSS:** Gegenhypothesen und Widersprüche dürfen nicht geglättet werden; sie bleiben als Irritation bestehen.
+16. **MUSS:** Jede Deutung muss als vorläufiger Denkstand markiert sein und darf nicht als stabile Eigenschaft einer Person formuliert werden.
+17. **MUSS:** Jede Deutung muss einem Evidenztyp zugeordnet werden: direkt beobachtungsnah, abgeleitet (Interpretation) oder spekulativ. Der Evidenztyp muss konsistent mit der zugrunde liegenden Beobachtung sein. Deutungen dürfen nur dann als beobachtungsnah klassifiziert werden, wenn sie unmittelbar aus der dokumentierten Beobachtung hervorgehen. (Beispiel: Beobachtung: „X schlägt mit der Hand auf den Tisch“ -> zulässig beobachtungsnah: „X zeigt körperliche Anspannung“ -> nicht zulässig beobachtungsnah: „X ist aggressiv“)
+18. **MUSS:** Wiederkehrende Deutungen dürfen nicht ohne Kontextprüfung als Muster oder Eigenschaft interpretiert werden.
+19. **MUSS:** Beobachtungen müssen rein beschreibend sein, als könnten sie von einer neutralen Kamera erfasst werden. Interpretative Begriffe sind unzulässig.
+20. **MUSS:** Gegen-Deutungen müssen sich explizit auf dieselbe Beobachtung beziehen und eine alternative Erklärung liefern. Reine Relativierungen („vielleicht anders“, „unklar“) sind nicht ausreichend.
+21. **MUSS:** **Drift** (Veränderung von Deutungen über Zeit bei gleicher oder ähnlicher Fallbasis) braucht immer zwingenden Bezug zu einer konkreten Situation, dem vorherigen Denkstand, und muss klassifiziert werden als: durch neue Beobachtung entstanden, durch neue Perspektive entstanden oder durch Neubewertung gleicher Daten entstanden.
+22. **MUSS:** Es ist zu markieren, ob und welche Aspekte einer Beobachtung als wiederkehrend eingeschätzt werden. Wiederholung bezieht sich ausschließlich auf Teilaspekte oder Konstellationselemente, nicht auf ganze Situationen. (Beispiele für Aspekte: Interaktionsmuster, Reaktionsformen, Auslöser, Beziehungskonstellationen)
 
 Die folgenden Leitplanken sind **SOLL**:
 
 - **SOLL:** Das System soll Kontinuität über Zeit schaffen, ohne Einzelfälle zu überstimmen.
 - **SOLL:** Teams sollen differenzierter urteilen, nicht schneller verfestigen.
 - **SOLL:** Interventionen sollen nach kurzfristiger Wirkung, langfristiger Wirkung und Nebenwirkung reflektierbar sein.
+- **SOLL:** Formulierungen müssen spannungs- oder konstellationsbezogen sein, nicht eigenschaftszuschreibend. (Falsch: „Ali ist aggressiv“ / Richtig: „Spannung zeigt sich in Interaktion X unter Bedingung Y“)
 
 ## 3. Kanonische Kernobjekte
 
@@ -230,9 +249,9 @@ Spannungsatlas ist nur tragfähig, wenn Fälle auch unter Zeitdruck dokumentierb
 
 **MUSS:** V1 unterstützt zwei Modi:
 
-1. **Quick-Capture-Modus** für akute oder knappe Dokumentation  
+1. **Quick-Capture-Modus** für akute oder knappe Dokumentation
    Ziel: minimale Eingabelast bei maximaler methodischer Klarheit
-2. **Tiefenreflexions-Modus** für Fallbesprechungen, Teamreflexion oder spätere Verdichtung  
+2. **Tiefenreflexions-Modus** für Fallbesprechungen, Teamreflexion oder spätere Verdichtung
    Ziel: differenziertere Deutung, Gegenhypothesen und Verlaufseinordnung
 
 ### 7.2 Pflichtfelder vs. optionale Felder
@@ -381,6 +400,7 @@ Die Schutzmechanismen sind Produktkern, nicht Beiwerk.
 - **MUSS:** Spekulation wird sichtbar markiert.
 - **MUSS:** Epistemische Leere bleibt explizit benennbar.
 - **MUSS:** Personennahe und konstellationsnahe Muster werden getrennt markiert.
+- **MUSS:** Historische Deutungsstände bleiben nachvollziehbar (Zeit als Denkbewegung).
 
 ### 10.2 Epistemische Markierung
 
