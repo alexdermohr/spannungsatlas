@@ -4,10 +4,11 @@
 Usage: python scripts/docmeta/generate_doc_index.py
 """
 
-import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
+
+from frontmatter_utils import parse_frontmatter
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 OUTPUT = REPO_ROOT / "docs" / "_generated" / "doc-index.md"
@@ -19,47 +20,6 @@ SCAN_PATHS = [
     REPO_ROOT / "AGENTS.md",
     REPO_ROOT / "docs",
 ]
-
-
-def parse_frontmatter(filepath: Path) -> dict | None:
-    """Extract YAML frontmatter from a Markdown file."""
-    text = filepath.read_text(encoding="utf-8")
-    match = re.match(r"^---\n(.*?\n)---\n", text, re.DOTALL)
-    if not match:
-        return None
-    return _parse_simple_yaml(match.group(1))
-
-
-def _parse_simple_yaml(raw: str) -> dict:
-    """Simple YAML-subset parser for flat frontmatter."""
-    result = {}
-    current_key = None
-    current_list = None
-
-    for line in raw.splitlines():
-        stripped = line.strip()
-        if not stripped or stripped.startswith("#"):
-            continue
-        if stripped.startswith("- ") and current_key:
-            if current_list is None:
-                current_list = []
-            value = stripped[2:].strip().strip('"').strip("'")
-            current_list.append(value)
-            result[current_key] = current_list
-            continue
-        if ":" in stripped:
-            if current_list is not None:
-                current_list = None
-            colon_idx = stripped.index(":")
-            key = stripped[:colon_idx].strip()
-            value = stripped[colon_idx + 1:].strip().strip('"').strip("'")
-            current_key = key
-            if value:
-                result[key] = value
-                current_list = None
-            else:
-                current_list = None
-    return result
 
 
 def collect_files() -> list[Path]:

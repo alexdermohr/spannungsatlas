@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
 """Validate YAML frontmatter in Markdown documents against docmeta schema.
 
+Checks exactly the JSON-Schema keywords actually used in
+``contracts/docmeta.schema.json``: required, type, enum, pattern,
+minLength, format (date), items.type, and additionalProperties.
+
+No external YAML or JSON-Schema library is used.
+
 Usage: python scripts/docmeta/validate_schema.py [--strict]
 """
 
@@ -8,6 +14,8 @@ import json
 import re
 import sys
 from pathlib import Path
+
+from frontmatter_utils import parse_frontmatter
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 SCHEMA_PATH = REPO_ROOT / "contracts" / "docmeta.schema.json"
@@ -20,57 +28,8 @@ SCAN_PATHS = [
     REPO_ROOT / "docs",
 ]
 
-
-def parse_frontmatter(filepath: Path) -> dict | None:
-    """Extract YAML frontmatter from a Markdown file. Returns None if absent."""
-    text = filepath.read_text(encoding="utf-8")
-    match = re.match(r"^---\n(.*?\n)---\n", text, re.DOTALL)
-    if not match:
-        return None
-    # Minimal YAML parsing without external dependency
-    raw = match.group(1)
-    return _parse_simple_yaml(raw)
-
-
-def _parse_simple_yaml(raw: str) -> dict:
-    """Very simple YAML-subset parser for flat frontmatter."""
-    result = {}
-    current_key = None
-    current_list = None
-
-    for line in raw.splitlines():
-        stripped = line.strip()
-        if not stripped or stripped.startswith("#"):
-            continue
-
-        # List item
-        if stripped.startswith("- ") and current_key:
-            if current_list is None:
-                current_list = []
-            value = stripped[2:].strip().strip('"').strip("'")
-            current_list.append(value)
-            result[current_key] = current_list
-            continue
-
-        # Key-value pair
-        if ":" in stripped:
-            # Save any pending list
-            if current_list is not None:
-                current_list = None
-
-            colon_idx = stripped.index(":")
-            key = stripped[:colon_idx].strip()
-            value = stripped[colon_idx + 1:].strip().strip('"').strip("'")
-
-            current_key = key
-            if value:
-                result[key] = value
-                current_list = None
-            else:
-                # Might be followed by a list
-                current_list = None
-
-    return result
+# ISO-8601 date (YYYY-MM-DD) with basic calendar validity
+_ISO_DATE_RE = re.compile(r"^\d{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\d|3[01])$")
 
 
 def load_schema() -> dict:
@@ -80,16 +39,21 @@ def load_schema() -> dict:
 
 
 def validate_against_schema(meta: dict, schema: dict) -> list[str]:
-    """Basic validation of frontmatter against schema. Returns list of errors."""
-    errors = []
+    """Validate frontmatter against the project schema.
 
-    # Check required fields
+    Supports the following JSON-Schema keywords as used in the repo schema:
+    required, type (string / array), enum, pattern, minLength,
+    format: date, items.type, additionalProperties: false.
+    """
+    errors: list[str] = []
+    properties = schema.get("properties", {})
+
+    # --- required ---
     for field in schema.get("required", []):
         if field not in meta:
             errors.append(f"Missing required field: '{field}'")
 
-    # Check enum constraints
-    properties = schema.get("properties", {})
+    # --- per-field checks ---
     for key, value in meta.items():
         if key not in properties:
             if schema.get("additionalProperties") is False:
@@ -97,17 +61,59 @@ def validate_against_schema(meta: dict, schema: dict) -> list[str]:
             continue
 
         prop = properties[key]
-
-        # Enum check
-        if "enum" in prop and isinstance(value, str) and value not in prop["enum"]:
-            errors.append(f"Field '{key}': value '{value}' not in allowed values {prop['enum']}")
-
-        # Type check (basic)
         expected_type = prop.get("type")
-        if expected_type == "string" and not isinstance(value, str):
-            errors.append(f"Field '{key}': expected string, got {type(value).__name__}")
-        elif expected_type == "array" and not isinstance(value, list):
-            errors.append(f"Field '{key}': expected array, got {type(value).__name__}")
+
+        # type: string
+        if expected_type == "string":
+            if not isinstance(value, str):
+                errors.append(
+                    f"Field '{key}': expected string, got {type(value).__name__}"
+                )
+                continue  # skip further string-specific checks
+
+            # enum
+            if "enum" in prop and value not in prop["enum"]:
+                errors.append(
+                    f"Field '{key}': value '{value}' not in allowed values {prop['enum']}"
+                )
+
+            # pattern
+            if "pattern" in prop:
+                if not re.fullmatch(prop["pattern"], value):
+                    errors.append(
+                        f"Field '{key}': value '{value}' does not match pattern /{prop['pattern']}/"
+                    )
+
+            # minLength
+            if "minLength" in prop and len(value) < prop["minLength"]:
+                errors.append(
+                    f"Field '{key}': length {len(value)} is below minimum {prop['minLength']}"
+                )
+
+            # format: date  (ISO 8601 YYYY-MM-DD)
+            if prop.get("format") == "date":
+                if not _ISO_DATE_RE.fullmatch(value):
+                    errors.append(
+                        f"Field '{key}': value '{value}' is not a valid ISO date (YYYY-MM-DD)"
+                    )
+
+        # type: array
+        elif expected_type == "array":
+            if not isinstance(value, list):
+                errors.append(
+                    f"Field '{key}': expected array, got {type(value).__name__}"
+                )
+                continue
+
+            # items.type
+            items_type = prop.get("items", {}).get("type")
+            if items_type == "string":
+                for idx, item in enumerate(value):
+                    if not isinstance(item, str):
+                        errors.append(
+                            f"Field '{key}[{idx}]': expected string item, "
+                            f"got {type(item).__name__}"
+                        )
 
     return errors
 

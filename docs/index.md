@@ -54,4 +54,5 @@ last_reviewed: "2026-03-28"
 | [Dokumenten-Index](_generated/doc-index.md) | Automatisch generierter Index aller Dokumente mit Frontmatter |
 | [Backlinks](_generated/backlinks.md) | Querverweise zwischen Dokumenten |
 | [Orphans](_generated/orphans.md) | Verwaiste Dokumente ohne Verlinkung |
+| [Schwach eingebunden](_generated/weak-links.md) | Dokumente, die nur navigativ eingebunden sind |
 | [System-Map](_generated/system-map.md) | Strukturübersicht des Repos |
