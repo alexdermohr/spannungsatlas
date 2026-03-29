@@ -1,5 +1,5 @@
 /**
- * Domain guards — validation functions enforcing documented product invariants.
+ * Domain guards — structural and formal validation for Spannungsatlas domain objects.
  *
  * Sources:
  *   - MASTERPLAN.md §2 Produktinvarianten
@@ -7,6 +7,23 @@
  *
  * Each guard returns a string error message on failure, or undefined on success.
  * This makes guards composable and easy to aggregate.
+ *
+ * WHAT THESE GUARDS ENFORCE (formal/structural):
+ *   - Required text fields are non-empty.
+ *   - Observation text and interpretation text are not textually identical.
+ *   - Interpretation text and counter-interpretation text are not textually identical.
+ *   - UncertaintyLevel is an integer in [0, 5].
+ *   - Uncertainty rationale is non-empty.
+ *   - Participants list is non-empty.
+ *   - TensionEdge direction is one of the two allowed enum values.
+ *   - Revision holds both `from` and `to` snapshots.
+ *
+ * WHAT THESE GUARDS DO NOT ENFORCE (semantic, requires future work):
+ *   - Whether observation text is genuinely camera-describable (MASTERPLAN §2 #19).
+ *   - Whether an interpretation is consistent with its declared EvidenceType.
+ *   - Whether a counter-interpretation provides a genuinely alternative explanation,
+ *     not just a superficial reformulation (MASTERPLAN §2 #20).
+ *   - Whether text uses essentialising or property-ascribing language (MASTERPLAN §2 #16).
  */
 
 import type {
@@ -35,7 +52,9 @@ function isNonEmptyString(value: unknown): value is string {
 }
 
 // ---------------------------------------------------------------------------
-// Observation guards (MASTERPLAN §2 #1, #19)
+// Observation guards
+// Enforced: text is non-empty (MASTERPLAN §2 #1 requires observation to exist).
+// NOT enforced: camera-describability of content (MASTERPLAN §2 #19 — semantic).
 // ---------------------------------------------------------------------------
 
 /** Observation text must not be empty. */
@@ -47,7 +66,9 @@ export function guardObservationText(text: string): GuardResult {
 }
 
 // ---------------------------------------------------------------------------
-// Interpretation guards (MASTERPLAN §2 #16, #17)
+// Interpretation guards
+// Enforced: text fields are non-empty (MASTERPLAN §2 #16, #17).
+// NOT enforced: EvidenceType consistency with observation content (semantic).
 // ---------------------------------------------------------------------------
 
 /** Interpretation text must not be empty. */
@@ -67,31 +88,34 @@ export function guardCounterInterpretationText(text: string): GuardResult {
 }
 
 /**
- * Interpretation and counter-interpretation must not be identical.
- * A true counter-interpretation provides a genuine alternative explanation
- * (MASTERPLAN §2 #20).
+ * Checks that interpretation and counter-interpretation texts are not textually
+ * identical (trimmed). This is a minimal formal guard: it does not verify that
+ * the counter-interpretation provides a genuinely alternative explanation
+ * (MASTERPLAN §2 #20 — semantic check, not yet implemented).
  */
 export function guardInterpretationsDistinct(
   interpretation: Interpretation,
   counterInterpretation: Interpretation,
 ): GuardResult {
   if (interpretation.text.trim() === counterInterpretation.text.trim()) {
-    return "Interpretation and counter-interpretation must not be identical.";
+    return "Interpretation text and counter-interpretation text must not be textually identical.";
   }
   return undefined;
 }
 
 /**
- * Observation text and interpretation text must not be identical.
- * Enforces the strict separation of observation and interpretation
- * (MASTERPLAN §2 #1).
+ * Checks that observation text and interpretation text are not textually
+ * identical (trimmed). This is a minimal formal guard supporting the
+ * observation/interpretation separation required by MASTERPLAN §2 #1.
+ * It does not verify semantic separation — an interpretation that paraphrases
+ * the observation in different words will pass this guard.
  */
 export function guardObservationInterpretationDistinct(
   observation: Observation,
   interpretation: Interpretation,
 ): GuardResult {
   if (observation.text.trim() === interpretation.text.trim()) {
-    return "Observation and interpretation must not be identical.";
+    return "Observation text and interpretation text must not be textually identical.";
   }
   return undefined;
 }

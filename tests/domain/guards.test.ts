@@ -279,3 +279,48 @@ describe("guardCase", () => {
     expect(errors.length).toBeGreaterThanOrEqual(3);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Calibration tests — document what the guards DO and DO NOT check
+//
+// These tests make the actual guarantee level explicit. They are not about
+// desired future behaviour; they document the current, honest state.
+// ---------------------------------------------------------------------------
+
+describe("formal guarantee boundary — observation text guard", () => {
+  it("accepts observation text that contains interpretive language (no semantic check)", () => {
+    // guardObservationText only checks non-emptiness.
+    // Whether the text is genuinely camera-describable is NOT verified.
+    expect(guardObservationText("Ali ist aggressiv.")).toBeUndefined();
+  });
+});
+
+describe("formal guarantee boundary — observation/interpretation non-identity", () => {
+  it("accepts an interpretation that paraphrases the observation in different words", () => {
+    // Only textual identity is blocked, not semantic overlap.
+    const obs: Observation = {
+      text: "Kind schlägt mit der Hand auf den Tisch.",
+      isCameraDescribable: true,
+    };
+    const interp: Interpretation = {
+      text: "Das Kind schlug mit seiner Hand auf den Tisch.", // paraphrase, not identical
+      evidenceType: "observational",
+    };
+    expect(guardObservationInterpretationDistinct(obs, interp)).toBeUndefined();
+  });
+});
+
+describe("formal guarantee boundary — interpretations non-identity", () => {
+  it("accepts a counter-interpretation that is similar but not textually identical", () => {
+    // Only exact textual identity is blocked — a superficial reformulation passes.
+    const interp: Interpretation = {
+      text: "Das Kind zeigt körperliche Anspannung.",
+      evidenceType: "observational",
+    };
+    const counter: Interpretation = {
+      text: "Das Kind zeigt körperliche Anspannung und sucht Aufmerksamkeit.",
+      evidenceType: "derived",
+    };
+    expect(guardInterpretationsDistinct(interp, counter)).toBeUndefined();
+  });
+});

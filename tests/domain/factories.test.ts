@@ -79,6 +79,16 @@ describe("createObservation", () => {
     expect(obs.isCameraDescribable).toBe(true);
   });
 
+  it("accepts isCameraDescribable: false — no semantic check is performed", () => {
+    // isCameraDescribable is user-supplied metadata; the system does not verify
+    // whether the text is actually camera-describable.
+    const obs = createObservation({
+      text: "Kind schlägt mit der Hand auf den Tisch.",
+      isCameraDescribable: false,
+    });
+    expect(obs.isCameraDescribable).toBe(false);
+  });
+
   it("throws on empty text", () => {
     expect(() => createObservation({ text: "" })).toThrow();
   });

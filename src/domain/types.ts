@@ -1,12 +1,30 @@
 /**
- * Canonical domain types for Spannungsatlas.
+ * Canonical domain types for Spannungsatlas — Reflexionskern (reflection core).
  *
  * Derived from:
  *   - docs/ux-ui-blaupause.md §7 "Minimal sinnvolles Datenmodell"
  *   - MASTERPLAN.md §2 Produktinvarianten
  *
- * Only types documented in those sources are included.
- * No speculative additions.
+ * SCOPE NOTE — deliberate phase cut:
+ * The UX-Blaupause §7 data model also defines types for the exploration layer:
+ * Need, Determinant, NeedSelection, DeterminantSelection.
+ * These are intentionally NOT included here. They belong to a later phase
+ * (Explorationsraum, UX-Blaupause §2 "Ebene A") and depend on a separate
+ * catalog structure. Absence is intentional, not accidental.
+ *
+ * What is enforced by the accompanying guards (guards.ts):
+ *   - Structural/formal constraints: non-empty required fields, value ranges,
+ *     enum membership, presence of mandatory sub-objects.
+ *   - Textual non-identity between observation, interpretation, and
+ *     counter-interpretation texts.
+ *
+ * What is NOT enforced — requires future semantic or NLP-based checks:
+ *   - Camera-describability of observation text (MASTERPLAN §2 #19).
+ *   - Whether an interpretation is genuinely observational vs. speculative
+ *     beyond the user-declared EvidenceType.
+ *   - Whether a counter-interpretation provides a genuine alternative
+ *     explanation rather than a mere reformulation (MASTERPLAN §2 #20).
+ *   - Absence of essentialising language in any text field.
  */
 
 // ---------------------------------------------------------------------------
@@ -42,7 +60,12 @@ export interface CaseParticipant {
 }
 
 /**
- * A purely descriptive observation — "camera-describable" (MASTERPLAN §2 #19).
+ * A descriptive observation of a situation.
+ *
+ * The field `isCameraDescribable` is a user-supplied flag indicating whether
+ * the author considers the text to be camera-describable (MASTERPLAN §2 #19).
+ * The system does NOT verify this claim — no semantic or linguistic check is
+ * performed on the text. The flag is structural metadata only.
  */
 export interface Observation {
   readonly text: string;

@@ -1,13 +1,16 @@
 /**
- * Factory functions for canonical domain objects.
+ * Factory functions for canonical domain objects — Reflexionskern (reflection core).
  *
  * Every factory validates its input through the corresponding guards
- * so that only valid objects can be constructed. Invalid input causes
- * a thrown Error with a descriptive message.
+ * so that only structurally valid objects can be constructed. Invalid input
+ * causes a thrown Error with a descriptive message.
  *
  * Sources:
  *   - docs/ux-ui-blaupause.md §7
  *   - MASTERPLAN.md §2 Produktinvarianten
+ *
+ * See guards.ts for the distinction between what IS formally enforced and
+ * what is NOT yet enforced (semantic/linguistic checks).
  */
 
 import type {
@@ -68,6 +71,8 @@ export interface CreateObservationInput {
 export function createObservation(input: CreateObservationInput): Observation {
   throwIfError(guardObservationText(input.text));
 
+  // isCameraDescribable is a user-supplied flag. The system does not verify
+  // whether the text is genuinely camera-describable. Defaults to true if omitted.
   return {
     text: input.text,
     isCameraDescribable: input.isCameraDescribable ?? true,
