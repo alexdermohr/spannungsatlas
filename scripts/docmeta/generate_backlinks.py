@@ -66,8 +66,8 @@ def extract_links(filepath: Path) -> list[str]:
             rel = resolved.relative_to(REPO_ROOT).as_posix()
         except ValueError:
             continue
-        # Only keep targets that actually exist in the repo
-        if resolved.exists():
+        # Only keep targets that actually exist as files in the repo
+        if resolved.exists() and resolved.is_file():
             links.append(rel)
     return links
 
