@@ -36,7 +36,7 @@ Voraussetzung: Node.js ≥ 20.19 (siehe `.nvmrc`).
 ```bash
 npm install          # Abhängigkeiten installieren (Root + apps/web)
 npm run typecheck    # Domain-Typecheck (tsc --noEmit)
-npm run test         # Domain-Tests (vitest, 131 Tests)
+npm run test         # Domain-Tests (vitest)
 npm run check:web    # SvelteKit-Typecheck (svelte-check)
 npm run build:web    # Web-App bauen (Vite + Vercel-Adapter)
 npm run verify       # Gesamtprüfung: typecheck → test → check:web → build:web
