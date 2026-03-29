@@ -250,6 +250,19 @@ describe("createTensionEdge", () => {
       }),
     ).toThrow(/timestamp/i);
   });
+
+  it("throws when timestamp is an empty string", () => {
+    expect(() =>
+      createTensionEdge({
+        source: "child",
+        target: "teacher",
+        label: "Druck",
+        context: "Klassenraum",
+        direction: "unidirectional",
+        timestamp: "",
+      }),
+    ).toThrow(/timestamp/i);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -492,5 +505,11 @@ describe("createCase", () => {
         },
       }),
     ).toThrow(/rationale/i);
+  });
+
+  it("throws when observedAt is an empty string", () => {
+    expect(() =>
+      createCase({ ...validCaseInput(), observedAt: "" }),
+    ).toThrow(/observedAt/i);
   });
 });

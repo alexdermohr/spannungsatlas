@@ -150,7 +150,7 @@ export function createTensionEdge(input: CreateTensionEdgeInput): TensionEdge {
     label: input.label,
     context: input.context,
     direction: input.direction,
-    ...(input.timestamp ? { timestamp: input.timestamp } : {}),
+    ...(input.timestamp !== undefined ? { timestamp: input.timestamp } : {}),
   };
   throwIfErrors(guardTensionEdgeFields(edge));
   return edge;
@@ -261,7 +261,7 @@ export function createCase(input: CreateCaseInput): Case {
     id: input.id,
     participants: [...input.participants],
     context: input.context,
-    ...(input.observedAt ? { observedAt: input.observedAt } : {}),
+    ...(input.observedAt !== undefined ? { observedAt: input.observedAt } : {}),
     observation,
     currentReflection,
     revisions,
