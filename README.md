@@ -8,6 +8,7 @@ summary: "Repo-Einstieg mit Kurzbeschreibung und Verweis auf das kanonische Prod
 related_docs:
   - masterplan
   - deploy-blaupause
+  - roadmap
 last_reviewed: "2026-03-29"
 ---
 
@@ -18,6 +19,44 @@ Spannungsatlas ist ein pädagogisches Dokumentations-, Reflexions- und Vordiagno
 Das kanonische Produktdokument für dieses Repository liegt in [`MASTERPLAN.md`](./MASTERPLAN.md).
 
 Eine geordnete Übersicht aller Dokumente findet sich im [Dokumentationsindex](./docs/index.md).
+
+## Was Spannungsatlas nicht ist
+
+- **Kein Diagnosetool** — es erzeugt keine klinischen oder psychiatrischen Diagnosen
+- **Kein Bewertungssystem** — Profile sind revidierbare Arbeitsprofile, keine Urteile über Personen
+- **Kein Wahrheitsautomat** — Deutungen bleiben als vorläufige Denkstände markiert; Unsicherheit ist kein Fehler, sondern ein Pflichtfeld
+- **Kein Entscheidungssystem für Ad-hoc-Situationen** — das System ist für nachträgliche Reflexion, provisorische Hypothesenbildung und planende Rekonstruktion
+
+Stattdessen: ein Reflexions- und Dokumentationssystem mit sichtbarer Unsicherheit, Pflicht zur Gegen-Deutung und revisionsfähiger Arbeitsverdichtung.
+
+## Kernprinzipien
+
+- Beobachtung und Deutung werden strikt getrennt dokumentiert
+- Gegen-Deutung ist Pflicht, keine Option
+- Unsicherheit bleibt sichtbar — Datenlücken und offene Fragen sind kein Mangel
+- Profile sind revidierbare Arbeitsprofile, keine stabilen Wesensbeschreibungen
+- Konstellationsanalyse ist Pflichtgegengewicht gegen vorschnelle Wesenserklärung
+
+## Minimaler Arbeitsablauf
+
+Der aktuelle Systemstand unterstützt folgenden Ablauf:
+
+1. **Fall anlegen** — Person, Datum, Kontext festhalten
+2. **Beobachtung dokumentieren** — rein beschreibend, kameraähnlich
+3. **Deutung formulieren** — Hypothese mit Evidenztyp (beobachtungsnah / abgeleitet / spekulativ)
+4. **Gegen-Deutung formulieren** — alternative Erklärung zur selben Beobachtung
+5. **Unsicherheit begründen** — Datenlücken, offene Fragen, Begrenzungen der Einschätzung
+6. **Fallansicht prüfen** — erfasste Elemente in der Fallübersicht kontrollieren
+
+## Architektur auf einen Blick
+
+| Schicht | Inhalt |
+|---------|--------|
+| `src/domain/` | Produktkern: Typen, Guards, Factories, epistemische Regeln |
+| `apps/web/` | SvelteKit-Webschicht mit Vercel-Adapter |
+| Persistenz | Local-first via `localStorage` (Schlüssel: `spannungsatlas-cases`) |
+
+Noch nicht implementiert: zentrale Persistenz, API, Authentifizierung, Rollen-/Rechtelogik, Export, Auditierbarkeit (vorgesehen für spätere Phasen laut [`docs/deploy-blaupause.md`](./docs/deploy-blaupause.md)).
 
 ## Aktueller Implementationsstand
 
@@ -42,3 +81,11 @@ npm run build:web    # Web-App bauen (Vite + Vercel-Adapter)
 npm run verify       # Gesamtprüfung: typecheck → test → check:web → build:web
 npm run dev          # Lokaler Entwicklungsserver (SvelteKit)
 ```
+
+## Dokumentationsverweise
+
+- [`MASTERPLAN.md`](./MASTERPLAN.md) — Kanonisches Produktdokument
+- [`docs/roadmap.md`](./docs/roadmap.md) — Ausbauplan nach Phase 0/1
+- [`docs/ux-ui-blaupause.md`](./docs/ux-ui-blaupause.md) — UX/UI-Konzept
+- [`docs/deploy-blaupause.md`](./docs/deploy-blaupause.md) — Architektur und Deploy-Strategie
+- [`docs/index.md`](./docs/index.md) — Dokumentationsübersicht
