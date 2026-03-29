@@ -9,6 +9,7 @@ related_docs:
   - masterplan
   - ux-ui-blaupause
   - icf-integration-blaupause
+  - roadmap
 last_reviewed: "2026-03-29"
 ---
 
@@ -41,6 +42,12 @@ last_reviewed: "2026-03-29"
 | Dokument | Beschreibung |
 |----------|-------------|
 | [ICF-Integrations-Blaupause](icf-integration-blaupause.md) | Konzeptionelle Integration von icf-tool in den Spannungsatlas |
+
+## Planung
+
+| Dokument | Beschreibung |
+|----------|-------------|
+| [Ausbauplan nach Phase 0/1](roadmap.md) | Geordneter Ausbaupfad, orientiert am bestehenden Produktkanon (informational) |
 
 ## Web-Anwendung
 
