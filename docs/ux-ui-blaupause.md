@@ -8,7 +8,7 @@ summary: "Konzeptionelle UX/UI-Prinzipien, Ebenen, Nutzerfluss und Informationsa
 related_docs:
   - masterplan
   - icf-integration-blaupause
-last_reviewed: "2026-03-28"
+last_reviewed: "2026-03-29"
 ---
 
 > **Hinweis:** Dieses Dokument ist ein konzeptionelles UX/UI-Leitdokument. Bei Konflikten gilt der kanonische Produktmasterplan in `MASTERPLAN.md`.
@@ -119,6 +119,8 @@ Zonen müssen in zwingender Reihenfolge durchlaufen werden. Die Übergänge sind
 - **profiles:** Spannungsprofil, (später: Konstellationsprofil).
 
 ## 7. Minimal sinnvolles Datenmodell
+
+> **Phasenschnitt:** Dieses Datenmodell ist das **Zielmodell des vollständigen Spannungsatlas-Datenmodells**. Der aktuell implementierte Code (siehe `src/domain/types.ts`) bildet davon nur den **Phase-1-Reflexionskern** ab: `Case`, `ReflectionSnapshot` (ohne `selectedNeeds`/`selectedDeterminants`), `Observation`, `Interpretation`, `Uncertainty`, `TensionEdge`, `Revision`, `CaseParticipant`. Die Typen des Explorationsraums (`Need`, `Determinant`, `NeedSelection`, `DeterminantSelection`) sowie die Selektionsfelder in `ReflectionSnapshot` gehören zu **Phase 2** und sind noch nicht implementiert.
 
 ```typescript
 type EvidenceType = "observational" | "derived" | "speculative";
