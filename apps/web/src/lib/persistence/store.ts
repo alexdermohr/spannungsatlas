@@ -10,8 +10,12 @@ export interface PersistenceStore {
 
 const STORAGE_KEY = 'spannungsatlas-cases';
 
+function isStorageAvailable(): boolean {
+  return typeof localStorage !== 'undefined';
+}
+
 function readCases(): Case[] {
-  if (typeof localStorage === 'undefined') return [];
+  if (!isStorageAvailable()) return [];
   const raw = localStorage.getItem(STORAGE_KEY);
   if (!raw) return [];
   try {
@@ -23,7 +27,7 @@ function readCases(): Case[] {
 }
 
 function writeCases(cases: Case[]): void {
-  if (typeof localStorage === 'undefined') return;
+  if (!isStorageAvailable()) return;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(cases));
 }
 

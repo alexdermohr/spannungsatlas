@@ -83,7 +83,7 @@
       goto(`/cases/${created.id}`);
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
-      errors = [`Validierungsfehler: ${msg}`];
+      errors = [msg];
       submitting = false;
     }
   }
