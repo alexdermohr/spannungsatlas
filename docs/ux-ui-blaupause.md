@@ -120,7 +120,7 @@ Zonen müssen in zwingender Reihenfolge durchlaufen werden. Die Übergänge sind
 
 ## 7. Minimal sinnvolles Datenmodell
 
-> **Phasenschnitt:** Dieses Datenmodell beschreibt den vollständigen Mehrphasenzustand (Zielmodell). Der aktuell implementierte Code bildet davon nur den **Phase-1-Reflexionskern** ab: `Case`, `ReflectionSnapshot` (ohne `selectedNeeds`/`selectedDeterminants`), `Observation`, `Interpretation`, `Uncertainty`, `TensionEdge`, `Revision`, `CaseParticipant`. Die Typen des Explorationsraums (`Need`, `Determinant`, `NeedSelection`, `DeterminantSelection`) sowie die Selektionsfelder in `ReflectionSnapshot` gehören zu **Phase 2** und sind noch nicht implementiert.
+> **Phasenschnitt:** Dieses Datenmodell ist das **Zielmodell des vollständigen Spannungsatlas-Datenmodells**. Der aktuell implementierte Code (siehe `src/domain/types.ts`) bildet davon nur den **Phase-1-Reflexionskern** ab: `Case`, `ReflectionSnapshot` (ohne `selectedNeeds`/`selectedDeterminants`), `Observation`, `Interpretation`, `Uncertainty`, `TensionEdge`, `Revision`, `CaseParticipant`. Die Typen des Explorationsraums (`Need`, `Determinant`, `NeedSelection`, `DeterminantSelection`) sowie die Selektionsfelder in `ReflectionSnapshot` gehören zu **Phase 2** und sind noch nicht implementiert.
 
 ```typescript
 type EvidenceType = "observational" | "derived" | "speculative";

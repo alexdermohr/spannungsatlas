@@ -20,6 +20,6 @@ Eine geordnete Übersicht aller Dokumente findet sich im [Dokumentationsindex](.
 
 ## Aktueller Implementationsstand
 
-Implementiert ist der **Phase-1-Reflexionskern**: Domain-Typen, Guards, Factories und Tests in `src/domain/` (siehe [`src/domain/types.ts`](./src/domain/types.ts)).
+Implementiert ist der **Phase-1-Reflexionskern**: Domain-Typen sowie zugehörige Guards und Factories in `src/domain/` (siehe [`src/domain/types.ts`](./src/domain/types.ts)).
 
 Noch nicht implementiert ist der **Phase-2-Explorationsraum**: Bedürfnis- und Determinantenkatalog, Clusterstruktur, Selektionsfelder und UI-Schichten. Das Zieldatenmodell dafür ist in [`docs/ux-ui-blaupause.md §7`](./docs/ux-ui-blaupause.md) beschrieben.
