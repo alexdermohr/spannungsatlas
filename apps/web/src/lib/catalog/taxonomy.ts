@@ -10,10 +10,15 @@
  * These layers MUST NOT be conflated (MASTERPLAN §9.1 Trennregel).
  */
 
+/** A single entry in the V1 taxonomy (MASTERPLAN §9). */
 export interface TaxonomyItem {
+  /** Unique machine-readable identifier, e.g. 'need-security'. */
   readonly id: string;
+  /** Human-readable short name displayed in the catalog. */
   readonly label: string;
+  /** Explanatory text describing the concept in pedagogical context. */
   readonly description: string;
+  /** Illustrative examples — not exhaustive, intended as reflection prompts. */
   readonly examples?: readonly string[];
 }
 

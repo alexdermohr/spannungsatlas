@@ -106,7 +106,7 @@
 
   function addTension() {
     tensions = [...tensions, {
-      source: participantName || '',
+      source: participantName.trim() || '',
       target: '',
       label: '',
       context: '',
@@ -129,7 +129,17 @@
       }
     }
 
-    // Validate tensions if any
+    // Validate tensions: warn about incomplete entries
+    const incompleteTensions = tensions.filter(t => {
+      const hasAny = t.source.trim() || t.target.trim() || t.label.trim() || t.context.trim();
+      const hasAll = t.source.trim() && t.target.trim() && t.label.trim() && t.context.trim();
+      return hasAny && !hasAll;
+    });
+    if (incompleteTensions.length > 0) {
+      errors = ['Unvollständige Spannungen: Bitte füllen Sie alle Felder aus oder entfernen Sie unvollständige Einträge.'];
+      return;
+    }
+
     const validTensions = tensions.filter(t =>
       t.source.trim() && t.target.trim() && t.label.trim() && t.context.trim()
     );
