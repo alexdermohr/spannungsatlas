@@ -9,6 +9,7 @@ related_docs:
   - masterplan
   - ux-ui-blaupause
   - icf-integration-blaupause
+  - roadmap
 last_reviewed: "2026-03-29"
 ---
 
@@ -30,6 +31,12 @@ last_reviewed: "2026-03-29"
 |----------|-------------|
 | [Deploy-Blaupause mit Vercel](deploy-blaupause.md) | Architektur-Entscheidung: Vercel für UI, Entkopplung des Produktkerns |
 
+## Planung
+
+| Dokument | Beschreibung |
+|----------|-------------|
+| [Roadmap / Ausbauplan](roadmap.md) | Geordneter Ausbaupfad nach Phase 0/1, orientiert am bestehenden Produktkanon |
+
 ## UX / UI
 
 | Dokument | Beschreibung |
@@ -41,6 +48,12 @@ last_reviewed: "2026-03-29"
 | Dokument | Beschreibung |
 |----------|-------------|
 | [ICF-Integrations-Blaupause](icf-integration-blaupause.md) | Konzeptionelle Integration von icf-tool in den Spannungsatlas |
+
+## Web-Anwendung
+
+| Pfad | Beschreibung |
+|------|-------------|
+| [apps/web/](../apps/web/) | SvelteKit-Webschicht (Vercel-Adapter, local-first, konsumiert `src/domain/`) |
 
 ## Repo-Struktur / Meta
 

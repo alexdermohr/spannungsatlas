@@ -3,8 +3,17 @@
   "version": "0.1.0",
   "private": true,
   "description": "Pädagogisches Reflexions- und Dokumentationssystem",
+  "workspaces": ["apps/web"],
+  "engines": {
+    "node": ">=20.19.0"
+  },
   "scripts": {
-    "build": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "build:web": "npm run build --workspace=apps/web",
+    "check:web": "npm run check --workspace=apps/web",
+    "build": "npm run typecheck && npm run check:web && npm run build:web",
+    "verify": "npm run typecheck && npm run test && npm run check:web && npm run build:web",
+    "dev": "npm run dev --workspace=apps/web",
     "test": "vitest run",
     "test:watch": "vitest"
   },
