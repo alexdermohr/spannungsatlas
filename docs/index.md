@@ -42,6 +42,12 @@ last_reviewed: "2026-03-29"
 |----------|-------------|
 | [ICF-Integrations-Blaupause](icf-integration-blaupause.md) | Konzeptionelle Integration von icf-tool in den Spannungsatlas |
 
+## Web-Anwendung
+
+| Pfad | Beschreibung |
+|------|-------------|
+| [apps/web/](../apps/web/) | SvelteKit-Webschicht (Vercel-Adapter, local-first, konsumiert `src/domain/`) |
+
 ## Repo-Struktur / Meta
 
 | Dokument | Beschreibung |
