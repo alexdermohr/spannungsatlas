@@ -8,7 +8,11 @@ import {
   guardUncertaintyLevel,
   guardUncertaintyRationale,
   guardParticipantsNotEmpty,
+  guardParticipantId,
+  guardParticipantRole,
   guardTensionDirection,
+  guardTensionEdgeFields,
+  guardIsoDateString,
   guardRevisionFromTo,
   guardReflectionSnapshot,
   guardCase,
@@ -17,6 +21,7 @@ import type {
   Interpretation,
   Observation,
   ReflectionSnapshot,
+  TensionEdge,
 } from "../../src/domain/types.js";
 
 // ---------------------------------------------------------------------------
@@ -190,6 +195,70 @@ describe("guardParticipantsNotEmpty", () => {
 });
 
 // ---------------------------------------------------------------------------
+// CaseParticipant id / role guards
+// ---------------------------------------------------------------------------
+
+describe("guardParticipantId", () => {
+  it("accepts non-empty id", () => {
+    expect(guardParticipantId("p1")).toBeUndefined();
+  });
+
+  it("rejects empty id", () => {
+    expect(guardParticipantId("")).toBeDefined();
+  });
+
+  it("rejects whitespace-only id", () => {
+    expect(guardParticipantId("   ")).toBeDefined();
+  });
+});
+
+describe("guardParticipantRole", () => {
+  it.each(["primary", "secondary", "staff", "contextual"])(
+    'accepts role "%s"',
+    (role) => {
+      expect(guardParticipantRole(role)).toBeUndefined();
+    },
+  );
+
+  it("rejects unknown role", () => {
+    expect(guardParticipantRole("admin")).toBeDefined();
+  });
+
+  it("rejects empty role string", () => {
+    expect(guardParticipantRole("")).toBeDefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Date/time guard
+// ---------------------------------------------------------------------------
+
+describe("guardIsoDateString", () => {
+  it("accepts a full ISO 8601 datetime string", () => {
+    expect(
+      guardIsoDateString("2026-03-28T10:00:00Z", "someField"),
+    ).toBeUndefined();
+  });
+
+  it("accepts a date-only ISO 8601 string", () => {
+    expect(guardIsoDateString("2026-03-28", "someField")).toBeUndefined();
+  });
+
+  it("rejects a non-date string", () => {
+    expect(guardIsoDateString("not-a-date", "someField")).toBeDefined();
+  });
+
+  it("rejects an empty string", () => {
+    expect(guardIsoDateString("", "someField")).toBeDefined();
+  });
+
+  it("includes the field name in the error message", () => {
+    const result = guardIsoDateString("garbage", "reflectedAt");
+    expect(result).toMatch(/reflectedAt/);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // TensionEdge guard
 // ---------------------------------------------------------------------------
 
@@ -204,6 +273,66 @@ describe("guardTensionDirection", () => {
 
   it("rejects invalid direction", () => {
     expect(guardTensionDirection("lateral")).toBeDefined();
+  });
+});
+
+describe("guardTensionEdgeFields", () => {
+  function validEdge(): TensionEdge {
+    return {
+      source: "child",
+      target: "teacher",
+      label: "Druck",
+      context: "Klassenraum",
+      direction: "unidirectional",
+    };
+  }
+
+  it("returns no errors for a valid edge", () => {
+    expect(guardTensionEdgeFields(validEdge())).toHaveLength(0);
+  });
+
+  it("returns an error when source is empty", () => {
+    const errors = guardTensionEdgeFields({ ...validEdge(), source: "" });
+    expect(errors.some((e) => /source/i.test(e))).toBe(true);
+  });
+
+  it("returns an error when target is empty", () => {
+    const errors = guardTensionEdgeFields({ ...validEdge(), target: "  " });
+    expect(errors.some((e) => /target/i.test(e))).toBe(true);
+  });
+
+  it("returns an error when label is empty", () => {
+    const errors = guardTensionEdgeFields({ ...validEdge(), label: "" });
+    expect(errors.some((e) => /label/i.test(e))).toBe(true);
+  });
+
+  it("returns an error when context is empty", () => {
+    const errors = guardTensionEdgeFields({ ...validEdge(), context: "" });
+    expect(errors.some((e) => /context/i.test(e))).toBe(true);
+  });
+
+  it("returns an error when direction is invalid", () => {
+    const errors = guardTensionEdgeFields({
+      ...validEdge(),
+      direction: "lateral" as any,
+    });
+    expect(errors.some((e) => /direction/i.test(e))).toBe(true);
+  });
+
+  it("returns an error when timestamp is not a parseable date", () => {
+    const errors = guardTensionEdgeFields({
+      ...validEdge(),
+      timestamp: "not-a-date",
+    });
+    expect(errors.some((e) => /timestamp/i.test(e))).toBe(true);
+  });
+
+  it("accepts a valid optional timestamp", () => {
+    const errors = guardTensionEdgeFields({
+      ...validEdge(),
+      timestamp: "2026-03-28T10:00:00Z",
+    });
+    expect(errors).toHaveLength(0);
   });
 });
 
@@ -277,6 +406,38 @@ describe("guardCase", () => {
       revisions: [],
     });
     expect(errors.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it("returns an error for a participant with an empty id", () => {
+    const errors = guardCase({
+      participants: [{ id: "" }],
+      observation: validObservation(),
+      currentReflection: validSnapshot(),
+      revisions: [],
+    });
+    expect(errors.some((e) => /id/i.test(e))).toBe(true);
+  });
+
+  it("returns an error for an invalid observedAt date", () => {
+    const errors = guardCase({
+      participants: [{ id: "p1" }],
+      observation: validObservation(),
+      currentReflection: validSnapshot(),
+      revisions: [],
+      observedAt: "not-a-date",
+    });
+    expect(errors.some((e) => /observedAt/i.test(e))).toBe(true);
+  });
+
+  it("returns no error when observedAt is a valid date string", () => {
+    const errors = guardCase({
+      participants: [{ id: "p1" }],
+      observation: validObservation(),
+      currentReflection: validSnapshot(),
+      revisions: [],
+      observedAt: "2026-03-28T08:15:00Z",
+    });
+    expect(errors).toHaveLength(0);
   });
 });
 

@@ -74,9 +74,9 @@ describe("createObservation", () => {
     expect(obs.isCameraDescribable).toBe(true);
   });
 
-  it("defaults isCameraDescribable to true", () => {
+  it("defaults isCameraDescribable to false (safe, non-assertive default)", () => {
     const obs = createObservation({ text: "Beobachtung" });
-    expect(obs.isCameraDescribable).toBe(true);
+    expect(obs.isCameraDescribable).toBe(false);
   });
 
   it("accepts isCameraDescribable: false — no semantic check is performed", () => {
@@ -166,6 +166,7 @@ describe("createTensionEdge", () => {
       direction: "unidirectional",
     });
     expect(edge.direction).toBe("unidirectional");
+    expect(edge.source).toBe("child");
   });
 
   it("throws on invalid direction", () => {
@@ -178,6 +179,67 @@ describe("createTensionEdge", () => {
         direction: "invalid" as any,
       }),
     ).toThrow(/direction/i);
+  });
+
+  it("throws when source is empty", () => {
+    expect(() =>
+      createTensionEdge({
+        source: "",
+        target: "teacher",
+        label: "Druck",
+        context: "Klassenraum",
+        direction: "unidirectional",
+      }),
+    ).toThrow(/source/i);
+  });
+
+  it("throws when target is empty", () => {
+    expect(() =>
+      createTensionEdge({
+        source: "child",
+        target: "  ",
+        label: "Druck",
+        context: "Klassenraum",
+        direction: "unidirectional",
+      }),
+    ).toThrow(/target/i);
+  });
+
+  it("throws when label is empty", () => {
+    expect(() =>
+      createTensionEdge({
+        source: "child",
+        target: "teacher",
+        label: "",
+        context: "Klassenraum",
+        direction: "unidirectional",
+      }),
+    ).toThrow(/label/i);
+  });
+
+  it("throws when context is empty", () => {
+    expect(() =>
+      createTensionEdge({
+        source: "child",
+        target: "teacher",
+        label: "Druck",
+        context: "",
+        direction: "unidirectional",
+      }),
+    ).toThrow(/context/i);
+  });
+
+  it("throws when timestamp is not a parseable date", () => {
+    expect(() =>
+      createTensionEdge({
+        source: "child",
+        target: "teacher",
+        label: "Druck",
+        context: "Klassenraum",
+        direction: "unidirectional",
+        timestamp: "not-a-date",
+      }),
+    ).toThrow(/timestamp/i);
   });
 });
 
@@ -222,6 +284,15 @@ describe("createReflectionSnapshot", () => {
         counterInterpretation: { text: "", evidenceType: "derived" },
       }),
     ).toThrow();
+  });
+
+  it("throws when reflectedAt is not a parseable date", () => {
+    expect(() =>
+      createReflectionSnapshot({
+        ...validReflectionSnapshotInput(),
+        reflectedAt: "not-a-date",
+      }),
+    ).toThrow(/reflectedAt/i);
   });
 });
 
@@ -278,6 +349,19 @@ describe("createRevision", () => {
         to: null as any,
       }),
     ).toThrow();
+  });
+
+  it("throws when Revision.at is not a parseable date", () => {
+    const snap = createReflectionSnapshot(validReflectionSnapshotInput());
+    expect(() =>
+      createRevision({
+        at: "not-a-date",
+        driftType: "new_observation",
+        reason: "reason",
+        from: snap,
+        to: snap,
+      }),
+    ).toThrow(/Revision\.at/i);
   });
 });
 

@@ -36,7 +36,8 @@ import {
   guardUncertaintyLevel,
   guardUncertaintyRationale,
   guardParticipantsNotEmpty,
-  guardTensionDirection,
+  guardTensionEdgeFields,
+  guardIsoDateString,
   guardRevisionFromTo,
   guardReflectionSnapshot,
   guardCase,
@@ -72,10 +73,11 @@ export function createObservation(input: CreateObservationInput): Observation {
   throwIfError(guardObservationText(input.text));
 
   // isCameraDescribable is a user-supplied flag. The system does not verify
-  // whether the text is genuinely camera-describable. Defaults to true if omitted.
+  // whether the text is genuinely camera-describable. Defaults to false if
+  // omitted — the safe, non-assertive choice.
   return {
     text: input.text,
-    isCameraDescribable: input.isCameraDescribable ?? true,
+    isCameraDescribable: input.isCameraDescribable ?? false,
     ...(input.recurringAspects
       ? { recurringAspects: [...input.recurringAspects] }
       : {}),
@@ -137,9 +139,7 @@ export interface CreateTensionEdgeInput {
 }
 
 export function createTensionEdge(input: CreateTensionEdgeInput): TensionEdge {
-  throwIfError(guardTensionDirection(input.direction));
-
-  return {
+  const edge: TensionEdge = {
     source: input.source,
     target: input.target,
     label: input.label,
@@ -147,6 +147,8 @@ export function createTensionEdge(input: CreateTensionEdgeInput): TensionEdge {
     direction: input.direction,
     ...(input.timestamp ? { timestamp: input.timestamp } : {}),
   };
+  throwIfErrors(guardTensionEdgeFields(edge));
+  return edge;
 }
 
 // ---------------------------------------------------------------------------
@@ -164,6 +166,8 @@ export interface CreateReflectionSnapshotInput {
 export function createReflectionSnapshot(
   input: CreateReflectionSnapshotInput,
 ): ReflectionSnapshot {
+  throwIfError(guardIsoDateString(input.reflectedAt, "reflectedAt"));
+
   const interpretation = createInterpretation(input.interpretation);
   const counterInterpretation = createInterpretation(
     input.counterInterpretation,
@@ -204,6 +208,7 @@ export interface CreateRevisionInput {
 
 export function createRevision(input: CreateRevisionInput): Revision {
   throwIfError(guardRevisionFromTo(input.from, input.to));
+  throwIfError(guardIsoDateString(input.at, "Revision.at"));
 
   return {
     at: input.at,

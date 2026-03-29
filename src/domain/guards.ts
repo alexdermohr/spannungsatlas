@@ -15,7 +15,12 @@
  *   - UncertaintyLevel is an integer in [0, 5].
  *   - Uncertainty rationale is non-empty.
  *   - Participants list is non-empty.
+ *   - CaseParticipant id is non-empty.
+ *   - CaseParticipant role, if provided, is one of the four allowed values.
  *   - TensionEdge direction is one of the two allowed enum values.
+ *   - TensionEdge source, target, label, context are non-empty.
+ *   - Date/time fields (reflectedAt, Revision.at, observedAt, TensionEdge.timestamp)
+ *     are parseable date strings (ISO 8601 recommended).
  *   - Revision holds both `from` and `to` snapshots.
  *
  * WHAT THESE GUARDS DO NOT ENFORCE (semantic, requires future work):
@@ -49,6 +54,25 @@ export type GuardResult = string | undefined;
 
 function isNonEmptyString(value: unknown): value is string {
   return typeof value === "string" && value.trim().length > 0;
+}
+
+// ---------------------------------------------------------------------------
+// Date/time guard — shared across multiple domain fields
+// ---------------------------------------------------------------------------
+
+/**
+ * Checks that a value is a non-empty, parseable date string.
+ * Uses Date.parse() for plausibility — not a full ISO 8601 calendar check.
+ * fieldName is included in the error message for context.
+ */
+export function guardIsoDateString(value: string, fieldName: string): GuardResult {
+  if (!isNonEmptyString(value)) {
+    return `${fieldName} must not be empty.`;
+  }
+  if (isNaN(Date.parse(value))) {
+    return `${fieldName} must be a parseable date string (ISO 8601 recommended), got "${value}".`;
+  }
+  return undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -141,7 +165,7 @@ export function guardUncertaintyRationale(rationale: string): GuardResult {
 }
 
 // ---------------------------------------------------------------------------
-// Participants guard (Case MUSS-Feld: Person)
+// Participants guards (Case MUSS-Feld: Person)
 // ---------------------------------------------------------------------------
 
 /** A case must have at least one participant. */
@@ -154,8 +178,34 @@ export function guardParticipantsNotEmpty(
   return undefined;
 }
 
+/** CaseParticipant id must not be empty. */
+export function guardParticipantId(id: string): GuardResult {
+  if (!isNonEmptyString(id)) {
+    return "CaseParticipant id must not be empty.";
+  }
+  return undefined;
+}
+
+const VALID_ROLES = new Set<string>([
+  "primary",
+  "secondary",
+  "staff",
+  "contextual",
+]);
+
+/**
+ * CaseParticipant role, if provided, must be one of the four allowed values.
+ * This is an enum membership check only — no semantic role validation.
+ */
+export function guardParticipantRole(role: string): GuardResult {
+  if (!VALID_ROLES.has(role)) {
+    return `CaseParticipant role must be one of "primary", "secondary", "staff", "contextual", got "${role}".`;
+  }
+  return undefined;
+}
+
 // ---------------------------------------------------------------------------
-// TensionEdge guard (UX-Blaupause §3 step 7)
+// TensionEdge guards (UX-Blaupause §3 step 7)
 // ---------------------------------------------------------------------------
 
 const VALID_DIRECTIONS = new Set(["unidirectional", "bidirectional"]);
@@ -166,6 +216,28 @@ export function guardTensionDirection(direction: string): GuardResult {
     return `TensionEdge direction must be "unidirectional" or "bidirectional", got "${direction}".`;
   }
   return undefined;
+}
+
+/**
+ * All required TensionEdge text fields must be non-empty, direction must be
+ * valid, and the optional timestamp must be a parseable date string if present.
+ */
+export function guardTensionEdgeFields(edge: TensionEdge): readonly string[] {
+  const errors: string[] = [];
+  const push = (r: GuardResult) => {
+    if (r) errors.push(r);
+  };
+
+  if (!isNonEmptyString(edge.source))  errors.push("TensionEdge source must not be empty.");
+  if (!isNonEmptyString(edge.target))  errors.push("TensionEdge target must not be empty.");
+  if (!isNonEmptyString(edge.label))   errors.push("TensionEdge label must not be empty.");
+  if (!isNonEmptyString(edge.context)) errors.push("TensionEdge context must not be empty.");
+  push(guardTensionDirection(edge.direction));
+  if (edge.timestamp !== undefined) {
+    push(guardIsoDateString(edge.timestamp, "TensionEdge timestamp"));
+  }
+
+  return errors;
 }
 
 // ---------------------------------------------------------------------------
@@ -196,6 +268,7 @@ export function guardReflectionSnapshot(
     if (r) errors.push(r);
   };
 
+  push(guardIsoDateString(snapshot.reflectedAt, "reflectedAt"));
   push(guardInterpretationText(snapshot.interpretation.text));
   push(guardCounterInterpretationText(snapshot.counterInterpretation.text));
   push(
@@ -208,7 +281,7 @@ export function guardReflectionSnapshot(
   push(guardUncertaintyRationale(snapshot.uncertainty.rationale));
 
   for (const edge of snapshot.tensions) {
-    push(guardTensionDirection(edge.direction));
+    errors.push(...guardTensionEdgeFields(edge));
   }
 
   return errors;
@@ -224,6 +297,7 @@ export function guardCase(
     observation: Observation;
     currentReflection: ReflectionSnapshot;
     revisions: readonly Revision[];
+    observedAt?: string;
   },
 ): readonly string[] {
   const errors: string[] = [];
@@ -233,6 +307,17 @@ export function guardCase(
   };
 
   push(guardParticipantsNotEmpty(caseData.participants));
+  for (const p of caseData.participants) {
+    push(guardParticipantId(p.id));
+    if (p.role !== undefined) {
+      push(guardParticipantRole(p.role));
+    }
+  }
+
+  if (caseData.observedAt !== undefined) {
+    push(guardIsoDateString(caseData.observedAt, "observedAt"));
+  }
+
   push(guardObservationText(caseData.observation.text));
   push(
     guardObservationInterpretationDistinct(
@@ -245,6 +330,7 @@ export function guardCase(
 
   for (const rev of caseData.revisions) {
     push(guardRevisionFromTo(rev.from, rev.to));
+    push(guardIsoDateString(rev.at, "Revision.at"));
   }
 
   return errors;
