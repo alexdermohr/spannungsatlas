@@ -9,7 +9,7 @@ related_docs:
   - masterplan
   - ux-ui-blaupause
   - icf-integration-blaupause
-last_reviewed: "2026-03-28"
+last_reviewed: "2026-03-29"
 ---
 
 # Spannungsatlas – Dokumentationsübersicht
@@ -23,6 +23,12 @@ last_reviewed: "2026-03-28"
 |----------|-------------|
 | [MASTERPLAN.md](../MASTERPLAN.md) | Kanonisches Produktdokument — Produktdefinition, Invarianten, Kernobjekte, Taxonomie |
 | [README.md](../README.md) | Repo-Einstieg mit Kurzbeschreibung |
+
+## Architektur
+
+| Dokument | Beschreibung |
+|----------|-------------|
+| [Deploy-Blaupause mit Vercel](deploy-blaupause.md) | Architektur-Entscheidung: Vercel für UI, Entkopplung des Produktkerns |
 
 ## UX / UI
 
