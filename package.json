@@ -2,6 +2,7 @@
   "name": "spannungsatlas",
   "version": "0.1.0",
   "private": true,
+  "workspaces": ["apps/*"],
   "description": "Pädagogisches Reflexions- und Dokumentationssystem",
   "scripts": {
     "build": "tsc --noEmit",
