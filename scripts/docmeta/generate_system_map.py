@@ -1,63 +1,31 @@
 #!/usr/bin/env python3
 """Generate docs/_generated/system-map.md showing the repo structure overview.
 
+Hidden paths (any path component starting with ``"."``) are excluded so that
+``.git``, ``.github``, and similar infrastructure directories do not appear.
+
 Usage: python scripts/docmeta/generate_system_map.py
 """
 
-import re
 from datetime import datetime, timezone
 from pathlib import Path
+
+from frontmatter_utils import parse_frontmatter
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 OUTPUT = REPO_ROOT / "docs" / "_generated" / "system-map.md"
 
 
-def parse_frontmatter(filepath: Path) -> dict | None:
-    """Extract YAML frontmatter from a Markdown file."""
-    text = filepath.read_text(encoding="utf-8")
-    match = re.match(r"^---\n(.*?\n)---\n", text, re.DOTALL)
-    if not match:
-        return None
-    return _parse_simple_yaml(match.group(1))
-
-
-def _parse_simple_yaml(raw: str) -> dict:
-    """Simple YAML-subset parser for flat frontmatter."""
-    result = {}
-    current_key = None
-    current_list = None
-
-    for line in raw.splitlines():
-        stripped = line.strip()
-        if not stripped or stripped.startswith("#"):
-            continue
-        if stripped.startswith("- ") and current_key:
-            if current_list is None:
-                current_list = []
-            value = stripped[2:].strip().strip('"').strip("'")
-            current_list.append(value)
-            result[current_key] = current_list
-            continue
-        if ":" in stripped:
-            if current_list is not None:
-                current_list = None
-            colon_idx = stripped.index(":")
-            key = stripped[:colon_idx].strip()
-            value = stripped[colon_idx + 1:].strip().strip('"').strip("'")
-            current_key = key
-            if value:
-                result[key] = value
-                current_list = None
-            else:
-                current_list = None
-    return result
+def _is_hidden(path: Path) -> bool:
+    """Return True when any component of *path* starts with a dot."""
+    return any(part.startswith(".") for part in path.relative_to(REPO_ROOT).parts)
 
 
 def collect_tree() -> dict[str, list[str]]:
-    """Build a directory tree of non-hidden, non-git files."""
+    """Build a directory tree of non-hidden files."""
     tree: dict[str, list[str]] = {}
     for item in sorted(REPO_ROOT.rglob("*")):
-        if ".git" in item.parts:
+        if _is_hidden(item):
             continue
         rel = item.relative_to(REPO_ROOT).as_posix()
         if item.is_file():

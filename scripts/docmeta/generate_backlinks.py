@@ -1,12 +1,20 @@
 #!/usr/bin/env python3
 """Generate docs/_generated/backlinks.md showing cross-references between documents.
 
+Two kinds of references are tracked and displayed separately:
+- **Markdown-Links** — ``[text](path)`` references resolved to repo-relative paths.
+  Only targets that actually exist on disk are included.
+- **related_docs** — semantic relations declared in YAML frontmatter.  Unknown IDs
+  are flagged but *not* silently dropped.
+
 Usage: python scripts/docmeta/generate_backlinks.py
 """
 
 import re
 from datetime import datetime, timezone
 from pathlib import Path
+
+from frontmatter_utils import parse_frontmatter
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 OUTPUT = REPO_ROOT / "docs" / "_generated" / "backlinks.md"
@@ -38,12 +46,15 @@ def collect_files() -> list[Path]:
 
 
 def extract_links(filepath: Path) -> list[str]:
-    """Extract local Markdown links from a file, resolved to repo-relative paths."""
+    """Extract local Markdown links from a file, resolved to repo-relative paths.
+
+    Only targets that exist on disk are returned.
+    """
     text = filepath.read_text(encoding="utf-8")
-    links = []
+    links: list[str] = []
     for _label, target in LINK_PATTERN.findall(text):
         # Skip external links and anchors
-        if target.startswith("http://") or target.startswith("https://") or target.startswith("#"):
+        if target.startswith(("http://", "https://", "#")):
             continue
         # Remove anchor fragments
         target = target.split("#")[0]
@@ -53,27 +64,62 @@ def extract_links(filepath: Path) -> list[str]:
         resolved = (filepath.parent / target).resolve()
         try:
             rel = resolved.relative_to(REPO_ROOT).as_posix()
-            links.append(rel)
         except ValueError:
             continue
+        # Only keep targets that actually exist as files in the repo
+        if resolved.exists() and resolved.is_file():
+            links.append(rel)
     return links
+
+
+def _build_id_to_path(files: list[Path]) -> dict[str, str]:
+    """Map frontmatter ``id`` → repo-relative path for all scanned files."""
+    mapping: dict[str, str] = {}
+    for filepath in files:
+        meta = parse_frontmatter(filepath)
+        if meta and meta.get("id"):
+            mapping[meta["id"]] = filepath.relative_to(REPO_ROOT).as_posix()
+    return mapping
 
 
 def main():
     files = collect_files()
     now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
-    # Map: target_path -> list of source_paths that link to it
-    backlinks: dict[str, list[str]] = {}
+    id_to_path = _build_id_to_path(files)
+
+    # Map: target_path -> list of source_paths (markdown links)
+    md_backlinks: dict[str, list[str]] = {}
+    # Map: target_path -> list of source_paths (related_docs)
+    rel_backlinks: dict[str, list[str]] = {}
+    # Unknown related_docs IDs: source -> list of unknown ids
+    unknown_related: dict[str, list[str]] = {}
 
     for filepath in files:
         source = filepath.relative_to(REPO_ROOT).as_posix()
-        targets = extract_links(filepath)
-        for target in targets:
-            if target not in backlinks:
-                backlinks[target] = []
-            if source not in backlinks[target]:
-                backlinks[target].append(source)
+
+        # --- Markdown links ---
+        for target in extract_links(filepath):
+            md_backlinks.setdefault(target, [])
+            if source not in md_backlinks[target]:
+                md_backlinks[target].append(source)
+
+        # --- related_docs from frontmatter ---
+        meta = parse_frontmatter(filepath)
+        if meta:
+            for doc_id in meta.get("related_docs", []) if isinstance(meta.get("related_docs"), list) else []:
+                target_path = id_to_path.get(doc_id)
+                if target_path:
+                    rel_backlinks.setdefault(target_path, [])
+                    if source not in rel_backlinks[target_path]:
+                        rel_backlinks[target_path].append(source)
+                else:
+                    unknown_related.setdefault(source, [])
+                    if doc_id not in unknown_related[source]:
+                        unknown_related[source].append(doc_id)
+
+    # Merge all target keys for iteration
+    all_targets = sorted(set(md_backlinks.keys()) | set(rel_backlinks.keys()))
 
     lines = [
         "<!-- GENERATED FILE — DO NOT EDIT MANUALLY -->",
@@ -85,22 +131,44 @@ def main():
         "",
     ]
 
-    if backlinks:
-        for target in sorted(backlinks.keys()):
-            sources = sorted(backlinks[target])
+    if all_targets:
+        for target in all_targets:
             lines.append(f"## `{target}`")
             lines.append("")
-            lines.append("Verwiesen von:")
-            for src in sources:
-                lines.append(f"- `{src}`")
-            lines.append("")
+
+            md_sources = sorted(md_backlinks.get(target, []))
+            rel_sources = sorted(rel_backlinks.get(target, []))
+
+            if md_sources:
+                lines.append("Verwiesen von (Markdown-Links):")
+                for src in md_sources:
+                    lines.append(f"- `{src}`")
+                lines.append("")
+
+            if rel_sources:
+                lines.append("Genannt in related_docs von:")
+                for src in rel_sources:
+                    lines.append(f"- `{src}`")
+                lines.append("")
+
+            if not md_sources and not rel_sources:
+                lines.append("")
     else:
         lines.append("Keine Querverweise gefunden.")
         lines.append("")
 
+    # Report unknown related_docs IDs
+    if unknown_related:
+        lines.append("## ⚠ Unbekannte related_docs IDs")
+        lines.append("")
+        for source in sorted(unknown_related):
+            for doc_id in sorted(unknown_related[source]):
+                lines.append(f"- `{source}` verweist auf unbekannte ID `{doc_id}`")
+        lines.append("")
+
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT.write_text("\n".join(lines), encoding="utf-8")
-    print(f"Generated {OUTPUT.relative_to(REPO_ROOT)} ({len(backlinks)} targets)")
+    print(f"Generated {OUTPUT.relative_to(REPO_ROOT)} ({len(all_targets)} targets)")
 
 
 if __name__ == "__main__":
