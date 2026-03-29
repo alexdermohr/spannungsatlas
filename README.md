@@ -7,6 +7,7 @@ canonicality: informational
 summary: "Repo-Einstieg mit Kurzbeschreibung und Verweis auf das kanonische Produktdokument."
 related_docs:
   - masterplan
+  - deploy-blaupause
 last_reviewed: "2026-03-29"
 ---
 
