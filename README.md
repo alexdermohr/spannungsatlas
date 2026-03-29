@@ -14,7 +14,7 @@ last_reviewed: "2026-03-29"
 
 # Spannungsatlas
 
-Spannungsatlas ist ein pädagogisches Dokumentations-, Reflexions- und Vordiagnostiksystem. Es verbindet Fallarbeit, revidierbare Spannungsprofile von Personen und Konstellationsanalyse von Situationen im Zeitverlauf. Der Kern ist nicht Diagnose, sondern eine faire, überprüfbare Arbeitsverdichtung für pädagogische Praxis. Personenprofile sind dabei nur zusammen mit Gegenbelegen, Revision und Konstellationsbezug zulässig. Das System ist primär für pädagogische Kontexte wie Jugendhilfe, Wohngruppen und Schulsozialarbeit konzipiert und grundsätzlich auf andere Settings mit wiederkehrenden Spannungsdynamiken übertragbar.
+Spannungsatlas ist ein pädagogisches Dokumentations- und Reflexionssystem mit strukturierter Hypothesenbildung. Es verbindet Fallarbeit, revidierbare Spannungsprofile von Personen und Konstellationsanalyse von Situationen im Zeitverlauf. Der Kern ist eine faire, überprüfbare Arbeitsverdichtung für pädagogische Praxis — keine Diagnose. Personenprofile sind dabei nur zusammen mit Gegenbelegen, Revision und Konstellationsbezug zulässig. Das System ist primär für pädagogische Kontexte wie Jugendhilfe, Wohngruppen und Schulsozialarbeit konzipiert und grundsätzlich auf andere Settings mit wiederkehrenden Spannungsdynamiken übertragbar.
 
 Das kanonische Produktdokument für dieses Repository liegt in [`MASTERPLAN.md`](./MASTERPLAN.md).
 
@@ -32,17 +32,16 @@ Eine geordnete Übersicht aller Dokumente findet sich im [Dokumentationsindex](.
 - Beobachtung und Deutung werden getrennt dokumentiert.
 - Gegen-Deutung ist Pflicht.
 - Unsicherheit bleibt sichtbar.
-- Profile sind revidierbare Arbeitsprofile.
-- Profile bleiben kontextgebunden und revidierbar.
+- Profile sind kontextgebundene, revidierbare Arbeitsprofile.
 
 ## Minimaler Arbeitsablauf
 
 1. **Fall anlegen** — Kontext und beteiligte Person erfassen.
-2. **Beobachtung dokumentieren** — Was wurde wahrgenommen?
-3. **Deutung formulieren** — Welche Hypothese ergibt sich?
-4. **Gegen-Deutung formulieren** — Welche alternative Lesart ist denkbar?
-5. **Unsicherheit begründen** — Was bleibt offen?
-6. **Fallansicht prüfen** — Gesamtbild des Falls betrachten.
+2. **Beobachtung dokumentieren** — beschreibend, möglichst kameraähnlich.
+3. **Deutung formulieren** — Hypothese mit markierter Evidenznähe.
+4. **Gegen-Deutung formulieren** — alternative Lesart derselben Beobachtung.
+5. **Unsicherheit begründen** — Datenlücken, offene Fragen, Begrenzungen benennen.
+6. **Fallansicht prüfen** — Trennung der Elemente und Gesamtbild kontrollieren.
 
 ## Architektur auf einen Blick
 
@@ -50,7 +49,7 @@ Eine geordnete Übersicht aller Dokumente findet sich im [Dokumentationsindex](.
 |---------|-----|-------------|
 | Domain-Kern | `src/domain/` | Typen, Guards, Factories — produktlogischer Kern |
 | Web-App | `apps/web/` | SvelteKit-Oberfläche mit Vercel-Adapter |
-| Persistenz | localStorage | Local-first, browserseitig |
+| Persistenz | localStorage | Local-first, browserseitig via localStorage |
 
 Noch **nicht** implementiert: zentrale Persistenz, API, Authentifizierung, Rollen-/Rechtelogik, Export und Auditierbarkeit.
 

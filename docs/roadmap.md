@@ -22,15 +22,16 @@ Mit Phase 0/1 sind ein lauffähiger Domain-Kern und eine erste Webschicht vorhan
 
 ## 2. Leitregel
 
-Bevor neue Schichten gebaut werden, sollte der bestehende Reflexionskern in der UI so ausgestaltet werden, dass epistemische Disziplin — also die klare Trennung von Beobachtung, Deutung, Gegen-Deutung und Unsicherheit — im Arbeitsfluss stabil erfahrbar ist.
+Bevor neue Schichten gebaut werden, sollte die epistemische Disziplin — die klare Trennung von Beobachtung, Deutung, Gegen-Deutung und Unsicherheit — in der bestehenden Webschicht stabil sichtbar und nicht übergehbar sein. Erst danach lohnt der Ausbau von Explorations- und Vergleichsräumen.
 
 ## 3. Empfohlene Reihenfolge
 
 ### Phase 2a — Reflexionskern in der UI stabilisieren
 
-- Gegen-Deutung und Unsicherheitsbegründung im Fallfluss prominent verankern.
-- Revisionsfähigkeit sichtbar machen (Revisionshistorie, Änderungsgründe).
-- Fallansicht so gestalten, dass epistemische Trennung visuell klar wird.
+- Beobachtung, Deutung, Gegen-Deutung und Unsicherheit in Erfassung und Ansicht klar unterscheidbar halten — nicht übergehbar.
+- Evidenznähe / Evidenztyp in Erfassung und Ansicht sichtbar machen.
+- Gegen-Deutung und Unsicherheitsbegründung im Fallfluss strukturell verankern, nicht nur als optionaler Zusatz.
+- Revisionsfähigkeit sichtbar machen: Revisionen als dokumentierte Veränderung des Denkstands, nicht als stille Korrektur.
 
 ### Phase 2b — Explorationsraum
 
@@ -41,7 +42,7 @@ Bevor neue Schichten gebaut werden, sollte der bestehende Reflexionskern in der 
 ### Phase 3 — Vergleich und Drift
 
 - Vergleichsansichten zwischen Revisionen und Fällen ermöglichen.
-- Drift über Zeit sichtbar machen.
+- Drift als Veränderung des Denkstands lesbar machen — nicht nur als Zeitreihe, sondern als nachvollziehbare Bewegung: etwa durch neue Beobachtungen, neue Perspektiven oder Neubewertung gleicher Daten.
 - Darstellung als Reflexionsinstrument, nicht als Bewertung.
 
 ### Phase 4 — Spannungsnetz und Verdichtung
@@ -57,7 +58,7 @@ Bevor neue Schichten gebaut werden, sollte der bestehende Reflexionskern in der 
 - **„Vergleich ist Bewertung."** — Vergleiche dienen der Reflexion, nicht der Rangordnung oder Beurteilung.
 - **„Phase 4 ist dekorativ."** — Konstellationsanalyse ist gemäß Masterplan Pflichtgegengewicht, nicht beliebig optional.
 
-## 5. Offene infrastrukturelle Themen
+## 5. Bewusst noch offene Systemthemen
 
 Folgende Themen sind für den späteren Betrieb relevant, aber in der aktuellen Phase bewusst noch nicht umgesetzt:
 
