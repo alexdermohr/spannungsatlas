@@ -29,7 +29,7 @@
   }
 
   onMount(() => {
-    const id = page.params.id;
+    const id = page.params.id ?? '';
     caseData = getCase(id);
     loaded = true;
   });

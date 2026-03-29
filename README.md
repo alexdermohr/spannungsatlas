@@ -28,3 +28,17 @@ Implementiert ist die **Phase-0/1-Webschicht**: Eine SvelteKit-Anwendung unter [
 Noch nicht implementiert ist der **Phase-2-Explorationsraum**: Bedürfnis- und Determinantenkatalog, Clusterstruktur, Selektionsfelder und UI-Schichten. Das Zieldatenmodell dafür ist in [`docs/ux-ui-blaupause.md §7`](./docs/ux-ui-blaupause.md) beschrieben.
 
 Noch nicht implementiert: zentrale Persistenz, API, Authentifizierung, Rollen-/Rechtelogik, Export und Auditierbarkeit (Phase 2+ laut [`docs/deploy-blaupause.md`](./docs/deploy-blaupause.md)).
+
+## Entwicklung und Verifikation
+
+Voraussetzung: Node.js ≥ 20.19 (siehe `.nvmrc`).
+
+```bash
+npm install          # Abhängigkeiten installieren (Root + apps/web)
+npm run typecheck    # Domain-Typecheck (tsc --noEmit)
+npm run test         # Domain-Tests (vitest, 131 Tests)
+npm run check:web    # SvelteKit-Typecheck (svelte-check)
+npm run build:web    # Web-App bauen (Vite + Vercel-Adapter)
+npm run verify       # Gesamtprüfung: typecheck → test → check:web → build:web
+npm run dev          # Lokaler Entwicklungsserver (SvelteKit)
+```
