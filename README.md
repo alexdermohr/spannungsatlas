@@ -25,7 +25,7 @@ Eine geordnete Übersicht aller Dokumente findet sich im [Dokumentationsindex](.
 - **Kein Diagnosetool.** Spannungsatlas ersetzt keine klinische oder therapeutische Diagnostik.
 - **Kein Bewertungssystem.** Es bewertet weder Personen noch Situationen.
 - **Kein Wahrheitsautomat.** Alle Profile und Deutungen sind revidierbar, nicht endgültig.
-- **Kein System für schnelle Situationsentscheidungen.** Das System dient primär der nachträglichen Reflexion und Dokumentation, nicht der schnellen automatisierten Situationsentscheidung.
+- **Kein System für schnelle Situationsentscheidungen.** Das System dient primär der nachträglichen Reflexion und Dokumentation, nicht der automatisierten Entscheidung in Akutsituationen.
 
 ## Kernprinzipien
 
@@ -49,7 +49,7 @@ Eine geordnete Übersicht aller Dokumente findet sich im [Dokumentationsindex](.
 |---------|-----|-------------|
 | Domain-Kern | `src/domain/` | Typen, Guards, Factories — produktlogischer Kern |
 | Web-App | `apps/web/` | SvelteKit-Oberfläche mit Vercel-Adapter |
-| Persistenz | localStorage | Local-first, browserseitig via localStorage |
+| Persistenz | `localStorage` | Local-first, browserseitig |
 
 Noch **nicht** implementiert: zentrale Persistenz, API, Authentifizierung, Rollen-/Rechtelogik, Export und Auditierbarkeit.
 
