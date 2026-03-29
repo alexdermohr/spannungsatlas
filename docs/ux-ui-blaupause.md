@@ -8,7 +8,7 @@ summary: "Konzeptionelle UX/UI-Prinzipien, Ebenen, Nutzerfluss und Informationsa
 related_docs:
   - masterplan
   - icf-integration-blaupause
-last_reviewed: "2026-03-28"
+last_reviewed: "2026-03-29"
 ---
 
 > **Hinweis:** Dieses Dokument ist ein konzeptionelles UX/UI-Leitdokument. Bei Konflikten gilt der kanonische Produktmasterplan in `MASTERPLAN.md`.
@@ -120,6 +120,12 @@ Zonen müssen in zwingender Reihenfolge durchlaufen werden. Die Übergänge sind
 
 ## 7. Minimal sinnvolles Datenmodell
 
+> **Hinweis – Phasenschnitt:** Das folgende Datenmodell ist das **Ziel-/Mehrphasenmodell** für den vollständigen Spannungsatlas. Es beschreibt nicht den aktuellen Implementationsstand.
+>
+> **Phase 1 (Reflexionskern – aktuell implementiert):** `Case`, `ReflectionSnapshot` *ohne* `selectedNeeds`/`selectedDeterminants`, `Observation`, `Interpretation`, `Uncertainty`, `TensionEdge`, `Revision`, `CaseParticipant`. Siehe `src/domain/types.ts`.
+>
+> **Phase 2 (Explorationsraum – noch nicht implementiert):** `Need`, `Determinant`, `NeedSelection`, `DeterminantSelection` sowie die Felder `selectedNeeds` und `selectedDeterminants` in `ReflectionSnapshot`. Diese Typen gehören zur Explorationsebene (§2 „Ebene A", §8 Phase 2) und sind im aktuellen Code bewusst ausgelassen.
+
 ```typescript
 type EvidenceType = "observational" | "derived" | "speculative";
 type DriftType = "new_observation" | "new_perspective" | "reinterpretation";
@@ -140,10 +146,13 @@ interface Case {
   revisions: Revision[];
 }
 
+// Phase 1 (Reflexionskern): reflectedAt, interpretation, counterInterpretation,
+// uncertainty, tensions — implementiert in src/domain/types.ts.
+// Phase 2 (Explorationsraum): selectedNeeds, selectedDeterminants — noch nicht implementiert.
 interface ReflectionSnapshot {
   reflectedAt: string;
-  selectedNeeds: NeedSelection[];
-  selectedDeterminants: DeterminantSelection[];
+  selectedNeeds: NeedSelection[];       // Phase 2 – Explorationsraum
+  selectedDeterminants: DeterminantSelection[]; // Phase 2 – Explorationsraum
   interpretation: Interpretation;
   counterInterpretation: Interpretation;
   uncertainty: Uncertainty;
