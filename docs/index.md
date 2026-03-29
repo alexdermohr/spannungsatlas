@@ -9,7 +9,7 @@ related_docs:
   - masterplan
   - ux-ui-blaupause
   - icf-integration-blaupause
-last_reviewed: "2026-03-28"
+last_reviewed: "2026-03-29"
 ---
 
 # Spannungsatlas – Dokumentationsübersicht

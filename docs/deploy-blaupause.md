@@ -110,6 +110,9 @@ Sobald echte Persistenz, Rechte und Teamnutzung relevant werden, wird der Produk
 
 ## 5. Technisches Zielbild (Repo-Struktur)
 
+Dies ist eine Zielstruktur für Phase 0/1. Sie beschreibt den angestrebten Zustand und ist im aktuellen Repository noch nicht umgesetzt.
+
+
 ```
 spannungsatlas/
   apps/
