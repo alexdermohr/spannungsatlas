@@ -114,6 +114,15 @@ describe("createInterpretation", () => {
       createInterpretation({ text: "", evidenceType: "derived" }),
     ).toThrow();
   });
+
+  it("throws on invalid evidenceType", () => {
+    expect(() =>
+      createInterpretation({
+        text: "Eine Deutung.",
+        evidenceType: "factual" as any,
+      }),
+    ).toThrow(/EvidenceType/i);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -363,6 +372,45 @@ describe("createRevision", () => {
       }),
     ).toThrow(/Revision\.at/i);
   });
+
+  it("throws when driftType is invalid", () => {
+    const snap = createReflectionSnapshot(validReflectionSnapshotInput());
+    expect(() =>
+      createRevision({
+        at: "2026-04-01T10:30:00Z",
+        driftType: "correction" as any,
+        reason: "Gespräch.",
+        from: snap,
+        to: snap,
+      }),
+    ).toThrow(/DriftType/i);
+  });
+
+  it("throws when reason is empty", () => {
+    const snap = createReflectionSnapshot(validReflectionSnapshotInput());
+    expect(() =>
+      createRevision({
+        at: "2026-04-01T10:30:00Z",
+        driftType: "new_observation",
+        reason: "",
+        from: snap,
+        to: snap,
+      }),
+    ).toThrow(/reason/i);
+  });
+
+  it("throws when reason is whitespace-only", () => {
+    const snap = createReflectionSnapshot(validReflectionSnapshotInput());
+    expect(() =>
+      createRevision({
+        at: "2026-04-01T10:30:00Z",
+        driftType: "new_observation",
+        reason: "   ",
+        from: snap,
+        to: snap,
+      }),
+    ).toThrow(/reason/i);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -381,6 +429,24 @@ describe("createCase", () => {
       "Das Kind zeigt körperliche Anspannung.",
     );
     expect(c.revisions).toHaveLength(0);
+  });
+
+  it("throws when id is empty", () => {
+    expect(() =>
+      createCase({ ...validCaseInput(), id: "" }),
+    ).toThrow(/Case id/i);
+  });
+
+  it("throws when id is whitespace-only", () => {
+    expect(() =>
+      createCase({ ...validCaseInput(), id: "   " }),
+    ).toThrow(/Case id/i);
+  });
+
+  it("throws when context is empty", () => {
+    expect(() =>
+      createCase({ ...validCaseInput(), context: "" }),
+    ).toThrow(/context/i);
   });
 
   it("throws when participants are empty", () => {

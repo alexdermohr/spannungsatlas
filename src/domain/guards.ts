@@ -14,14 +14,18 @@
  *   - Interpretation text and counter-interpretation text are not textually identical.
  *   - UncertaintyLevel is an integer in [0, 5].
  *   - Uncertainty rationale is non-empty.
+ *   - Case id and context are non-empty.
  *   - Participants list is non-empty.
  *   - CaseParticipant id is non-empty.
  *   - CaseParticipant role, if provided, is one of the four allowed values.
+ *   - EvidenceType is one of the three allowed values (runtime check).
+ *   - DriftType is one of the three allowed values (runtime check).
+ *   - Revision reason is non-empty.
+ *   - Revision holds both `from` and `to` snapshots.
  *   - TensionEdge direction is one of the two allowed enum values.
  *   - TensionEdge source, target, label, context are non-empty.
  *   - Date/time fields (reflectedAt, Revision.at, observedAt, TensionEdge.timestamp)
- *     are parseable date strings (ISO 8601 recommended).
- *   - Revision holds both `from` and `to` snapshots.
+ *     are parseable date strings (Date.parse()-based plausibility; ISO 8601 recommended).
  *
  * WHAT THESE GUARDS DO NOT ENFORCE (semantic, requires future work):
  *   - Whether observation text is genuinely camera-describable (MASTERPLAN §2 #19).
@@ -76,6 +80,26 @@ export function guardIsoDateString(value: string, fieldName: string): GuardResul
 }
 
 // ---------------------------------------------------------------------------
+// Case field guards
+// ---------------------------------------------------------------------------
+
+/** Case id must not be empty. */
+export function guardCaseId(id: string): GuardResult {
+  if (!isNonEmptyString(id)) {
+    return "Case id must not be empty.";
+  }
+  return undefined;
+}
+
+/** Case context must not be empty. */
+export function guardCaseContext(context: string): GuardResult {
+  if (!isNonEmptyString(context)) {
+    return "Case context must not be empty.";
+  }
+  return undefined;
+}
+
+// ---------------------------------------------------------------------------
 // Observation guards
 // Enforced: text is non-empty (MASTERPLAN §2 #1 requires observation to exist).
 // NOT enforced: camera-describability of content (MASTERPLAN §2 #19 — semantic).
@@ -92,8 +116,26 @@ export function guardObservationText(text: string): GuardResult {
 // ---------------------------------------------------------------------------
 // Interpretation guards
 // Enforced: text fields are non-empty (MASTERPLAN §2 #16, #17).
+//           evidenceType is one of the three allowed values (runtime).
 // NOT enforced: EvidenceType consistency with observation content (semantic).
 // ---------------------------------------------------------------------------
+
+const VALID_EVIDENCE_TYPES = new Set<string>([
+  "observational",
+  "derived",
+  "speculative",
+]);
+
+/**
+ * EvidenceType must be one of the three allowed values.
+ * Runtime check — TypeScript type alone does not protect against JSON input.
+ */
+export function guardEvidenceType(value: string): GuardResult {
+  if (!VALID_EVIDENCE_TYPES.has(value)) {
+    return `EvidenceType must be "observational", "derived", or "speculative", got "${value}".`;
+  }
+  return undefined;
+}
 
 /** Interpretation text must not be empty. */
 export function guardInterpretationText(text: string): GuardResult {
@@ -241,8 +283,33 @@ export function guardTensionEdgeFields(edge: TensionEdge): readonly string[] {
 }
 
 // ---------------------------------------------------------------------------
-// Revision guard (UX-Blaupause §7; MASTERPLAN §2 #14, #21)
+// Revision guards (UX-Blaupause §7; MASTERPLAN §2 #14, #21)
 // ---------------------------------------------------------------------------
+
+const VALID_DRIFT_TYPES = new Set<string>([
+  "new_observation",
+  "new_perspective",
+  "reinterpretation",
+]);
+
+/**
+ * DriftType must be one of the three allowed values.
+ * Runtime check — TypeScript type alone does not protect against JSON input.
+ */
+export function guardDriftType(value: string): GuardResult {
+  if (!VALID_DRIFT_TYPES.has(value)) {
+    return `DriftType must be "new_observation", "new_perspective", or "reinterpretation", got "${value}".`;
+  }
+  return undefined;
+}
+
+/** Revision reason must not be empty. */
+export function guardRevisionReason(reason: string): GuardResult {
+  if (!isNonEmptyString(reason)) {
+    return "Revision reason must not be empty.";
+  }
+  return undefined;
+}
 
 /** A revision must have both `from` and `to` snapshots. */
 export function guardRevisionFromTo(
@@ -293,6 +360,8 @@ export function guardReflectionSnapshot(
 
 export function guardCase(
   caseData: {
+    id: string;
+    context: string;
     participants: readonly CaseParticipant[];
     observation: Observation;
     currentReflection: ReflectionSnapshot;
@@ -305,6 +374,9 @@ export function guardCase(
   const push = (r: GuardResult) => {
     if (r) errors.push(r);
   };
+
+  push(guardCaseId(caseData.id));
+  push(guardCaseContext(caseData.context));
 
   push(guardParticipantsNotEmpty(caseData.participants));
   for (const p of caseData.participants) {
@@ -331,6 +403,7 @@ export function guardCase(
   for (const rev of caseData.revisions) {
     push(guardRevisionFromTo(rev.from, rev.to));
     push(guardIsoDateString(rev.at, "Revision.at"));
+    push(guardRevisionReason(rev.reason));
   }
 
   return errors;

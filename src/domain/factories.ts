@@ -30,12 +30,17 @@ import type {
 import {
   guardObservationText,
   guardInterpretationText,
+  guardEvidenceType,
   guardCounterInterpretationText,
   guardInterpretationsDistinct,
   guardObservationInterpretationDistinct,
   guardUncertaintyLevel,
   guardUncertaintyRationale,
   guardParticipantsNotEmpty,
+  guardCaseId,
+  guardCaseContext,
+  guardDriftType,
+  guardRevisionReason,
   guardTensionEdgeFields,
   guardIsoDateString,
   guardRevisionFromTo,
@@ -98,6 +103,7 @@ export function createInterpretation(
   input: CreateInterpretationInput,
 ): Interpretation {
   throwIfError(guardInterpretationText(input.text));
+  throwIfError(guardEvidenceType(input.evidenceType));
 
   return {
     text: input.text,
@@ -209,6 +215,8 @@ export interface CreateRevisionInput {
 export function createRevision(input: CreateRevisionInput): Revision {
   throwIfError(guardRevisionFromTo(input.from, input.to));
   throwIfError(guardIsoDateString(input.at, "Revision.at"));
+  throwIfError(guardDriftType(input.driftType));
+  throwIfError(guardRevisionReason(input.reason));
 
   return {
     at: input.at,
@@ -234,6 +242,8 @@ export interface CreateCaseInput {
 }
 
 export function createCase(input: CreateCaseInput): Case {
+  throwIfError(guardCaseId(input.id));
+  throwIfError(guardCaseContext(input.context));
   throwIfError(guardParticipantsNotEmpty(input.participants));
 
   const observation = createObservation(input.observation);

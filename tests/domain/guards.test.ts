@@ -7,9 +7,14 @@ import {
   guardObservationInterpretationDistinct,
   guardUncertaintyLevel,
   guardUncertaintyRationale,
+  guardCaseId,
+  guardCaseContext,
   guardParticipantsNotEmpty,
   guardParticipantId,
   guardParticipantRole,
+  guardEvidenceType,
+  guardDriftType,
+  guardRevisionReason,
   guardTensionDirection,
   guardTensionEdgeFields,
   guardIsoDateString,
@@ -175,6 +180,98 @@ describe("guardUncertaintyRationale", () => {
 
   it("rejects empty string", () => {
     expect(guardUncertaintyRationale("")).toBeDefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Case field guards
+// ---------------------------------------------------------------------------
+
+describe("guardCaseId", () => {
+  it("accepts non-empty id", () => {
+    expect(guardCaseId("case-001")).toBeUndefined();
+  });
+
+  it("rejects empty id", () => {
+    expect(guardCaseId("")).toBeDefined();
+  });
+
+  it("rejects whitespace-only id", () => {
+    expect(guardCaseId("   ")).toBeDefined();
+  });
+});
+
+describe("guardCaseContext", () => {
+  it("accepts non-empty context", () => {
+    expect(guardCaseContext("Klassenraum, Montag")).toBeUndefined();
+  });
+
+  it("rejects empty context", () => {
+    expect(guardCaseContext("")).toBeDefined();
+  });
+
+  it("rejects whitespace-only context", () => {
+    expect(guardCaseContext("   ")).toBeDefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// EvidenceType guard
+// ---------------------------------------------------------------------------
+
+describe("guardEvidenceType", () => {
+  it.each(["observational", "derived", "speculative"])(
+    'accepts evidenceType "%s"',
+    (value) => {
+      expect(guardEvidenceType(value)).toBeUndefined();
+    },
+  );
+
+  it("rejects unknown value", () => {
+    expect(guardEvidenceType("factual")).toBeDefined();
+  });
+
+  it("rejects empty string", () => {
+    expect(guardEvidenceType("")).toBeDefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// DriftType guard
+// ---------------------------------------------------------------------------
+
+describe("guardDriftType", () => {
+  it.each(["new_observation", "new_perspective", "reinterpretation"])(
+    'accepts driftType "%s"',
+    (value) => {
+      expect(guardDriftType(value)).toBeUndefined();
+    },
+  );
+
+  it("rejects unknown value", () => {
+    expect(guardDriftType("correction")).toBeDefined();
+  });
+
+  it("rejects empty string", () => {
+    expect(guardDriftType("")).toBeDefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Revision reason guard
+// ---------------------------------------------------------------------------
+
+describe("guardRevisionReason", () => {
+  it("accepts non-empty reason", () => {
+    expect(guardRevisionReason("Neues Gespräch lieferte andere Sicht.")).toBeUndefined();
+  });
+
+  it("rejects empty string", () => {
+    expect(guardRevisionReason("")).toBeDefined();
+  });
+
+  it("rejects whitespace-only string", () => {
+    expect(guardRevisionReason("   ")).toBeDefined();
   });
 });
 
@@ -384,6 +481,8 @@ describe("guardReflectionSnapshot", () => {
 describe("guardCase", () => {
   it("returns no errors for a valid case", () => {
     const errors = guardCase({
+      id: "case-001",
+      context: "Klassenraum, Montag",
       participants: [{ id: "p1", role: "primary" }],
       observation: validObservation(),
       currentReflection: validSnapshot(),
@@ -392,8 +491,34 @@ describe("guardCase", () => {
     expect(errors).toHaveLength(0);
   });
 
+  it("returns an error when id is empty", () => {
+    const errors = guardCase({
+      id: "",
+      context: "Klassenraum",
+      participants: [{ id: "p1" }],
+      observation: validObservation(),
+      currentReflection: validSnapshot(),
+      revisions: [],
+    });
+    expect(errors.some((e) => /Case id/i.test(e))).toBe(true);
+  });
+
+  it("returns an error when context is empty", () => {
+    const errors = guardCase({
+      id: "case-001",
+      context: "   ",
+      participants: [{ id: "p1" }],
+      observation: validObservation(),
+      currentReflection: validSnapshot(),
+      revisions: [],
+    });
+    expect(errors.some((e) => /context/i.test(e))).toBe(true);
+  });
+
   it("collects errors from observation, participants and reflection", () => {
     const errors = guardCase({
+      id: "case-001",
+      context: "Klassenraum",
       participants: [],
       observation: { text: "", isCameraDescribable: true },
       currentReflection: {
@@ -410,6 +535,8 @@ describe("guardCase", () => {
 
   it("returns an error for a participant with an empty id", () => {
     const errors = guardCase({
+      id: "case-001",
+      context: "Klassenraum",
       participants: [{ id: "" }],
       observation: validObservation(),
       currentReflection: validSnapshot(),
@@ -420,6 +547,8 @@ describe("guardCase", () => {
 
   it("returns an error for an invalid observedAt date", () => {
     const errors = guardCase({
+      id: "case-001",
+      context: "Klassenraum",
       participants: [{ id: "p1" }],
       observation: validObservation(),
       currentReflection: validSnapshot(),
@@ -431,6 +560,8 @@ describe("guardCase", () => {
 
   it("returns no error when observedAt is a valid date string", () => {
     const errors = guardCase({
+      id: "case-001",
+      context: "Klassenraum",
       participants: [{ id: "p1" }],
       observation: validObservation(),
       currentReflection: validSnapshot(),
