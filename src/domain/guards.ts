@@ -42,8 +42,6 @@ import type {
   ReflectionSnapshot,
   Revision,
   TensionEdge,
-  Uncertainty,
-  UncertaintyLevel,
 } from "./types.js";
 
 // ---------------------------------------------------------------------------
@@ -337,7 +335,9 @@ export function guardReflectionSnapshot(
 
   push(guardIsoDateString(snapshot.reflectedAt, "reflectedAt"));
   push(guardInterpretationText(snapshot.interpretation.text));
+  push(guardEvidenceType(snapshot.interpretation.evidenceType));
   push(guardCounterInterpretationText(snapshot.counterInterpretation.text));
+  push(guardEvidenceType(snapshot.counterInterpretation.evidenceType));
   push(
     guardInterpretationsDistinct(
       snapshot.interpretation,
@@ -403,6 +403,7 @@ export function guardCase(
   for (const rev of caseData.revisions) {
     push(guardRevisionFromTo(rev.from, rev.to));
     push(guardIsoDateString(rev.at, "Revision.at"));
+    push(guardDriftType(rev.driftType));
     push(guardRevisionReason(rev.reason));
   }
 

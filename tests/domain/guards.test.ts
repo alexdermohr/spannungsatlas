@@ -461,6 +461,24 @@ describe("guardReflectionSnapshot", () => {
     expect(guardReflectionSnapshot(validSnapshot())).toHaveLength(0);
   });
 
+  it("returns an error for an invalid evidenceType in interpretation", () => {
+    const bad: ReflectionSnapshot = {
+      ...validSnapshot(),
+      interpretation: { text: "Eine Deutung.", evidenceType: "factual" as any },
+    };
+    const errors = guardReflectionSnapshot(bad);
+    expect(errors.some((e) => /EvidenceType/i.test(e))).toBe(true);
+  });
+
+  it("returns an error for an invalid evidenceType in counterInterpretation", () => {
+    const bad: ReflectionSnapshot = {
+      ...validSnapshot(),
+      counterInterpretation: { text: "Eine Gegendeutung.", evidenceType: "unknown" as any },
+    };
+    const errors = guardReflectionSnapshot(bad);
+    expect(errors.some((e) => /EvidenceType/i.test(e))).toBe(true);
+  });
+
   it("collects multiple errors", () => {
     const bad: ReflectionSnapshot = {
       reflectedAt: "2026-03-28T10:00:00Z",
@@ -569,6 +587,32 @@ describe("guardCase", () => {
       observedAt: "2026-03-28T08:15:00Z",
     });
     expect(errors).toHaveLength(0);
+  });
+
+  it("returns an error for a revision with an invalid driftType", () => {
+    const snap = validSnapshot();
+    const snapB: ReflectionSnapshot = {
+      ...snap,
+      reflectedAt: "2026-04-01T10:00:00Z",
+      interpretation: { text: "Neue Deutung.", evidenceType: "derived" },
+    };
+    const errors = guardCase({
+      id: "case-001",
+      context: "Klassenraum",
+      participants: [{ id: "p1" }],
+      observation: validObservation(),
+      currentReflection: snap,
+      revisions: [
+        {
+          at: "2026-04-01T10:30:00Z",
+          driftType: "correction" as any,
+          reason: "Gespräch.",
+          from: snap,
+          to: snapB,
+        },
+      ],
+    });
+    expect(errors.some((e) => /DriftType/i.test(e))).toBe(true);
   });
 });
 

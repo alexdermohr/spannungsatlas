@@ -31,7 +31,6 @@ import {
   guardObservationText,
   guardInterpretationText,
   guardEvidenceType,
-  guardCounterInterpretationText,
   guardInterpretationsDistinct,
   guardObservationInterpretationDistinct,
   guardUncertaintyLevel,
