@@ -1,4 +1,4 @@
-import type { Case } from '$domain/types.js';
+import type { Case, EvidenceType, ParticipantRole, UncertaintyLevel } from '$domain/types.js';
 import type { CreateCaseInput } from '$domain/factories.js';
 import { createCase } from '$domain/factories.js';
 import { localStorageStore, type PersistenceStore } from '$lib/persistence/store.js';
@@ -6,14 +6,14 @@ import { localStorageStore, type PersistenceStore } from '$lib/persistence/store
 export interface StartNewCaseInput {
   context: string;
   participantName: string;
-  participantRole?: 'primary' | 'secondary' | 'staff' | 'contextual';
+  participantRole?: ParticipantRole;
   observationText: string;
   isCameraDescribable: boolean;
   interpretationText: string;
-  interpretationEvidenceType: 'observational' | 'derived' | 'speculative';
+  interpretationEvidenceType: EvidenceType;
   counterInterpretationText: string;
-  counterInterpretationEvidenceType: 'observational' | 'derived' | 'speculative';
-  uncertaintyLevel: 0 | 1 | 2 | 3 | 4 | 5;
+  counterInterpretationEvidenceType: EvidenceType;
+  uncertaintyLevel: UncertaintyLevel;
   uncertaintyRationale: string;
 }
 

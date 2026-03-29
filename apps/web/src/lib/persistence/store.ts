@@ -1,4 +1,5 @@
 import type { Case } from '$domain/types.js';
+import { guardCase } from '$domain/guards.js';
 
 /** Abstraction over case persistence — swap localStorage for IndexedDB or API. */
 export interface PersistenceStore {
@@ -16,11 +17,20 @@ function isStorageAvailable(): boolean {
 
 function readCases(): Case[] {
   if (!isStorageAvailable()) return [];
-  const raw = localStorage.getItem(STORAGE_KEY);
+  let raw: string | null;
+  try {
+    raw = localStorage.getItem(STORAGE_KEY);
+  } catch {
+    console.warn('Failed to read cases from localStorage');
+    return [];
+  }
   if (!raw) return [];
   try {
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return (parsed as unknown[]).filter(
+      (entry) => typeof entry === 'object' && entry !== null && guardCase(entry as Case).length === 0
+    ) as Case[];
   } catch {
     return [];
   }
@@ -28,7 +38,11 @@ function readCases(): Case[] {
 
 function writeCases(cases: Case[]): void {
   if (!isStorageAvailable()) return;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(cases));
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(cases));
+  } catch (error) {
+    console.warn('Failed to persist cases to localStorage', error);
+  }
 }
 
 export const localStorageStore: PersistenceStore = {
