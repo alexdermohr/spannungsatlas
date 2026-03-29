@@ -1,0 +1,336 @@
+import { describe, it, expect } from "vitest";
+import {
+  createObservation,
+  createInterpretation,
+  createUncertainty,
+  createTensionEdge,
+  createReflectionSnapshot,
+  createRevision,
+  createCase,
+} from "../../src/domain/factories.js";
+import type { ReflectionSnapshot } from "../../src/domain/types.js";
+
+// ---------------------------------------------------------------------------
+// Helpers: valid input builders
+// ---------------------------------------------------------------------------
+
+function validObservationInput() {
+  return {
+    text: "Kind schlägt mit der Hand auf den Tisch.",
+    isCameraDescribable: true,
+  };
+}
+
+function validInterpretationInput() {
+  return {
+    text: "Das Kind zeigt körperliche Anspannung.",
+    evidenceType: "observational" as const,
+  };
+}
+
+function validCounterInterpretationInput() {
+  return {
+    text: "Das Kind versucht Aufmerksamkeit zu gewinnen.",
+    evidenceType: "derived" as const,
+  };
+}
+
+function validUncertaintyInput() {
+  return {
+    level: 3 as const,
+    rationale: "Nur ein Einzelereignis beobachtet.",
+  };
+}
+
+function validReflectionSnapshotInput() {
+  return {
+    reflectedAt: "2026-03-28T10:00:00Z",
+    interpretation: validInterpretationInput(),
+    counterInterpretation: validCounterInterpretationInput(),
+    uncertainty: validUncertaintyInput(),
+    tensions: [],
+  };
+}
+
+function validCaseInput() {
+  return {
+    id: "case-001",
+    participants: [{ id: "p1", role: "primary" as const }],
+    context: "Klassenraum, Montag 8:15 Uhr",
+    observedAt: "2026-03-28T08:15:00Z",
+    observation: validObservationInput(),
+    currentReflection: validReflectionSnapshotInput(),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// createObservation
+// ---------------------------------------------------------------------------
+
+describe("createObservation", () => {
+  it("creates a valid observation", () => {
+    const obs = createObservation(validObservationInput());
+    expect(obs.text).toBe("Kind schlägt mit der Hand auf den Tisch.");
+    expect(obs.isCameraDescribable).toBe(true);
+  });
+
+  it("defaults isCameraDescribable to true", () => {
+    const obs = createObservation({ text: "Beobachtung" });
+    expect(obs.isCameraDescribable).toBe(true);
+  });
+
+  it("throws on empty text", () => {
+    expect(() => createObservation({ text: "" })).toThrow();
+  });
+
+  it("throws on whitespace-only text", () => {
+    expect(() => createObservation({ text: "   " })).toThrow();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// createInterpretation
+// ---------------------------------------------------------------------------
+
+describe("createInterpretation", () => {
+  it("creates a valid interpretation", () => {
+    const interp = createInterpretation(validInterpretationInput());
+    expect(interp.text).toBe("Das Kind zeigt körperliche Anspannung.");
+    expect(interp.evidenceType).toBe("observational");
+  });
+
+  it("throws on empty text", () => {
+    expect(() =>
+      createInterpretation({ text: "", evidenceType: "derived" }),
+    ).toThrow();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// createUncertainty
+// ---------------------------------------------------------------------------
+
+describe("createUncertainty", () => {
+  it("creates a valid uncertainty", () => {
+    const u = createUncertainty(validUncertaintyInput());
+    expect(u.level).toBe(3);
+    expect(u.rationale).toBe("Nur ein Einzelereignis beobachtet.");
+  });
+
+  it("throws on empty rationale", () => {
+    expect(() =>
+      createUncertainty({ level: 2, rationale: "" }),
+    ).toThrow(/rationale/i);
+  });
+
+  it("throws on invalid level (too high)", () => {
+    expect(() =>
+      createUncertainty({ level: 6 as any, rationale: "begründung" }),
+    ).toThrow(/level/i);
+  });
+
+  it("throws on invalid level (negative)", () => {
+    expect(() =>
+      createUncertainty({ level: -1 as any, rationale: "begründung" }),
+    ).toThrow(/level/i);
+  });
+
+  it("throws on non-integer level", () => {
+    expect(() =>
+      createUncertainty({ level: 2.5 as any, rationale: "begründung" }),
+    ).toThrow(/level/i);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// createTensionEdge
+// ---------------------------------------------------------------------------
+
+describe("createTensionEdge", () => {
+  it("creates a valid tension edge", () => {
+    const edge = createTensionEdge({
+      source: "child",
+      target: "teacher",
+      label: "Druck",
+      context: "Klassenraum",
+      direction: "unidirectional",
+    });
+    expect(edge.direction).toBe("unidirectional");
+  });
+
+  it("throws on invalid direction", () => {
+    expect(() =>
+      createTensionEdge({
+        source: "a",
+        target: "b",
+        label: "x",
+        context: "y",
+        direction: "invalid" as any,
+      }),
+    ).toThrow(/direction/i);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// createReflectionSnapshot
+// ---------------------------------------------------------------------------
+
+describe("createReflectionSnapshot", () => {
+  it("creates a valid snapshot", () => {
+    const snap = createReflectionSnapshot(validReflectionSnapshotInput());
+    expect(snap.reflectedAt).toBe("2026-03-28T10:00:00Z");
+    expect(snap.interpretation.text).toBe(
+      "Das Kind zeigt körperliche Anspannung.",
+    );
+    expect(snap.counterInterpretation.text).toBe(
+      "Das Kind versucht Aufmerksamkeit zu gewinnen.",
+    );
+  });
+
+  it("throws when interpretation and counter-interpretation are identical", () => {
+    expect(() =>
+      createReflectionSnapshot({
+        ...validReflectionSnapshotInput(),
+        counterInterpretation: validInterpretationInput(), // same as interpretation
+      }),
+    ).toThrow(/identical/i);
+  });
+
+  it("throws when interpretation text is empty", () => {
+    expect(() =>
+      createReflectionSnapshot({
+        ...validReflectionSnapshotInput(),
+        interpretation: { text: "", evidenceType: "observational" },
+      }),
+    ).toThrow();
+  });
+
+  it("throws when counter-interpretation text is empty", () => {
+    expect(() =>
+      createReflectionSnapshot({
+        ...validReflectionSnapshotInput(),
+        counterInterpretation: { text: "", evidenceType: "derived" },
+      }),
+    ).toThrow();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// createRevision
+// ---------------------------------------------------------------------------
+
+describe("createRevision", () => {
+  it("creates a valid revision with from and to", () => {
+    const snapA = createReflectionSnapshot(validReflectionSnapshotInput());
+    const snapB = createReflectionSnapshot({
+      ...validReflectionSnapshotInput(),
+      reflectedAt: "2026-04-01T10:00:00Z",
+      interpretation: {
+        text: "Neue Deutung nach weiterem Gespräch.",
+        evidenceType: "derived",
+      },
+    });
+
+    const rev = createRevision({
+      at: "2026-04-01T10:30:00Z",
+      driftType: "new_perspective",
+      reason: "Gespräch mit Kolleg:in lieferte neue Sicht.",
+      from: snapA,
+      to: snapB,
+    });
+
+    expect(rev.from).toBe(snapA);
+    expect(rev.to).toBe(snapB);
+    expect(rev.driftType).toBe("new_perspective");
+  });
+
+  it("throws when from is missing", () => {
+    const snap = createReflectionSnapshot(validReflectionSnapshotInput());
+    expect(() =>
+      createRevision({
+        at: "2026-04-01T10:30:00Z",
+        driftType: "new_observation",
+        reason: "reason",
+        from: undefined as any,
+        to: snap,
+      }),
+    ).toThrow(/from/i);
+  });
+
+  it("throws when to is missing", () => {
+    const snap = createReflectionSnapshot(validReflectionSnapshotInput());
+    expect(() =>
+      createRevision({
+        at: "2026-04-01T10:30:00Z",
+        driftType: "new_observation",
+        reason: "reason",
+        from: snap,
+        to: null as any,
+      }),
+    ).toThrow();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// createCase
+// ---------------------------------------------------------------------------
+
+describe("createCase", () => {
+  it("creates a valid case", () => {
+    const c = createCase(validCaseInput());
+    expect(c.id).toBe("case-001");
+    expect(c.participants).toHaveLength(1);
+    expect(c.observation.text).toBe(
+      "Kind schlägt mit der Hand auf den Tisch.",
+    );
+    expect(c.currentReflection.interpretation.text).toBe(
+      "Das Kind zeigt körperliche Anspannung.",
+    );
+    expect(c.revisions).toHaveLength(0);
+  });
+
+  it("throws when participants are empty", () => {
+    expect(() =>
+      createCase({ ...validCaseInput(), participants: [] }),
+    ).toThrow(/participants/i);
+  });
+
+  it("throws when observation text is empty", () => {
+    expect(() =>
+      createCase({
+        ...validCaseInput(),
+        observation: { text: "" },
+      }),
+    ).toThrow(/observation/i);
+  });
+
+  it("throws when observation and interpretation are identical", () => {
+    const input = validCaseInput();
+    input.observation.text = input.currentReflection.interpretation.text;
+    expect(() => createCase(input)).toThrow(/identical/i);
+  });
+
+  it("throws when counter-interpretation is empty", () => {
+    expect(() =>
+      createCase({
+        ...validCaseInput(),
+        currentReflection: {
+          ...validReflectionSnapshotInput(),
+          counterInterpretation: { text: "", evidenceType: "derived" },
+        },
+      }),
+    ).toThrow();
+  });
+
+  it("throws when uncertainty rationale is empty", () => {
+    expect(() =>
+      createCase({
+        ...validCaseInput(),
+        currentReflection: {
+          ...validReflectionSnapshotInput(),
+          uncertainty: { level: 3, rationale: "" },
+        },
+      }),
+    ).toThrow(/rationale/i);
+  });
+});
