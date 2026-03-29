@@ -1,16 +1,24 @@
 <script lang="ts">
   import { page } from '$app/state';
+  import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
-  import { getCase } from '$lib/services/case-service.js';
-  import type { Case, EvidenceType } from '$domain/types.js';
+  import { getCase, deleteCase } from '$lib/services/case-service.js';
+  import type { Case, DriftType, EvidenceType } from '$domain/types.js';
 
   let caseData: Case | null = $state(null);
   let loaded = $state(false);
+  let showDeleteConfirm = $state(false);
 
   const evidenceLabels: Record<EvidenceType, string> = {
     observational: 'Beobachtungsnah',
     derived: 'Abgeleitet',
     speculative: 'Spekulativ'
+  };
+
+  const driftLabels: Record<DriftType, string> = {
+    new_observation: 'Neue Beobachtung',
+    new_perspective: 'Neue Perspektive',
+    reinterpretation: 'Uminterpretation'
   };
 
   function evidenceBadgeClass(t: EvidenceType): string {
@@ -26,6 +34,12 @@
     } catch {
       return iso;
     }
+  }
+
+  function confirmDelete() {
+    if (!caseData) return;
+    deleteCase(caseData.id);
+    goto('/');
   }
 
   onMount(() => {
@@ -121,23 +135,87 @@
     {/if}
 
     <!-- Revisionen -->
-    {#if caseData.revisions.length > 0}
-      <section class="card section">
-        <h2>Revisionen</h2>
-        {#each caseData.revisions as rev}
+    <section class="card section">
+      <div class="section-header">
+        <h2>Revisionshistorie</h2>
+        <span class="revision-count">{caseData.revisions.length} {caseData.revisions.length === 1 ? 'Revision' : 'Revisionen'}</span>
+      </div>
+
+      {#if caseData.revisions.length === 0}
+        <p class="no-revisions">
+          Noch keine Revisionen dokumentiert. Eine Revision dokumentiert die Veränderung
+          Ihres Denkstands — nicht als stille Korrektur, sondern als nachvollziehbare Entwicklung.
+        </p>
+      {:else}
+        {#each caseData.revisions as rev, i}
           <div class="revision">
             <div class="revision-header">
-              <strong>{formatDate(rev.at)}</strong>
-              <span class="badge badge-derived">{rev.driftType}</span>
+              <strong>Revision {i + 1} — {formatDate(rev.at)}</strong>
+              <span class="badge badge-drift">{driftLabels[rev.driftType]}</span>
             </div>
-            <p>{rev.reason}</p>
+            <p class="revision-reason">{rev.reason}</p>
+
+            <details class="revision-details">
+              <summary>Denkstand-Vergleich anzeigen</summary>
+              <div class="revision-compare">
+                <div class="compare-col compare-from">
+                  <h4>Vorher</h4>
+                  <div class="compare-item">
+                    <strong>Deutung</strong>
+                    <p>{rev.from.interpretation.text}</p>
+                    <span class={evidenceBadgeClass(rev.from.interpretation.evidenceType)}>
+                      {evidenceLabels[rev.from.interpretation.evidenceType]}
+                    </span>
+                  </div>
+                  <div class="compare-item">
+                    <strong>Gegen-Deutung</strong>
+                    <p>{rev.from.counterInterpretation.text}</p>
+                  </div>
+                  <div class="compare-item">
+                    <strong>Unsicherheit</strong>
+                    <p>Stufe {rev.from.uncertainty.level}/5 — {rev.from.uncertainty.rationale}</p>
+                  </div>
+                </div>
+                <div class="compare-col compare-to">
+                  <h4>Nachher</h4>
+                  <div class="compare-item">
+                    <strong>Deutung</strong>
+                    <p>{rev.to.interpretation.text}</p>
+                    <span class={evidenceBadgeClass(rev.to.interpretation.evidenceType)}>
+                      {evidenceLabels[rev.to.interpretation.evidenceType]}
+                    </span>
+                  </div>
+                  <div class="compare-item">
+                    <strong>Gegen-Deutung</strong>
+                    <p>{rev.to.counterInterpretation.text}</p>
+                  </div>
+                  <div class="compare-item">
+                    <strong>Unsicherheit</strong>
+                    <p>Stufe {rev.to.uncertainty.level}/5 — {rev.to.uncertainty.rationale}</p>
+                  </div>
+                </div>
+              </div>
+            </details>
           </div>
         {/each}
-      </section>
-    {/if}
+      {/if}
+    </section>
 
+    <!-- Actions -->
     <div class="actions">
+      <a href="/cases/{caseData.id}/revise" class="btn btn-primary">Revision erstellen</a>
       <a href="/" class="btn">← Zurück zur Übersicht</a>
+      {#if !showDeleteConfirm}
+        <button class="btn btn-danger" onclick={() => { showDeleteConfirm = true; }}>
+          Fall löschen
+        </button>
+      {:else}
+        <div class="delete-confirm">
+          <span>Wirklich löschen?</span>
+          <button class="btn btn-danger" onclick={confirmDelete}>Ja, endgültig löschen</button>
+          <button class="btn" onclick={() => { showDeleteConfirm = false; }}>Abbrechen</button>
+        </div>
+      {/if}
     </div>
   {/if}
 </div>
@@ -172,6 +250,19 @@
   }
   .section p {
     margin: 0.3rem 0 0.5rem;
+  }
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+  }
+  .section-header h2 {
+    margin-bottom: 0;
+  }
+  .revision-count {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
   }
   .empty-state {
     text-align: center;
@@ -228,10 +319,15 @@
     margin-top: 0.1rem;
     margin-bottom: 0.75rem;
   }
+  .no-revisions {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+    font-style: italic;
+  }
   .revision {
     border-left: 3px solid var(--color-accent);
     padding-left: 0.75rem;
-    margin-bottom: 0.75rem;
+    margin-bottom: 1rem;
   }
   .revision-header {
     display: flex;
@@ -239,8 +335,86 @@
     gap: 0.5rem;
     margin-bottom: 0.2rem;
     font-size: 0.9rem;
+    flex-wrap: wrap;
+  }
+  .badge-drift {
+    background: var(--color-accent-light);
+    color: var(--color-accent);
+  }
+  .revision-reason {
+    font-size: 0.85rem;
+    color: var(--color-text);
+  }
+  .revision-details {
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+  }
+  .revision-details summary {
+    cursor: pointer;
+    color: var(--color-accent);
+    font-size: 0.8rem;
+    margin-bottom: 0.5rem;
+  }
+  .revision-compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+  }
+  @media (max-width: 600px) {
+    .revision-compare { grid-template-columns: 1fr; }
+  }
+  .compare-col {
+    padding: 0.75rem;
+    border-radius: var(--radius);
+    font-size: 0.8rem;
+  }
+  .compare-from {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+  }
+  .compare-to {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+  }
+  .compare-col h4 {
+    margin: 0 0 0.5rem;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-muted);
+  }
+  .compare-item {
+    margin-bottom: 0.5rem;
+  }
+  .compare-item strong {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+  }
+  .compare-item p {
+    margin: 0.15rem 0 0.25rem;
+    font-size: 0.8rem;
   }
   .actions {
     margin: 1.5rem 0 2rem;
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .btn-danger {
+    background: var(--color-danger);
+    color: #fff;
+    border-color: var(--color-danger);
+  }
+  .btn-danger:hover {
+    background: #9b2c2c;
+  }
+  .delete-confirm {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--color-danger);
   }
 </style>
