@@ -120,11 +120,7 @@ Zonen müssen in zwingender Reihenfolge durchlaufen werden. Die Übergänge sind
 
 ## 7. Minimal sinnvolles Datenmodell
 
-> **Hinweis – Phasenschnitt:** Das folgende Datenmodell ist das **Ziel-/Mehrphasenmodell** für den vollständigen Spannungsatlas. Es beschreibt nicht den aktuellen Implementationsstand.
->
-> **Phase 1 (Reflexionskern – aktuell implementiert):** `Case`, `ReflectionSnapshot` *ohne* `selectedNeeds`/`selectedDeterminants`, `Observation`, `Interpretation`, `Uncertainty`, `TensionEdge`, `Revision`, `CaseParticipant`. Siehe `src/domain/types.ts`.
->
-> **Phase 2 (Explorationsraum – noch nicht implementiert):** `Need`, `Determinant`, `NeedSelection`, `DeterminantSelection` sowie die Felder `selectedNeeds` und `selectedDeterminants` in `ReflectionSnapshot`. Diese Typen gehören zur Explorationsebene (§2 „Ebene A", §8 Phase 2) und sind im aktuellen Code bewusst ausgelassen.
+> **Phasenschnitt:** Dieses Datenmodell beschreibt den vollständigen Mehrphasenzustand (Zielmodell). Der aktuell implementierte Code bildet davon nur den **Phase-1-Reflexionskern** ab: `Case`, `ReflectionSnapshot` (ohne `selectedNeeds`/`selectedDeterminants`), `Observation`, `Interpretation`, `Uncertainty`, `TensionEdge`, `Revision`, `CaseParticipant`. Die Typen des Explorationsraums (`Need`, `Determinant`, `NeedSelection`, `DeterminantSelection`) sowie die Selektionsfelder in `ReflectionSnapshot` gehören zu **Phase 2** und sind noch nicht implementiert.
 
 ```typescript
 type EvidenceType = "observational" | "derived" | "speculative";
@@ -146,13 +142,10 @@ interface Case {
   revisions: Revision[];
 }
 
-// Phase 1 (Reflexionskern): reflectedAt, interpretation, counterInterpretation,
-// uncertainty, tensions — implementiert in src/domain/types.ts.
-// Phase 2 (Explorationsraum): selectedNeeds, selectedDeterminants — noch nicht implementiert.
 interface ReflectionSnapshot {
   reflectedAt: string;
-  selectedNeeds: NeedSelection[];       // Phase 2 – Explorationsraum
-  selectedDeterminants: DeterminantSelection[]; // Phase 2 – Explorationsraum
+  selectedNeeds: NeedSelection[];
+  selectedDeterminants: DeterminantSelection[];
   interpretation: Interpretation;
   counterInterpretation: Interpretation;
   uncertainty: Uncertainty;
