@@ -1,11 +1,11 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import { startNewCase } from '$lib/services/case-service.js';
-  import type { EvidenceType, UncertaintyLevel } from '$domain/types.js';
+  import type { EvidenceType, ParticipantRole, UncertaintyLevel } from '$domain/types.js';
 
   let context = $state('');
   let participantName = $state('');
-  let participantRole = $state<'primary' | 'secondary' | 'staff' | 'contextual'>('primary');
+  let participantRole = $state<ParticipantRole>('primary');
 
   let observationText = $state('');
   let isCameraDescribable = $state(false);
