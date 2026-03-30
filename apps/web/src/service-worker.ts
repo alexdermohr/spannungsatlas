@@ -13,7 +13,7 @@ const CACHE = `app-${version}`;
 const PRECACHE_ASSETS = [
 	...build,
 	...files.filter(
-		(f) => !f.endsWith('/version.json') && !f.endsWith('/sw.js') && !f.endsWith('/sw.ts')
+		(f) => !f.endsWith('/version.json')
 	)
 ];
 const PRECACHE_ASSET_SET = new Set(PRECACHE_ASSETS);

@@ -320,24 +320,21 @@ immer mit `__APP_VERSION__` überein, unabhängig vom Dateisystem-Stand.
 | `version.json` frisch | Network → /version.json | `Cache-Control: no-store` in Response-Headers |
 | Debug-Log | Console (level: Verbose) | `[spannungsatlas] version check` (nur im Dev-Modus) |
 
-**Simulierter Versionswechsel (nur im Preview-/Produktionsmodus sinnvoll):**
+**Update-Flow-Verifikation (über echtes Deployment):**
 
-1. `apps/web/static/version.json` → `build`-Feld manuell ändern (z. B. `"build": "newbuild"`)
-2. Seite neu laden (ohne Hard-Reload – normaler Reload)
-3. Banner unten rechts erscheint: „Neue Version verfügbar"
-4. „Jetzt aktualisieren" klicken → Seite lädt neu auf neuen Stand
+Das Banner erscheint, wenn das abgerufene `/version.json` einen anderen `build`-Wert trägt als
+`__APP_VERSION__.build` des laufenden Standes. Zuverlässig verifizierbar über zwei aufeinanderfolgende Deployments:
 
-> **Hinweis:** Console-Logs (`[spannungsatlas] version check …`) erscheinen nur im Dev-Modus.
-> Im Preview-/Produktionsbuild erfolgt die Verifikation über Banner, Reload und SW-Status in den DevTools.
+1. Ersten Stand deployen, App in einem Tab öffnen
+2. Zweiten Stand deployen (z. B. neuer Commit auf Vercel)
+3. Tab nicht neu laden — beim nächsten Polling-Intervall erscheint das Banner automatisch
+4. „Jetzt aktualisieren" klicken → Seite lädt auf neuen Stand
+5. Multi-Tab: weitere offene Tabs zeigen den Banner nach dem nächsten Fokus-Wechsel
 
-**Multi-Tab-Test:**
-
-1. App in zwei Tabs öffnen
-2. In Tab 1 `version.json` ändern, Tab 1 aktualisieren → Banner erscheint
-3. „Jetzt aktualisieren" in Tab 1 klicken
-4. Tab 1 lädt neu, ist jetzt auf neuem Stand
-5. Tab 2 fokussieren → nach Fokus-Wechsel erscheint auch dort der Banner
-6. Tab 2 ebenfalls aktualisieren
+> **Hinweis:** `apps/web/static/version.json` ist ein Build-Artefakt.
+> Eine Änderung an dieser Quelldatei nach dem Build beeinflusst den bereits gebauten Preview-Stand nicht —
+> die Datei wurde beim Build in den Output kopiert.
+> Console-Logs (`[spannungsatlas] version check …`) erscheinen nur im Dev-Modus.
 
 ### 11.8 Bekannte Grenzen
 
