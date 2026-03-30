@@ -14,7 +14,8 @@
     filledCounterRows,
     ensureTrailingEmptyCounterRow,
     normalizeCounterRows,
-    shouldShowRemoveCounterRow
+    shouldShowRemoveCounterRow,
+    DEFAULT_COUNTER_EVIDENCE
   } from '$lib/forms/new-case-form.js';
   import type { EvidenceType, UncertaintyLevel } from '$domain/types.js';
 
@@ -27,7 +28,7 @@
   let interpretationText = $state('');
   let interpretationEvidence = $state<EvidenceType>('derived');
 
-  let counterRows = $state<CounterRow[]>([{ text: '', evidence: 'derived' }]);
+  let counterRows = $state<CounterRow[]>([{ text: '', evidence: DEFAULT_COUNTER_EVIDENCE }]);
 
   let uncertaintyLevel = $state<UncertaintyLevel>(3);
   let uncertaintyRationale = $state('');

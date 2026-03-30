@@ -64,6 +64,8 @@ export interface CounterRow {
   evidence: EvidenceType;
 }
 
+export const DEFAULT_COUNTER_EVIDENCE: EvidenceType = 'derived';
+
 export function filledCounterRows(rows: CounterRow[]): CounterRow[] {
   return rows
     .filter((r) => r.text.trim() !== '')
@@ -73,13 +75,13 @@ export function filledCounterRows(rows: CounterRow[]): CounterRow[] {
 export function ensureTrailingEmptyCounterRow(rows: CounterRow[]): CounterRow[] {
   const last = rows[rows.length - 1];
   if (last && last.text.trim() !== '') {
-    return [...rows, { text: '', evidence: 'derived' as EvidenceType }];
+    return [...rows, { text: '', evidence: DEFAULT_COUNTER_EVIDENCE }];
   }
   return rows;
 }
 
 export function normalizeCounterRows(rows: CounterRow[]): CounterRow[] {
-  return [...filledCounterRows(rows), { text: '', evidence: 'derived' as EvidenceType }];
+  return [...filledCounterRows(rows), { text: '', evidence: DEFAULT_COUNTER_EVIDENCE }];
 }
 
 export function shouldShowRemoveCounterRow(rows: CounterRow[], row: CounterRow): boolean {
