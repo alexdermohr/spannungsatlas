@@ -3,12 +3,15 @@
   import { tick } from 'svelte';
   import { startNewCase } from '$lib/services/case-service.js';
   import { roleLabels, evidenceLabels } from '$lib/ui/labels.js';
-  import type { EvidenceType, ParticipantRole, UncertaintyLevel } from '$domain/types.js';
-
-  interface ParticipantRow {
-    name: string;
-    role: ParticipantRole;
-  }
+  import {
+    ensureTrailingEmptyRow,
+    filledParticipants,
+    normalizeParticipants,
+    refreshFieldErrors,
+    shouldShowRemoveParticipant,
+    type ParticipantRow
+  } from '$lib/forms/new-case-form.js';
+  import type { EvidenceType, UncertaintyLevel } from '$domain/types.js';
 
   let context = $state('');
   let participants = $state<ParticipantRow[]>([{ name: '', role: 'primary' }]);
@@ -37,35 +40,49 @@
     5: '5 — Hochspekulativ'
   };
 
-  function normalizeParticipants() {
-    const filled = participants.filter((p) => p.name.trim() !== '');
-    participants = [...filled, { name: '', role: 'primary' as ParticipantRole }];
-  }
-
-  /** Called on input: only appends a trailing empty row when needed, never removes rows. */
-  function ensureTrailingEmptyRow() {
-    const last = participants[participants.length - 1];
-    if (last && last.name.trim() !== '') {
-      participants = [...participants, { name: '', role: 'primary' as ParticipantRole }];
-    }
-  }
-
   function removeParticipant(index: number) {
     participants = participants.filter((_, i) => i !== index);
-    normalizeParticipants();
+    participants = normalizeParticipants(participants);
   }
 
-  /** Returns non-empty participants with names trimmed. */
-  function filledParticipants(): ParticipantRow[] {
-    return participants
-      .filter((p) => p.name.trim() !== '')
-      .map((p) => ({ ...p, name: p.name.trim() }));
+  function clearFieldErrors(keys: string[]) {
+    fieldErrors = refreshFieldErrors(fieldErrors, validate(), keys);
+  }
+
+  function handleContextInput() {
+    clearFieldErrors(['context']);
+  }
+
+  function handleParticipantInput(index: number) {
+    participants = ensureTrailingEmptyRow(participants);
+    clearFieldErrors([`participant-${index}`, 'participant-0']);
+  }
+
+  function handleParticipantBlur() {
+    participants = normalizeParticipants(participants);
+    clearFieldErrors(['participant-0']);
+  }
+
+  function handleObservationInput() {
+    clearFieldErrors(['observationText', 'interpretationText']);
+  }
+
+  function handleInterpretationInput() {
+    clearFieldErrors(['interpretationText', 'counterText']);
+  }
+
+  function handleCounterInput() {
+    clearFieldErrors(['counterText']);
+  }
+
+  function handleUncertaintyRationaleInput() {
+    clearFieldErrors(['uncertaintyRationale']);
   }
 
   function validate(): Record<string, string> {
     const errs: Record<string, string> = {};
     if (!context.trim()) errs['context'] = 'Kontext darf nicht leer sein.';
-    if (filledParticipants().length === 0)
+    if (filledParticipants(participants).length === 0)
       errs['participant-0'] = 'Mindestens eine beteiligte Person ist erforderlich.';
     if (!observationText.trim()) errs['observationText'] = 'Beobachtung darf nicht leer sein.';
     if (!interpretationText.trim()) errs['interpretationText'] = 'Deutung darf nicht leer sein.';
@@ -98,7 +115,7 @@
     try {
       const created = startNewCase({
         context: context.trim(),
-        participants: filledParticipants().map((p) => ({
+        participants: filledParticipants(participants).map((p) => ({
           id: p.name,
           role: p.role
         })),
@@ -138,7 +155,7 @@
 
       <label class="field" class:field-error={fieldErrors['context']}>
         <span class="field-label">Situationskontext</span>
-        <textarea id="field-context" bind:value={context} rows="3" placeholder="z.B. Mittagssituation in der Kita, Gruppenraum, 12 Kinder anwesend…"></textarea>
+        <textarea id="field-context" bind:value={context} oninput={handleContextInput} rows="3" placeholder="z.B. Mittagssituation in der Kita, Gruppenraum, 12 Kinder anwesend…"></textarea>
         {#if fieldErrors['context']}<span class="field-error-msg">{fieldErrors['context']}</span>{/if}
       </label>
 
@@ -149,11 +166,11 @@
             <label class="field" class:field-error={fieldErrors[`participant-${i}`]}>
               <span class="sr-only">Name Person {i + 1}</span>
               <input
-                id="field-participant-{i}"
+                id={`field-participant-${i}`}
                 type="text"
                 bind:value={row.name}
-                oninput={() => ensureTrailingEmptyRow()}
-                onblur={() => normalizeParticipants()}
+                oninput={() => handleParticipantInput(i)}
+                onblur={handleParticipantBlur}
                 placeholder="Name oder Pseudonym"
               />
               {#if fieldErrors[`participant-${i}`]}<span class="field-error-msg">{fieldErrors[`participant-${i}`]}</span>{/if}
@@ -166,8 +183,8 @@
                 {/each}
               </select>
             </label>
-            {#if row.name.trim() !== ''}
-              <button type="button" class="btn-remove" onclick={() => removeParticipant(i)} aria-label="Person {i + 1} entfernen">×</button>
+            {#if shouldShowRemoveParticipant(participants, row)}
+              <button type="button" class="btn-remove" onclick={() => removeParticipant(i)} aria-label={`Person ${i + 1} entfernen`}>×</button>
             {/if}
           </div>
         {/each}
@@ -184,7 +201,7 @@
 
       <label class="field" class:field-error={fieldErrors['observationText']}>
         <span class="field-label">Beobachtungstext</span>
-        <textarea id="field-observationText" bind:value={observationText} rows="4" placeholder="z.B. Kind A nimmt Kind B den Stift aus der Hand. Kind B sagt ‚Nein' und wendet sich ab."></textarea>
+        <textarea id="field-observationText" bind:value={observationText} oninput={handleObservationInput} rows="4" placeholder="z.B. Kind A nimmt Kind B den Stift aus der Hand. Kind B sagt ‚Nein' und wendet sich ab."></textarea>
         {#if fieldErrors['observationText']}<span class="field-error-msg">{fieldErrors['observationText']}</span>{/if}
       </label>
 
@@ -204,7 +221,7 @@
 
       <label class="field" class:field-error={fieldErrors['interpretationText']}>
         <span class="field-label">Deutungstext</span>
-        <textarea id="field-interpretationText" bind:value={interpretationText} rows="4" placeholder="z.B. Kind A zeigt möglicherweise Frustration über die eigene Impulskontrolle…"></textarea>
+        <textarea id="field-interpretationText" bind:value={interpretationText} oninput={handleInterpretationInput} rows="4" placeholder="z.B. Kind A zeigt möglicherweise Frustration über die eigene Impulskontrolle…"></textarea>
         {#if fieldErrors['interpretationText']}<span class="field-error-msg">{fieldErrors['interpretationText']}</span>{/if}
       </label>
 
@@ -228,7 +245,7 @@
 
       <label class="field" class:field-error={fieldErrors['counterText']}>
         <span class="field-label">Gegen-Deutungstext</span>
-        <textarea id="field-counterText" bind:value={counterText} rows="4" placeholder="z.B. Kind A imitiert möglicherweise ein Verhalten, das es bei anderen Kindern beobachtet hat…"></textarea>
+        <textarea id="field-counterText" bind:value={counterText} oninput={handleCounterInput} rows="4" placeholder="z.B. Kind A imitiert möglicherweise ein Verhalten, das es bei anderen Kindern beobachtet hat…"></textarea>
         {#if fieldErrors['counterText']}<span class="field-error-msg">{fieldErrors['counterText']}</span>{/if}
       </label>
 
@@ -261,7 +278,7 @@
 
       <label class="field" class:field-error={fieldErrors['uncertaintyRationale']}>
         <span class="field-label">Begründung der Unsicherheit</span>
-        <textarea id="field-uncertaintyRationale" bind:value={uncertaintyRationale} rows="3" placeholder="z.B. Ich kenne die Vorgeschichte zwischen den Kindern nicht ausreichend…"></textarea>
+        <textarea id="field-uncertaintyRationale" bind:value={uncertaintyRationale} oninput={handleUncertaintyRationaleInput} rows="3" placeholder="z.B. Ich kenne die Vorgeschichte zwischen den Kindern nicht ausreichend…"></textarea>
         {#if fieldErrors['uncertaintyRationale']}<span class="field-error-msg">{fieldErrors['uncertaintyRationale']}</span>{/if}
       </label>
     </section>
