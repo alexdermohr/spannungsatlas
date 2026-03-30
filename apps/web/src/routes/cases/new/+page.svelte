@@ -2,6 +2,7 @@
   import { goto } from '$app/navigation';
   import { tick } from 'svelte';
   import { startNewCase } from '$lib/services/case-service.js';
+  import { roleLabels, evidenceLabels } from '$lib/ui/labels.js';
   import type { EvidenceType, ParticipantRole, UncertaintyLevel } from '$domain/types.js';
 
   interface ParticipantRow {
@@ -26,19 +27,6 @@
 
   let fieldErrors = $state<Record<string, string>>({});
   let submitting = $state(false);
-
-  const evidenceLabels: Record<EvidenceType, string> = {
-    observational: 'Beobachtungsnah',
-    derived: 'Abgeleitet',
-    speculative: 'Spekulativ'
-  };
-
-  const roleLabels: Record<ParticipantRole, string> = {
-    primary: 'Primär',
-    secondary: 'Sekundär',
-    staff: 'Fachkraft',
-    contextual: 'Kontextuell'
-  };
 
   const uncertaintyLabels: Record<number, string> = {
     0: '0 — Sicher',
@@ -105,7 +93,7 @@
         context: context.trim(),
         participants: filledParticipants().map((p) => ({
           id: p.name.trim(),
-          ...(p.role ? { role: p.role } : {})
+          role: p.role
         })),
         observationText: observationText.trim(),
         isCameraDescribable,
@@ -421,7 +409,7 @@
     padding: 0;
     margin: -1px;
     overflow: hidden;
-    clip: rect(0, 0, 0, 0);
+    clip-path: inset(50%);
     white-space: nowrap;
     border: 0;
   }

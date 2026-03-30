@@ -2,23 +2,11 @@
   import { page } from '$app/state';
   import { onMount } from 'svelte';
   import { getCase } from '$lib/services/case-service.js';
+  import { roleLabels, evidenceLabels } from '$lib/ui/labels.js';
   import type { Case, EvidenceType } from '$domain/types.js';
 
   let caseData: Case | null = $state(null);
   let loaded = $state(false);
-
-  const evidenceLabels: Record<EvidenceType, string> = {
-    observational: 'Beobachtungsnah',
-    derived: 'Abgeleitet',
-    speculative: 'Spekulativ'
-  };
-
-  const roleLabels: Record<string, string> = {
-    primary: 'Primär',
-    secondary: 'Sekundär',
-    staff: 'Fachkraft',
-    contextual: 'Kontextuell'
-  };
 
   function evidenceBadgeClass(t: EvidenceType): string {
     return `badge badge-${t}`;

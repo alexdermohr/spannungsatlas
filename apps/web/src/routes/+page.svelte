@@ -1,14 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { getAllCases } from '$lib/services/case-service.js';
+  import { roleLabels } from '$lib/ui/labels.js';
   import type { Case } from '$domain/types.js';
-
-  const roleLabels: Record<string, string> = {
-    primary: 'Primär',
-    secondary: 'Sekundär',
-    staff: 'Fachkraft',
-    contextual: 'Kontextuell'
-  };
 
   let cases: Case[] = $state([]);
   let loaded = $state(false);
@@ -41,7 +35,7 @@
     const label = role ? `${name} (${role})` : name;
     if (ps.length === 1) return label;
     const rest = ps.length - 1;
-    return `${label} + ${rest} weitere`;
+    return `${label} + ${rest} weitere ${rest === 1 ? 'Person' : 'Personen'}`;
   }
 </script>
 
