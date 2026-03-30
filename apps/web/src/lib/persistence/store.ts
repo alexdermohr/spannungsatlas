@@ -11,6 +11,45 @@ export interface PersistenceStore {
 
 const STORAGE_KEY = 'spannungsatlas-cases';
 
+/**
+ * Normalizes a raw case entry from storage into the current plural schema.
+ *
+ * Supports forward-migration from earlier single-value fields:
+ *   counterInterpretation (singular) → counterInterpretations: [value]
+ *   uncertainty (singular)           → uncertainties: [value]
+ *
+ * If the plural fields are already present they are used as-is.
+ * Missing or invalid fields are left for guardCase to reject.
+ */
+function normalizeCaseFromStorage(raw: unknown): unknown {
+  if (typeof raw !== 'object' || raw === null) return raw;
+  const entry = raw as Record<string, unknown>;
+
+  const reflection = entry['currentReflection'];
+  if (typeof reflection !== 'object' || reflection === null) return entry;
+  const snap = reflection as Record<string, unknown>;
+
+  let changed = false;
+  const updated: Record<string, unknown> = { ...snap };
+
+  // Migrate singular counterInterpretation → counterInterpretations
+  if (!Array.isArray(snap['counterInterpretations']) && snap['counterInterpretation'] !== undefined) {
+    updated['counterInterpretations'] = [snap['counterInterpretation']];
+    delete updated['counterInterpretation'];
+    changed = true;
+  }
+
+  // Migrate singular uncertainty → uncertainties
+  if (!Array.isArray(snap['uncertainties']) && snap['uncertainty'] !== undefined) {
+    updated['uncertainties'] = [snap['uncertainty']];
+    delete updated['uncertainty'];
+    changed = true;
+  }
+
+  if (!changed) return entry;
+  return { ...entry, currentReflection: updated };
+}
+
 function isStorageAvailable(): boolean {
   return typeof localStorage !== 'undefined';
 }
@@ -28,9 +67,11 @@ function readCases(): Case[] {
   try {
     const parsed: unknown = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
-    return (parsed as unknown[]).filter(
-      (entry) => typeof entry === 'object' && entry !== null && guardCase(entry as Case).length === 0
-    ) as Case[];
+    return (parsed as unknown[])
+      .map(normalizeCaseFromStorage)
+      .filter(
+        (entry) => typeof entry === 'object' && entry !== null && guardCase(entry as Case).length === 0
+      ) as Case[];
   } catch {
     return [];
   }

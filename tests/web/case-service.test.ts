@@ -113,3 +113,73 @@ describe('startNewCase', () => {
     expect(persisted.currentReflection.uncertainties).toHaveLength(2);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Migration tests — old singular format
+// ---------------------------------------------------------------------------
+
+const STORAGE_KEY = 'spannungsatlas-cases';
+
+function makeOldSingularCase(id: string): object {
+  return {
+    id,
+    context: 'Morgenkreis',
+    participants: [{ id: 'Anna', role: 'primary' }],
+    observation: { text: 'Anna schaut auf den Boden.', isCameraDescribable: true },
+    currentReflection: {
+      reflectedAt: '2026-03-01T08:00:00Z',
+      interpretation: { text: 'Anna wirkt gehemmt.', evidenceType: 'derived' },
+      // old singular fields
+      counterInterpretation: { text: 'Anna ist müde.', evidenceType: 'speculative' },
+      uncertainty: { level: 3, rationale: 'Nur eine Beobachtung.' },
+      tensions: []
+    },
+    revisions: []
+  };
+}
+
+describe('migration — old singular schema', () => {
+  const originalLocalStorage = globalThis.localStorage;
+
+  beforeEach(() => {
+    Object.defineProperty(globalThis, 'localStorage', {
+      configurable: true,
+      value: new MemoryStorage()
+    });
+  });
+
+  afterEach(() => {
+    Object.defineProperty(globalThis, 'localStorage', {
+      configurable: true,
+      value: originalLocalStorage
+    });
+  });
+
+  it('loads an old case with singular counterInterpretation as counterInterpretations array of length 1', () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([makeOldSingularCase('old-001')]));
+
+    const cases = getAllCases();
+    expect(cases).toHaveLength(1);
+    const reflection = cases[0]!.currentReflection;
+    expect(reflection.counterInterpretations).toHaveLength(1);
+    expect(reflection.counterInterpretations[0]!.text).toBe('Anna ist müde.');
+    expect(reflection.counterInterpretations[0]!.evidenceType).toBe('speculative');
+  });
+
+  it('loads an old case with singular uncertainty as uncertainties array of length 1', () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([makeOldSingularCase('old-002')]));
+
+    const cases = getAllCases();
+    expect(cases).toHaveLength(1);
+    const reflection = cases[0]!.currentReflection;
+    expect(reflection.uncertainties).toHaveLength(1);
+    expect(reflection.uncertainties[0]!.level).toBe(3);
+    expect(reflection.uncertainties[0]!.rationale).toBe('Nur eine Beobachtung.');
+  });
+
+  it('does not crash when reflection fields are missing — case is silently skipped', () => {
+    const broken = { id: 'broken', context: 'x', participants: [], observation: { text: 'y', isCameraDescribable: false }, currentReflection: null, revisions: [] };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([broken]));
+    expect(() => getAllCases()).not.toThrow();
+  });
+});

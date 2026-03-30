@@ -109,6 +109,9 @@ export interface TensionEdge {
  * Later reflections do not silently overwrite earlier ones (MASTERPLAN §2 #14).
  *
  * At least one counter-interpretation and at least one uncertainty are required.
+ * Multiple counter-interpretations are alternative explanations of the same observation.
+ * Multiple uncertainties are independently reasoned sources of doubt, not a
+ * computed aggregate. Each entry stands on its own with its own level and rationale.
  */
 export interface ReflectionSnapshot {
   readonly reflectedAt: string;

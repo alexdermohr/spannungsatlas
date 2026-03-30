@@ -30,8 +30,8 @@ Eine geordnete Übersicht aller Dokumente findet sich im [Dokumentationsindex](.
 ## Kernprinzipien
 
 - Beobachtung und Deutung werden getrennt dokumentiert.
-- Gegen-Deutung ist Pflicht.
-- Unsicherheit bleibt sichtbar.
+- Gegen-Deutungen sind Pflicht.
+- Unsicherheiten bleiben sichtbar.
 - Profile sind kontextgebundene, revidierbare Arbeitsprofile.
 
 ## Minimaler Arbeitsablauf
@@ -39,8 +39,8 @@ Eine geordnete Übersicht aller Dokumente findet sich im [Dokumentationsindex](.
 1. **Fall anlegen** — Kontext und beteiligte Person erfassen.
 2. **Beobachtung dokumentieren** — beschreibend, möglichst kameraähnlich.
 3. **Deutung formulieren** — Hypothese mit markierter Evidenznähe.
-4. **Gegen-Deutung formulieren** — alternative Lesart derselben Beobachtung.
-5. **Unsicherheit begründen** — Datenlücken, offene Fragen, Begrenzungen benennen.
+4. **Gegen-Deutungen formulieren** — alternative Lesarten derselben Beobachtung (mindestens eine).
+5. **Unsicherheiten begründen** — Datenlücken, offene Fragen, Begrenzungen benennen (mindestens eine).
 6. **Fallansicht prüfen** — Trennung der Elemente und Gesamtbild kontrollieren.
 
 ## Architektur auf einen Blick
