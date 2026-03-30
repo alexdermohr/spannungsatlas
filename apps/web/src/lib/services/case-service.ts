@@ -11,8 +11,7 @@ export interface StartNewCaseInput {
   interpretationText: string;
   interpretationEvidenceType: EvidenceType;
   counterInterpretations: Array<{ text: string; evidenceType: EvidenceType }>;
-  uncertaintyLevel: UncertaintyLevel;
-  uncertaintyRationale: string;
+  uncertainties: Array<{ level: UncertaintyLevel; rationale: string }>;
 }
 
 const store: PersistenceStore = localStorageStore;
@@ -36,10 +35,7 @@ export function startNewCase(input: StartNewCaseInput): Case {
         evidenceType: input.interpretationEvidenceType
       },
       counterInterpretations: input.counterInterpretations,
-      uncertainty: {
-        level: input.uncertaintyLevel,
-        rationale: input.uncertaintyRationale
-      }
+      uncertainties: input.uncertainties
     }
   };
 

@@ -107,12 +107,14 @@ export interface TensionEdge {
 /**
  * A time-stamped snapshot of a reflection — a "Denkstand".
  * Later reflections do not silently overwrite earlier ones (MASTERPLAN §2 #14).
+ *
+ * At least one counter-interpretation and at least one uncertainty are required.
  */
 export interface ReflectionSnapshot {
   readonly reflectedAt: string;
   readonly interpretation: Interpretation;
   readonly counterInterpretations: readonly Interpretation[];
-  readonly uncertainty: Uncertainty;
+  readonly uncertainties: readonly Uncertainty[];
   readonly tensions: readonly TensionEdge[];
 }
 

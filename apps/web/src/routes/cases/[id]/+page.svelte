@@ -77,12 +77,10 @@
 
     <!-- Gegen-Deutungen -->
     <section class="card section">
-      <h2>Gegen-Deutung{caseData.currentReflection.counterInterpretations.length > 1 ? 'en' : ''}</h2>
+      <h2>Gegen-Deutungen</h2>
       {#each caseData.currentReflection.counterInterpretations as counter, i}
-        <div class={caseData.currentReflection.counterInterpretations.length > 1 ? 'counter-item' : ''}>
-          {#if caseData.currentReflection.counterInterpretations.length > 1}
-            <strong class="counter-index">{i + 1}.</strong>
-          {/if}
+        <div class="counter-item">
+          <strong class="sub-heading">Gegen-Deutung {i + 1}</strong>
           <p>{counter.text}</p>
           <span class={evidenceBadgeClass(counter.evidenceType)}>
             {evidenceLabels[counter.evidenceType]}
@@ -91,19 +89,24 @@
       {/each}
     </section>
 
-    <!-- Unsicherheit -->
+    <!-- Unsicherheiten -->
     <section class="card section">
-      <h2>Unsicherheit</h2>
-      <div class="uncertainty-level">
-        <strong>Stufe {caseData.currentReflection.uncertainty.level}</strong> / 5
-      </div>
-      <div class="uncertainty-bar">
-        <div
-          class="uncertainty-fill"
-          style="width: {(caseData.currentReflection.uncertainty.level / 5) * 100}%"
-        ></div>
-      </div>
-      <p class="rationale">{caseData.currentReflection.uncertainty.rationale}</p>
+      <h2>Unsicherheiten</h2>
+      {#each caseData.currentReflection.uncertainties as u, i}
+        <div class="uncertainty-item">
+          <strong class="sub-heading">Unsicherheit {i + 1}</strong>
+          <div class="uncertainty-level">
+            <strong>Stufe {u.level}</strong> / 5
+          </div>
+          <div class="uncertainty-bar">
+            <div
+              class="uncertainty-fill"
+              style="width: {(u.level / 5) * 100}%"
+            ></div>
+          </div>
+          <p class="rationale">{u.rationale}</p>
+        </div>
+      {/each}
     </section>
 
     <!-- Spannungen -->
@@ -251,8 +254,20 @@
   .counter-item:last-child {
     margin-bottom: 0;
   }
-  .counter-index {
-    font-size: 0.85rem;
+  .uncertainty-item {
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+  .uncertainty-item:last-child {
+    margin-bottom: 0;
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+  .sub-heading {
+    display: block;
+    font-size: 0.82rem;
     color: var(--color-text-muted);
+    margin-bottom: 0.15rem;
   }
 </style>

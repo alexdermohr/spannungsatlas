@@ -353,8 +353,13 @@ export function guardReflectionSnapshot(
       if (r) errors.push(r);
     }
   }
-  push(guardUncertaintyLevel(snapshot.uncertainty.level));
-  push(guardUncertaintyRationale(snapshot.uncertainty.rationale));
+  if (snapshot.uncertainties.length === 0) {
+    errors.push("At least one uncertainty is required.");
+  }
+  for (const u of snapshot.uncertainties) {
+    push(guardUncertaintyLevel(u.level));
+    push(guardUncertaintyRationale(u.rationale));
+  }
 
   for (const edge of snapshot.tensions) {
     errors.push(...guardTensionEdgeFields(edge));

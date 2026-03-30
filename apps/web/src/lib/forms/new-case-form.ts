@@ -1,4 +1,4 @@
-import type { ParticipantRole, EvidenceType } from '$domain/types.js';
+import type { ParticipantRole, EvidenceType, UncertaintyLevel } from '$domain/types.js';
 
 export interface ParticipantRow {
   name: string;
@@ -86,4 +86,33 @@ export function normalizeCounterRows(rows: CounterRow[]): CounterRow[] {
 
 export function shouldShowRemoveCounterRow(rows: CounterRow[], row: CounterRow): boolean {
   return row.text.trim() !== '' && filledCounterRows(rows).length > 1;
+}
+
+export interface UncertaintyRow {
+  level: UncertaintyLevel;
+  rationale: string;
+}
+
+export const DEFAULT_UNCERTAINTY_LEVEL: UncertaintyLevel = 3;
+
+export function filledUncertaintyRows(rows: UncertaintyRow[]): UncertaintyRow[] {
+  return rows
+    .filter((r) => r.rationale.trim() !== '')
+    .map((r) => ({ ...r, rationale: r.rationale.trim() }));
+}
+
+export function ensureTrailingEmptyUncertaintyRow(rows: UncertaintyRow[]): UncertaintyRow[] {
+  const last = rows[rows.length - 1];
+  if (last && last.rationale.trim() !== '') {
+    return [...rows, { level: DEFAULT_UNCERTAINTY_LEVEL, rationale: '' }];
+  }
+  return rows;
+}
+
+export function normalizeUncertaintyRows(rows: UncertaintyRow[]): UncertaintyRow[] {
+  return [...filledUncertaintyRows(rows), { level: DEFAULT_UNCERTAINTY_LEVEL, rationale: '' }];
+}
+
+export function shouldShowRemoveUncertaintyRow(rows: UncertaintyRow[], row: UncertaintyRow): boolean {
+  return row.rationale.trim() !== '' && filledUncertaintyRows(rows).length > 1;
 }

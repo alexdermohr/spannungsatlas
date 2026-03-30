@@ -15,9 +15,15 @@
     ensureTrailingEmptyCounterRow,
     normalizeCounterRows,
     shouldShowRemoveCounterRow,
-    DEFAULT_COUNTER_EVIDENCE
+    DEFAULT_COUNTER_EVIDENCE,
+    type UncertaintyRow,
+    filledUncertaintyRows,
+    ensureTrailingEmptyUncertaintyRow,
+    normalizeUncertaintyRows,
+    shouldShowRemoveUncertaintyRow,
+    DEFAULT_UNCERTAINTY_LEVEL
   } from '$lib/forms/new-case-form.js';
-  import type { EvidenceType, UncertaintyLevel } from '$domain/types.js';
+  import type { EvidenceType } from '$domain/types.js';
 
   let context = $state('');
   let participants = $state<ParticipantRow[]>([{ name: '', role: 'primary' }]);
@@ -30,8 +36,7 @@
 
   let counterRows = $state<CounterRow[]>([{ text: '', evidence: DEFAULT_COUNTER_EVIDENCE }]);
 
-  let uncertaintyLevel = $state<UncertaintyLevel>(3);
-  let uncertaintyRationale = $state('');
+  let uncertaintyRows = $state<UncertaintyRow[]>([{ level: DEFAULT_UNCERTAINTY_LEVEL, rationale: '' }]);
 
   let fieldErrors = $state<Record<string, string>>({});
   let submitting = $state(false);
@@ -48,6 +53,7 @@
   function removeParticipant(index: number) {
     participants = participants.filter((_, i) => i !== index);
     participants = normalizeParticipants(participants);
+    clearFieldErrors(['participant-0']);
   }
 
   function clearFieldErrors(keys: string[]) {
@@ -73,7 +79,8 @@
   }
 
   function handleInterpretationInput() {
-    clearFieldErrors(['interpretationText', 'counterText']);
+    const counterKeys = counterRows.map((_, i) => `counterText-${i}`);
+    clearFieldErrors(['interpretationText', ...counterKeys]);
   }
 
   function handleCounterInput(index: number) {
@@ -84,10 +91,18 @@
   function removeCounterRow(index: number) {
     counterRows = counterRows.filter((_, i) => i !== index);
     counterRows = normalizeCounterRows(counterRows);
+    clearFieldErrors(counterRows.map((_, i) => `counterText-${i}`));
   }
 
-  function handleUncertaintyRationaleInput() {
-    clearFieldErrors(['uncertaintyRationale']);
+  function handleUncertaintyInput(index: number) {
+    uncertaintyRows = ensureTrailingEmptyUncertaintyRow(uncertaintyRows);
+    clearFieldErrors([`uncertaintyRationale-${index}`]);
+  }
+
+  function removeUncertaintyRow(index: number) {
+    uncertaintyRows = uncertaintyRows.filter((_, i) => i !== index);
+    uncertaintyRows = normalizeUncertaintyRows(uncertaintyRows);
+    clearFieldErrors(uncertaintyRows.map((_, i) => `uncertaintyRationale-${i}`));
   }
 
   function validate(): Record<string, string> {
@@ -97,8 +112,6 @@
       errs['participant-0'] = 'Mindestens eine beteiligte Person ist erforderlich.';
     if (!observationText.trim()) errs['observationText'] = 'Beobachtung darf nicht leer sein.';
     if (!interpretationText.trim()) errs['interpretationText'] = 'Deutung darf nicht leer sein.';
-    if (!uncertaintyRationale.trim())
-      errs['uncertaintyRationale'] = 'Begründung der Unsicherheit fehlt.';
     if (observationText.trim() && observationText.trim() === interpretationText.trim()) {
       errs['interpretationText'] = 'Beobachtung und Deutung dürfen nicht identisch sein.';
     }
@@ -118,6 +131,10 @@
           }
         }
       }
+    }
+    const filledUncerts = filledUncertaintyRows(uncertaintyRows);
+    if (filledUncerts.length === 0) {
+      errs['uncertaintyRationale-0'] = 'Mindestens eine Unsicherheitsbegründung ist erforderlich.';
     }
     return errs;
   }
@@ -151,8 +168,10 @@
           text: r.text,
           evidenceType: r.evidence
         })),
-        uncertaintyLevel,
-        uncertaintyRationale: uncertaintyRationale.trim()
+        uncertainties: filledUncertaintyRows(uncertaintyRows).map((r) => ({
+          level: r.level,
+          rationale: r.rationale
+        }))
       });
       goto(`/cases/${created.id}`);
     } catch (e: unknown) {
@@ -267,18 +286,18 @@
       </label>
     </section>
 
-    <!-- Sektion 4: Gegen-Deutung -->
+    <!-- Sektion 4: Gegen-Deutungen -->
     <section class="card form-section">
-      <h2>4. Gegen-Deutung</h2>
+      <h2>4. Gegen-Deutungen</h2>
       <p class="helper">
         Welche alternative Erklärung wäre ebenfalls denkbar? Die Gegen-Deutung zwingt
         zur Perspektiverweiterung und verhindert vorschnelle Festlegung.
       </p>
 
       <fieldset class="counter-fieldset">
-        <legend class="field-label">Gegen-Deutungen</legend>
         {#each counterRows as row, i}
           <div class="counter-block">
+            <span class="block-sub-heading">Gegen-Deutung {i + 1}</span>
             <label class="field" class:field-error={fieldErrors[`counterText-${i}`]}>
               <span class="sr-only">Gegen-Deutung {i + 1}</span>
               <textarea
@@ -314,28 +333,51 @@
       </fieldset>
     </section>
 
-    <!-- Sektion 5: Unsicherheit -->
+    <!-- Sektion 5: Unsicherheiten -->
     <section class="card form-section">
-      <h2>5. Unsicherheit</h2>
+      <h2>5. Unsicherheiten</h2>
       <p class="helper">
         Wie sicher sind Sie sich in Ihrer Einschätzung? Unsicherheit explizit zu
         benennen ist ein Qualitätsmerkmal professioneller Reflexion.
       </p>
 
-      <label class="field">
-        <span class="field-label">Unsicherheitsstufe</span>
-        <select bind:value={uncertaintyLevel}>
-          {#each [0, 1, 2, 3, 4, 5] as lvl}
-            <option value={lvl}>{uncertaintyLabels[lvl]}</option>
-          {/each}
-        </select>
-      </label>
-
-      <label class="field" class:field-error={fieldErrors['uncertaintyRationale']}>
-        <span class="field-label">Begründung der Unsicherheit</span>
-        <textarea id="field-uncertaintyRationale" bind:value={uncertaintyRationale} oninput={handleUncertaintyRationaleInput} rows="3" placeholder="z.B. Ich kenne die Vorgeschichte zwischen den Kindern nicht ausreichend…"></textarea>
-        {#if fieldErrors['uncertaintyRationale']}<span class="field-error-msg">{fieldErrors['uncertaintyRationale']}</span>{/if}
-      </label>
+      <fieldset class="uncertainty-fieldset">
+        {#each uncertaintyRows as row, i}
+          <div class="uncertainty-block">
+            <span class="block-sub-heading">Unsicherheit {i + 1}</span>
+            <label class="field">
+              <span class="field-label">Unsicherheitsstufe</span>
+              <select bind:value={row.level}>
+                {#each [0, 1, 2, 3, 4, 5] as lvl}
+                  <option value={lvl}>{uncertaintyLabels[lvl]}</option>
+                {/each}
+              </select>
+            </label>
+            <label class="field" class:field-error={fieldErrors[`uncertaintyRationale-${i}`]}>
+              <span class="field-label">Begründung der Unsicherheit</span>
+              <textarea
+                id={`field-uncertaintyRationale-${i}`}
+                bind:value={row.rationale}
+                oninput={() => handleUncertaintyInput(i)}
+                rows="3"
+                placeholder="z.B. Ich kenne die Vorgeschichte zwischen den Kindern nicht ausreichend…"
+              ></textarea>
+              {#if fieldErrors[`uncertaintyRationale-${i}`]}<span class="field-error-msg">{fieldErrors[`uncertaintyRationale-${i}`]}</span>{/if}
+            </label>
+            <div class="uncertainty-block-footer">
+              <button
+                type="button"
+                class="btn-remove"
+                class:btn-remove--hidden={!shouldShowRemoveUncertaintyRow(uncertaintyRows, row)}
+                onclick={() => removeUncertaintyRow(i)}
+                aria-label={`Unsicherheit ${i + 1} entfernen`}
+                aria-hidden={!shouldShowRemoveUncertaintyRow(uncertaintyRows, row) ? true : undefined}
+                tabindex={!shouldShowRemoveUncertaintyRow(uncertaintyRows, row) ? -1 : undefined}
+              >×</button>
+            </div>
+          </div>
+        {/each}
+      </fieldset>
     </section>
 
     <div class="form-actions">
@@ -492,9 +534,6 @@
     padding: 0;
     margin: 0;
   }
-  .counter-fieldset legend {
-    padding: 0;
-  }
   .counter-block {
     margin-bottom: 0.75rem;
   }
@@ -509,6 +548,37 @@
   .field-counter-evidence {
     flex: 1;
     margin-bottom: 0;
+  }
+  /* Uncertainty (Unsicherheit) blocks */
+  .uncertainty-fieldset {
+    border: none;
+    padding: 0;
+    margin: 0;
+  }
+  .uncertainty-block {
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+  .uncertainty-block:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+  }
+  .uncertainty-block .field {
+    margin-bottom: 0.5rem;
+  }
+  .uncertainty-block-footer {
+    display: flex;
+    justify-content: flex-end;
+  }
+  /* Visible sub-headings for dynamic rows */
+  .block-sub-heading {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    margin-bottom: 0.3rem;
   }
   .sr-only {
     position: absolute;

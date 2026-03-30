@@ -164,7 +164,7 @@ export interface CreateReflectionSnapshotInput {
   reflectedAt: string;
   interpretation: CreateInterpretationInput;
   counterInterpretations: CreateInterpretationInput[];
-  uncertainty: CreateUncertaintyInput;
+  uncertainties: CreateUncertaintyInput[];
   tensions?: CreateTensionEdgeInput[];
 }
 
@@ -188,14 +188,17 @@ export function createReflectionSnapshot(
     }
   }
 
-  const uncertainty = createUncertainty(input.uncertainty);
+  if (input.uncertainties.length === 0) {
+    throw new Error("At least one uncertainty is required.");
+  }
+  const uncertainties = input.uncertainties.map(createUncertainty);
   const tensions = (input.tensions ?? []).map(createTensionEdge);
 
   const snapshot: ReflectionSnapshot = {
     reflectedAt: input.reflectedAt,
     interpretation,
     counterInterpretations,
-    uncertainty,
+    uncertainties,
     tensions,
   };
 

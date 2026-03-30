@@ -47,7 +47,7 @@ function validReflectionSnapshotInput() {
     reflectedAt: "2026-03-28T10:00:00Z",
     interpretation: validInterpretationInput(),
     counterInterpretations: [validCounterInterpretationInput()],
-    uncertainty: validUncertaintyInput(),
+    uncertainties: [validUncertaintyInput()],
     tensions: [],
   };
 }
@@ -348,6 +348,28 @@ describe("createReflectionSnapshot", () => {
       }),
     ).toThrow(/required/i);
   });
+
+  it("creates a valid snapshot with multiple uncertainties", () => {
+    const snap = createReflectionSnapshot({
+      ...validReflectionSnapshotInput(),
+      uncertainties: [
+        validUncertaintyInput(),
+        { level: 1 as const, rationale: "Zweite Unsicherheitsbegründung." },
+      ],
+    });
+    expect(snap.uncertainties).toHaveLength(2);
+    expect(snap.uncertainties[0]!.level).toBe(3);
+    expect(snap.uncertainties[1]!.level).toBe(1);
+  });
+
+  it("throws when no uncertainties are provided", () => {
+    expect(() =>
+      createReflectionSnapshot({
+        ...validReflectionSnapshotInput(),
+        uncertainties: [],
+      }),
+    ).toThrow(/required/i);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -533,7 +555,7 @@ describe("createCase", () => {
         ...validCaseInput(),
         currentReflection: {
           ...validReflectionSnapshotInput(),
-          uncertainty: { level: 3, rationale: "" },
+          uncertainties: [{ level: 3, rationale: "" }],
         },
       }),
     ).toThrow(/rationale/i);
