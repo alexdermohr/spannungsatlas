@@ -15,7 +15,13 @@
 			const res = await fetch('/version.json', { cache: 'no-store' });
 			if (!res.ok) return;
 			const remote: Partial<AppVersion> = await res.json();
-			if (isUpdateAvailable(currentBuild, remote)) {
+			const newVersionFound = isUpdateAvailable(currentBuild, remote);
+			console.debug('[spannungsatlas] version check', {
+				current: currentBuild,
+				remote: remote.build ?? '(missing)',
+				updateAvailable: newVersionFound
+			});
+			if (newVersionFound) {
 				updateAvailable = true;
 			}
 		} catch {
@@ -29,9 +35,29 @@
 			try {
 				const reg = await navigator.serviceWorker.getRegistration();
 				if (reg?.waiting) {
+					// Reload only after the new SW has actually taken control.
+					// controllerchange fires exactly when the new SW becomes the active
+					// controller — this is the correct, race-free moment to reload.
+					const reloadOnControllerChange = () => window.location.reload();
+					navigator.serviceWorker.addEventListener('controllerchange', reloadOnControllerChange, {
+						once: true
+					});
+
+					// Safety timeout: if controllerchange doesn't fire within 1.5 s
+					// (e.g. no existing clients to claim), reload anyway.
+					const safetyTimer = setTimeout(() => {
+						navigator.serviceWorker.removeEventListener(
+							'controllerchange',
+							reloadOnControllerChange
+						);
+						window.location.reload();
+					}, 1500);
+
 					reg.waiting.postMessage({ type: 'SKIP_WAITING' });
-					// Give the SW a moment to skip waiting before we reload.
-					await new Promise<void>((r) => setTimeout(r, 250));
+
+					// controllerchange listener handles reload; safetyTimer is the fallback.
+					void safetyTimer;
+					return;
 				}
 			} catch {
 				// SW not available, proceed with plain reload.
@@ -42,6 +68,17 @@
 
 	onMount(() => {
 		checkForUpdate();
+
+		// Log SW state once for debuggability.
+		if ('serviceWorker' in navigator) {
+			navigator.serviceWorker.getRegistration().then((reg) => {
+				console.debug('[spannungsatlas] SW state', {
+					active: reg?.active?.state ?? 'none',
+					waiting: reg?.waiting ? 'yes' : 'none',
+					installing: reg?.installing ? 'yes' : 'none'
+				});
+			});
+		}
 
 		// Re-check every 5 minutes.
 		const interval = setInterval(checkForUpdate, 5 * 60 * 1000);

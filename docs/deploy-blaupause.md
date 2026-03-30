@@ -198,6 +198,12 @@ Gleichzeitig wird `__APP_VERSION__` als globale Konstante in den App-Code eingeb
 
 **Invariante:** `version.json` ist die einzige laufzeitfähige Wahrheitsquelle für die Build-Identität.
 
+#### Atomic-Deploy-Garantie
+
+Vercel deployed atomisch: `version.json` und alle Assets einer neuen Version werden gemeinsam
+aktiviert. Es gibt keinen Zustand, in dem ein neues `version.json` mit alten Assets zusammenfällt.
+Der einzige Edge-Fall – offene Tabs während eines Deploys – ist durch den Update-Flow abgedeckt.
+
 ### 11.3 Service Worker und Cache-Strategie
 
 Der Service Worker liegt unter `apps/web/src/service-worker.ts` und wird von SvelteKit
@@ -216,15 +222,39 @@ Bei jedem neuen Build werden alle alten Caches beim Aktivieren des neuen SW gel�
 **Update-Aktivierung:** Der neue Service Worker übernimmt nicht automatisch.
 Der Nutzer steuert das über den Update-Banner (siehe unten).
 
-### 11.4 Clientseitige Update-Erkennung
+### 11.4 Clientseitige Update-Erkennung und Update-Flow
 
 `UpdateBanner.svelte` (eingebunden in `+layout.svelte`) prüft alle 5 Minuten
 und bei Tab-Fokus, ob `version.json` am Server eine neuere `build`-ID hat.
 
 Falls ja: dezenter Banner unten rechts mit „Neue Version verfügbar – Jetzt aktualisieren".
-Klick → sendet `SKIP_WAITING` an wartenden Service Worker → Seite lädt neu.
 
-Der Banner funktioniert auch ohne aktiven Service Worker (dann nur Plain-Reload).
+**Aktivierungssequenz:**
+1. Nutzer klickt „Jetzt aktualisieren"
+2. `SKIP_WAITING` wird an den wartenden Service Worker gesendet
+3. Der neue SW übernimmt → feuert `controllerchange`-Event
+4. Erst dann lädt die Seite neu (race-free: kein Reload vor vollständiger SW-Übernahme)
+5. Sicherheits-Timeout (1,5 s): Falls `controllerchange` nicht feuert, Reload trotzdem
+
+Der Banner funktioniert auch ohne aktiven Service Worker (dann direkter Reload).
+
+**Multi-Tab-Verhalten:**
+- Nur der Tab, der den Banner bestätigt, löst `SKIP_WAITING` aus
+- Alle anderen offenen Tabs bekommen nach ihrem nächsten Fokus-Wechsel ebenfalls
+  den Banner angezeigt (nächste `version.json`-Prüfung)
+- Sie laden beim nächsten Klick auf „Jetzt aktualisieren" ebenfalls neu
+
+#### Debug-Logging
+
+Jeder version-Check und der SW-State werden als `console.debug`-Ausgaben
+unter dem Präfix `[spannungsatlas]` geloggt:
+
+```
+[spannungsatlas] version check { current: "abc123", remote: "def456", updateAvailable: true }
+[spannungsatlas] SW state { active: "activated", waiting: "none", installing: "none" }
+```
+
+Dies ermöglicht Diagnose im Browser-Konsolefenster ohne zusätzliche DevTools-Suche.
 
 ### 11.5 PWA-Basis
 
@@ -235,39 +265,60 @@ Der Banner funktioniert auch ohne aktiven Service Worker (dann nur Plain-Reload)
 
 ### 11.6 Cache-Control-Header auf Vercel
 
-Konfiguriert in `vercel.json`:
+Konfiguriert in `vercel.json`. Vercel wendet alle passenden Regeln an; spezifischere Regeln
+(z. B. `version.json`) überschreiben die allgemeinere Catch-All-Regel:
 
-| Pfad | Cache-Control |
-|---|---|
-| `/version.json` | `no-store, max-age=0` |
-| `/service-worker.js` | `no-store, max-age=0` |
-| `/_app/immutable/…` | `public, max-age=31536000, immutable` |
+| Pfad | Cache-Control | Begründung |
+|---|---|---|
+| `/version.json` | `no-store, max-age=0` | Immer frisch – Versionswahrheitsquelle |
+| `/service-worker.js` | `no-store, max-age=0` | Browser-SW-Update-Mechanismus |
+| `/_app/immutable/…` | `public, max-age=31536000, immutable` | Content-hashed, nie veraltet |
+| alle anderen Pfade | `no-cache, must-revalidate` | HTML und statische Assets: immer revalidieren |
 
-HTML-Responses werden von der SvelteKit-Vercel-Adapter-Integration verwaltet
-und sind standardmäßig revalidierbar.
+**Hinweis:** Die Catch-All-Regel `/((?!_app/).*)` matcht bewusst alles außer `/_app/`,
+damit HTML-Seiten und öffentliche statische Dateien nie veraltet gecacht werden – auch
+wenn Vercel eigene Defaults anwenden würde.
 
-### 11.7 Lokale Verifikation
+### 11.7 Verifikation (manuell)
 
 ```bash
 # 1. Build
 npm run build:web
 
-# 2. Prüfen, dass version.json erzeugt wurde
+# 2. version.json prüfen
 cat apps/web/static/version.json
+# Erwartet: { release, build, commit, builtAt } – alle Felder befüllt
 
-# 3. Lokaler Vorschau-Server (simuliert Produktionsbuild)
+# 3. Lokaler Vorschau-Server (Produktionsbuild)
 npm run preview --workspace=apps/web
-
-# 4. Im Browser prüfen:
-#    - DevTools → Application → Manifest: Manifest geladen?
-#    - DevTools → Application → Service Workers: SW registriert?
-#    - DevTools → Network → /version.json: frische Response (no-store)?
-
-# 5. Simulierter Versionswechsel:
-#    - version.json build-Feld manuell ändern (oder neuen Build anstoßen)
-#    - Seite neu laden → Banner erscheint
-#    - „Jetzt aktualisieren" klicken → Reload auf neuen Stand
 ```
+
+**Browser DevTools:**
+
+| Prüfpunkt | Wo | Erwartetes Ergebnis |
+|---|---|---|
+| Manifest geladen | Application → Manifest | Name, Theme-Color, Icon |
+| SW registriert | Application → Service Workers | Status "activated and is running" |
+| `version.json` frisch | Network → /version.json | `Cache-Control: no-store` in Response-Headers |
+| Debug-Log | Console (level: Verbose) | `[spannungsatlas] version check` |
+
+**Simulierter Versionswechsel:**
+
+1. `apps/web/static/version.json` → `build`-Feld manuell ändern (z. B. `"build": "newbuild"`)
+2. Seite neu laden (ohne Hard-Reload – normaler Reload)
+3. Banner unten rechts erscheint: „Neue Version verfügbar"
+4. Console: `[spannungsatlas] version check { ..., updateAvailable: true }`
+5. „Jetzt aktualisieren" klicken → Seite lädt neu auf neuen Stand
+6. Console nach Reload: `[spannungsatlas] version check { ..., updateAvailable: false }`
+
+**Multi-Tab-Test:**
+
+1. App in zwei Tabs öffnen
+2. In Tab 1 `version.json` ändern, Tab 1 aktualisieren → Banner erscheint
+3. „Jetzt aktualisieren" in Tab 1 klicken
+4. Tab 1 lädt neu, ist jetzt auf neuem Stand
+5. Tab 2 fokussieren → nach Fokus-Wechsel erscheint auch dort der Banner
+6. Tab 2 ebenfalls aktualisieren
 
 ### 11.8 Bekannte Grenzen
 
@@ -276,7 +327,10 @@ npm run preview --workspace=apps/web
   liefern den letzten Cache-Stand oder eine 503-Antwort.
 - **PNG-Icons:** Derzeit nur SVG-Platzhalter. Für vollständige Installierbarkeit
   auf allen Plattformen sind PNG-Icons 192×192 und 512×512 erforderlich.
-- **SW-Tests:** Service Worker-Logik ist nicht vollständig unit-getestet.
+- **SW-Tests:** Service Worker-Lifecycle ist nicht vollständig unit-getestet.
   Die testbare Kernlogik (Update-Erkennung via `isUpdateAvailable`) ist durch Tests abgedeckt.
   SW-Verhalten muss manuell via DevTools verifiziert werden.
+- **Vercel Regex-Headers:** Das Catch-All-Pattern `/((?!_app/).*)` für HTML-Cache-Headers
+  setzt voraus, dass Vercel negative Lookaheads in Header-Source-Patterns unterstützt.
+  Falls nicht: pro HTML-Route explizite Regeln ergänzen.
 
