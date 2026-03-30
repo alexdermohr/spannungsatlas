@@ -152,6 +152,20 @@ export function guardCounterInterpretationText(text: string): GuardResult {
 }
 
 /**
+ * Generic guard: returns `message` when the trimmed texts of two Interpretations
+ * are identical, undefined otherwise. Use this as the underlying primitive when
+ * the calling context determines the correct error message.
+ */
+export function guardDistinctTexts(
+  a: Interpretation,
+  b: Interpretation,
+  message: string,
+): GuardResult {
+  if (a.text.trim() === b.text.trim()) return message;
+  return undefined;
+}
+
+/**
  * Checks that interpretation and counter-interpretation texts are not textually
  * identical (trimmed). This is a minimal formal guard: it does not verify that
  * the counter-interpretation provides a genuinely alternative explanation
@@ -161,10 +175,11 @@ export function guardInterpretationsDistinct(
   interpretation: Interpretation,
   counterInterpretation: Interpretation,
 ): GuardResult {
-  if (interpretation.text.trim() === counterInterpretation.text.trim()) {
-    return "Interpretation text and counter-interpretation text must not be textually identical.";
-  }
-  return undefined;
+  return guardDistinctTexts(
+    interpretation,
+    counterInterpretation,
+    "Interpretation text and counter-interpretation text must not be textually identical.",
+  );
 }
 
 /**
@@ -346,9 +361,10 @@ export function guardReflectionSnapshot(
   }
   for (let i = 0; i < snapshot.counterInterpretations.length; i++) {
     for (let j = i + 1; j < snapshot.counterInterpretations.length; j++) {
-      const r = guardInterpretationsDistinct(
+      const r = guardDistinctTexts(
         snapshot.counterInterpretations[i],
         snapshot.counterInterpretations[j],
+        "Two counter-interpretation texts must not be textually identical.",
       );
       if (r) errors.push(r);
     }

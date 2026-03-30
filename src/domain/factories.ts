@@ -32,6 +32,7 @@ import {
   guardInterpretationText,
   guardEvidenceType,
   guardInterpretationsDistinct,
+  guardDistinctTexts,
   guardObservationInterpretationDistinct,
   guardUncertaintyLevel,
   guardUncertaintyRationale,
@@ -184,7 +185,11 @@ export function createReflectionSnapshot(
   }
   for (let i = 0; i < counterInterpretations.length; i++) {
     for (let j = i + 1; j < counterInterpretations.length; j++) {
-      throwIfError(guardInterpretationsDistinct(counterInterpretations[i], counterInterpretations[j]));
+      throwIfError(guardDistinctTexts(
+        counterInterpretations[i],
+        counterInterpretations[j],
+        "Two counter-interpretation texts must not be textually identical.",
+      ));
     }
   }
 

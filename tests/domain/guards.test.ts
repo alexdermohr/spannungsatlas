@@ -4,6 +4,7 @@ import {
   guardInterpretationText,
   guardCounterInterpretationText,
   guardInterpretationsDistinct,
+  guardDistinctTexts,
   guardObservationInterpretationDistinct,
   guardUncertaintyLevel,
   guardUncertaintyRationale,
@@ -129,6 +130,27 @@ describe("guardInterpretationsDistinct", () => {
     const a = { ...validInterpretation(), text: "  Deutung  " };
     const b = { ...validCounterInterpretation(), text: "Deutung" };
     expect(guardInterpretationsDistinct(a, b)).toBeDefined();
+  });
+});
+
+describe("guardDistinctTexts", () => {
+  it("returns the supplied message when texts are identical", () => {
+    const a = validInterpretation();
+    const msg = "Two counter-interpretation texts must not be textually identical.";
+    expect(guardDistinctTexts(a, a, msg)).toBe(msg);
+  });
+
+  it("returns undefined when texts differ", () => {
+    expect(
+      guardDistinctTexts(validInterpretation(), validCounterInterpretation(), "msg"),
+    ).toBeUndefined();
+  });
+
+  it("uses the caller-supplied message, not a hardcoded one", () => {
+    const a = { ...validInterpretation(), text: "same" };
+    const b = { ...validCounterInterpretation(), text: "same" };
+    const customMsg = "Gegen-Deutungen dürfen nicht identisch sein.";
+    expect(guardDistinctTexts(a, b, customMsg)).toBe(customMsg);
   });
 });
 

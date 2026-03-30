@@ -87,7 +87,9 @@
 
   function handleCounterInput(index: number) {
     counterRows = ensureTrailingEmptyCounterRow(counterRows);
-    clearFieldErrors([`counterText-${index}`]);
+    // Revalidate all counterText-* keys: duplicates and required-field rules are global
+    fieldErrors = clearErrorKeysWithPrefix(fieldErrors, 'counterText-');
+    fieldErrors = applyPrefixErrors(fieldErrors, validate(), 'counterText-');
   }
 
   function removeCounterRow(index: number) {
@@ -101,7 +103,9 @@
 
   function handleUncertaintyInput(index: number) {
     uncertaintyRows = ensureTrailingEmptyUncertaintyRow(uncertaintyRows);
-    clearFieldErrors([`uncertaintyRationale-${index}`]);
+    // Revalidate all uncertaintyRationale-* keys: required-field rule is global
+    fieldErrors = clearErrorKeysWithPrefix(fieldErrors, 'uncertaintyRationale-');
+    fieldErrors = applyPrefixErrors(fieldErrors, validate(), 'uncertaintyRationale-');
   }
 
   function removeUncertaintyRow(index: number) {
