@@ -16,6 +16,7 @@ const PRECACHE_ASSETS = [
 		(f) => !f.endsWith('/version.json') && !f.endsWith('/sw.js') && !f.endsWith('/sw.ts')
 	)
 ];
+const PRECACHE_ASSET_SET = new Set(PRECACHE_ASSETS);
 
 self.addEventListener('install', (event) => {
 	event.waitUntil(
@@ -73,7 +74,7 @@ self.addEventListener('fetch', (event) => {
 	}
 
 	// Hashed build assets: cache-first (they never change for a given hash).
-	if (PRECACHE_ASSETS.includes(url.pathname)) {
+	if (PRECACHE_ASSET_SET.has(url.pathname)) {
 		event.respondWith(
 			caches
 				.match(req)
