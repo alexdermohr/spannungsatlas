@@ -117,10 +117,10 @@
           des Denkstands — nicht als stille Korrektur, sondern als nachvollziehbare Entwicklung.
         </p>
       {:else}
-        {#each caseData.revisions as rev, i}
+        {#each caseData.revisions.toReversed() as rev, i}
           <div class="revision">
             <div class="revision-header">
-              <strong>Revision {i + 1} — {formatDate(rev.at)}</strong>
+              <strong>Revision {caseData.revisions.length - i} — {formatDate(rev.at)}</strong>
               <span class="badge badge-drift">{driftLabels[rev.driftType]}</span>
             </div>
             <p class="revision-reason">{rev.reason}</p>
