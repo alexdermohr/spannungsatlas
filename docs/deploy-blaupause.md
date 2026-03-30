@@ -325,9 +325,10 @@ immer mit `__APP_VERSION__` überein, unabhängig vom Dateisystem-Stand.
 1. `apps/web/static/version.json` → `build`-Feld manuell ändern (z. B. `"build": "newbuild"`)
 2. Seite neu laden (ohne Hard-Reload – normaler Reload)
 3. Banner unten rechts erscheint: „Neue Version verfügbar"
-4. Console: `[spannungsatlas] version check { ..., updateAvailable: true }`
-5. „Jetzt aktualisieren" klicken → Seite lädt neu auf neuen Stand
-6. Console nach Reload: `[spannungsatlas] version check { ..., updateAvailable: false }`
+4. „Jetzt aktualisieren" klicken → Seite lädt neu auf neuen Stand
+
+> **Hinweis:** Console-Logs (`[spannungsatlas] version check …`) erscheinen nur im Dev-Modus.
+> Im Preview-/Produktionsbuild erfolgt die Verifikation über Banner, Reload und SW-Status in den DevTools.
 
 **Multi-Tab-Test:**
 
