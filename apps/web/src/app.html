@@ -9,6 +9,18 @@
     %sveltekit.head%
   </head>
   <body data-sveltekit-preload-data="hover">
+    <script>
+      // Prevent flash of wrong theme — runs before any rendering.
+      (function() {
+        var t = localStorage.getItem('spannungsatlas-theme') || 'system';
+        var d = (t === 'system')
+          ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+          : t;
+        document.documentElement.setAttribute('data-theme', d);
+        var m = document.querySelector('meta[name="theme-color"]');
+        if (m) m.setAttribute('content', d === 'dark' ? '#1a1a2e' : '#2d5a9b');
+      })();
+    </script>
     %sveltekit.body%
   </body>
 </html>

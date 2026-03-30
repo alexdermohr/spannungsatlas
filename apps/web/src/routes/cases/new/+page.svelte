@@ -420,8 +420,8 @@
     font-size: 0.95rem;
   }
   .error-box {
-    background: #fef2f2;
-    border: 1px solid #fecaca;
+    background: var(--color-error-bg);
+    border: 1px solid var(--color-error-border);
     border-radius: var(--radius);
     padding: 0.75rem 1rem;
     margin-bottom: 1.25rem;
