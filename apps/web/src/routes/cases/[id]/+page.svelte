@@ -117,7 +117,7 @@
           des Denkstands — nicht als stille Korrektur, sondern als nachvollziehbare Entwicklung.
         </p>
       {:else}
-        {#each caseData.revisions.toReversed() as rev, i}
+        {#each [...caseData.revisions].reverse() as rev, i}
           <div class="revision">
             <div class="revision-header">
               <strong>Revision {caseData.revisions.length - i} — {formatDate(rev.at)}</strong>
