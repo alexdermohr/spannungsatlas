@@ -170,3 +170,113 @@ Erste Kernkomponenten: CaseEditor, ObservationEditor, InterpretationEditor, Coun
 - Produktkern repo-intern sauber halten
 - Spätere API- und Datenhaltung vorbereiten, aber noch nicht erzwingen
 - Phase 1 als klickbarer epistemischer Prototyp, Phase 2 als echte kontrollierte Anwendung
+
+---
+
+## 11. Versionierung, PWA-Basis und Update-Flow
+
+### 11.1 Ziel
+
+Neue Deployments sollen nicht unsichtbar im Browser-Cache hängen bleiben.
+Nutzer bekommen einen kontrollierten, dezenten Hinweis, wenn eine neue Version bereitsteht.
+
+### 11.2 Build-Version und version.json
+
+Bei jedem Build (und im Dev-Modus) wird automatisch `apps/web/static/version.json` erzeugt:
+
+```json
+{
+  "release": "0.1.0",
+  "build": "abc1234",
+  "commit": "abc1234",
+  "builtAt": "2026-03-30T18:00:00.000Z"
+}
+```
+
+Die Datei wird vom Vite-Plugin in `apps/web/vite.config.ts` beim Build-Start geschrieben.
+Gleichzeitig wird `__APP_VERSION__` als globale Konstante in den App-Code eingebettet.
+
+**Invariante:** `version.json` ist die einzige laufzeitfähige Wahrheitsquelle für die Build-Identität.
+
+### 11.3 Service Worker und Cache-Strategie
+
+Der Service Worker liegt unter `apps/web/src/service-worker.ts` und wird von SvelteKit
+automatisch registriert und verarbeitet.
+
+| Ressourcentyp | Strategie |
+|---|---|
+| HTML / Navigation | Network-first (Offline-Fallback auf Cache) |
+| Vite-gehashte Assets (`/_app/immutable/…`) | Cache-first (stabil, inhaltsgehashed) |
+| `version.json` | Immer Netzwerk, nie gecacht |
+| Alles andere | Stale-while-revalidate |
+
+**Cache-Name:** Enthält die SvelteKit-Build-Version (`app-${version}`).
+Bei jedem neuen Build werden alle alten Caches beim Aktivieren des neuen SW gelöscht.
+
+**Update-Aktivierung:** Der neue Service Worker übernimmt nicht automatisch.
+Der Nutzer steuert das über den Update-Banner (siehe unten).
+
+### 11.4 Clientseitige Update-Erkennung
+
+`UpdateBanner.svelte` (eingebunden in `+layout.svelte`) prüft alle 5 Minuten
+und bei Tab-Fokus, ob `version.json` am Server eine neuere `build`-ID hat.
+
+Falls ja: dezenter Banner unten rechts mit „Neue Version verfügbar – Jetzt aktualisieren".
+Klick → sendet `SKIP_WAITING` an wartenden Service Worker → Seite lädt neu.
+
+Der Banner funktioniert auch ohne aktiven Service Worker (dann nur Plain-Reload).
+
+### 11.5 PWA-Basis
+
+- Manifest: `apps/web/static/manifest.webmanifest`
+- Theme-Color: `#2d5a9b` (App-Akzentfarbe)
+- Icon: `apps/web/static/icons/icon.svg` (SVG-Platzhalter – für vollständige Browser-Unterstützung
+  sollten PNG-Icons in 192×192 und 512×512 ergänzt werden)
+
+### 11.6 Cache-Control-Header auf Vercel
+
+Konfiguriert in `vercel.json`:
+
+| Pfad | Cache-Control |
+|---|---|
+| `/version.json` | `no-store, max-age=0` |
+| `/service-worker.js` | `no-store, max-age=0` |
+| `/_app/immutable/…` | `public, max-age=31536000, immutable` |
+
+HTML-Responses werden von der SvelteKit-Vercel-Adapter-Integration verwaltet
+und sind standardmäßig revalidierbar.
+
+### 11.7 Lokale Verifikation
+
+```bash
+# 1. Build
+npm run build:web
+
+# 2. Prüfen, dass version.json erzeugt wurde
+cat apps/web/static/version.json
+
+# 3. Lokaler Vorschau-Server (simuliert Produktionsbuild)
+npm run preview --workspace=apps/web
+
+# 4. Im Browser prüfen:
+#    - DevTools → Application → Manifest: Manifest geladen?
+#    - DevTools → Application → Service Workers: SW registriert?
+#    - DevTools → Network → /version.json: frische Response (no-store)?
+
+# 5. Simulierter Versionswechsel:
+#    - version.json build-Feld manuell ändern (oder neuen Build anstoßen)
+#    - Seite neu laden → Banner erscheint
+#    - „Jetzt aktualisieren" klicken → Reload auf neuen Stand
+```
+
+### 11.8 Bekannte Grenzen
+
+- **Offline-Unterstützung:** Rudimentär. Nur gecachte Assets funktionieren offline;
+  dynamische Inhalte (LocalStorage-Daten) sind nicht betroffen, aber Netzwerkfehler
+  liefern den letzten Cache-Stand oder eine 503-Antwort.
+- **PNG-Icons:** Derzeit nur SVG-Platzhalter. Für vollständige Installierbarkeit
+  auf allen Plattformen sind PNG-Icons 192×192 und 512×512 erforderlich.
+- **SW-Tests:** Service Worker-Logik ist nicht vollständig unit-getestet.
+  Die testbare Kernlogik (Update-Erkennung via `isUpdateAvailable`) ist durch Tests abgedeckt.
+  SW-Verhalten muss manuell via DevTools verifiziert werden.
+
