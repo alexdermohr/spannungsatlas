@@ -75,13 +75,20 @@
       </span>
     </section>
 
-    <!-- Gegen-Deutung -->
+    <!-- Gegen-Deutungen -->
     <section class="card section">
-      <h2>Gegen-Deutung</h2>
-      <p>{caseData.currentReflection.counterInterpretation.text}</p>
-      <span class={evidenceBadgeClass(caseData.currentReflection.counterInterpretation.evidenceType)}>
-        {evidenceLabels[caseData.currentReflection.counterInterpretation.evidenceType]}
-      </span>
+      <h2>Gegen-Deutung{caseData.currentReflection.counterInterpretations.length > 1 ? 'en' : ''}</h2>
+      {#each caseData.currentReflection.counterInterpretations as counter, i}
+        <div class={caseData.currentReflection.counterInterpretations.length > 1 ? 'counter-item' : ''}>
+          {#if caseData.currentReflection.counterInterpretations.length > 1}
+            <strong class="counter-index">{i + 1}.</strong>
+          {/if}
+          <p>{counter.text}</p>
+          <span class={evidenceBadgeClass(counter.evidenceType)}>
+            {evidenceLabels[counter.evidenceType]}
+          </span>
+        </div>
+      {/each}
     </section>
 
     <!-- Unsicherheit -->
@@ -237,5 +244,15 @@
   }
   .actions {
     margin: 1.5rem 0 2rem;
+  }
+  .counter-item {
+    margin-bottom: 0.75rem;
+  }
+  .counter-item:last-child {
+    margin-bottom: 0;
+  }
+  .counter-index {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
   }
 </style>

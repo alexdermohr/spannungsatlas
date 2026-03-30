@@ -64,8 +64,7 @@ describe('startNewCase', () => {
       isCameraDescribable: true,
       interpretationText: 'Anna wirkt in der Gruppe gehemmt.',
       interpretationEvidenceType: 'derived',
-      counterInterpretationText: 'Anna ist noch müde vom Wochenende.',
-      counterInterpretationEvidenceType: 'speculative',
+      counterInterpretations: [{ text: 'Anna ist noch müde vom Wochenende.', evidenceType: 'speculative' }],
       uncertaintyLevel: 3,
       uncertaintyRationale: 'Es liegt nur diese eine Beobachtung vor.'
     });

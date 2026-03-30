@@ -1,4 +1,4 @@
-import type { ParticipantRole } from '$domain/types.js';
+import type { ParticipantRole, EvidenceType } from '$domain/types.js';
 
 export interface ParticipantRow {
   name: string;
@@ -57,4 +57,31 @@ export function refreshFieldErrors(
   }
 
   return changed ? updated : fieldErrors;
+}
+
+export interface CounterRow {
+  text: string;
+  evidence: EvidenceType;
+}
+
+export function filledCounterRows(rows: CounterRow[]): CounterRow[] {
+  return rows
+    .filter((r) => r.text.trim() !== '')
+    .map((r) => ({ ...r, text: r.text.trim() }));
+}
+
+export function ensureTrailingEmptyCounterRow(rows: CounterRow[]): CounterRow[] {
+  const last = rows[rows.length - 1];
+  if (last && last.text.trim() !== '') {
+    return [...rows, { text: '', evidence: 'derived' as EvidenceType }];
+  }
+  return rows;
+}
+
+export function normalizeCounterRows(rows: CounterRow[]): CounterRow[] {
+  return [...filledCounterRows(rows), { text: '', evidence: 'derived' as EvidenceType }];
+}
+
+export function shouldShowRemoveCounterRow(rows: CounterRow[], row: CounterRow): boolean {
+  return row.text.trim() !== '' && filledCounterRows(rows).length > 1;
 }

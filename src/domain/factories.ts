@@ -163,7 +163,7 @@ export function createTensionEdge(input: CreateTensionEdgeInput): TensionEdge {
 export interface CreateReflectionSnapshotInput {
   reflectedAt: string;
   interpretation: CreateInterpretationInput;
-  counterInterpretation: CreateInterpretationInput;
+  counterInterpretations: CreateInterpretationInput[];
   uncertainty: CreateUncertaintyInput;
   tensions?: CreateTensionEdgeInput[];
 }
@@ -174,13 +174,19 @@ export function createReflectionSnapshot(
   throwIfError(guardIsoDateString(input.reflectedAt, "reflectedAt"));
 
   const interpretation = createInterpretation(input.interpretation);
-  const counterInterpretation = createInterpretation(
-    input.counterInterpretation,
-  );
 
-  throwIfError(
-    guardInterpretationsDistinct(interpretation, counterInterpretation),
-  );
+  if (input.counterInterpretations.length === 0) {
+    throw new Error("At least one counter-interpretation is required.");
+  }
+  const counterInterpretations = input.counterInterpretations.map(createInterpretation);
+  for (const counter of counterInterpretations) {
+    throwIfError(guardInterpretationsDistinct(interpretation, counter));
+  }
+  for (let i = 0; i < counterInterpretations.length; i++) {
+    for (let j = i + 1; j < counterInterpretations.length; j++) {
+      throwIfError(guardInterpretationsDistinct(counterInterpretations[i], counterInterpretations[j]));
+    }
+  }
 
   const uncertainty = createUncertainty(input.uncertainty);
   const tensions = (input.tensions ?? []).map(createTensionEdge);
@@ -188,7 +194,7 @@ export function createReflectionSnapshot(
   const snapshot: ReflectionSnapshot = {
     reflectedAt: input.reflectedAt,
     interpretation,
-    counterInterpretation,
+    counterInterpretations,
     uncertainty,
     tensions,
   };

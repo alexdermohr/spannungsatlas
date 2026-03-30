@@ -9,7 +9,12 @@
     normalizeParticipants,
     refreshFieldErrors,
     shouldShowRemoveParticipant,
-    type ParticipantRow
+    type ParticipantRow,
+    type CounterRow,
+    filledCounterRows,
+    ensureTrailingEmptyCounterRow,
+    normalizeCounterRows,
+    shouldShowRemoveCounterRow
   } from '$lib/forms/new-case-form.js';
   import type { EvidenceType, UncertaintyLevel } from '$domain/types.js';
 
@@ -22,8 +27,7 @@
   let interpretationText = $state('');
   let interpretationEvidence = $state<EvidenceType>('derived');
 
-  let counterText = $state('');
-  let counterEvidence = $state<EvidenceType>('derived');
+  let counterRows = $state<CounterRow[]>([{ text: '', evidence: 'derived' }]);
 
   let uncertaintyLevel = $state<UncertaintyLevel>(3);
   let uncertaintyRationale = $state('');
@@ -71,8 +75,14 @@
     clearFieldErrors(['interpretationText', 'counterText']);
   }
 
-  function handleCounterInput() {
-    clearFieldErrors(['counterText']);
+  function handleCounterInput(index: number) {
+    counterRows = ensureTrailingEmptyCounterRow(counterRows);
+    clearFieldErrors([`counterText-${index}`]);
+  }
+
+  function removeCounterRow(index: number) {
+    counterRows = counterRows.filter((_, i) => i !== index);
+    counterRows = normalizeCounterRows(counterRows);
   }
 
   function handleUncertaintyRationaleInput() {
@@ -86,14 +96,27 @@
       errs['participant-0'] = 'Mindestens eine beteiligte Person ist erforderlich.';
     if (!observationText.trim()) errs['observationText'] = 'Beobachtung darf nicht leer sein.';
     if (!interpretationText.trim()) errs['interpretationText'] = 'Deutung darf nicht leer sein.';
-    if (!counterText.trim()) errs['counterText'] = 'Gegen-Deutung darf nicht leer sein.';
     if (!uncertaintyRationale.trim())
       errs['uncertaintyRationale'] = 'Begründung der Unsicherheit fehlt.';
     if (observationText.trim() && observationText.trim() === interpretationText.trim()) {
       errs['interpretationText'] = 'Beobachtung und Deutung dürfen nicht identisch sein.';
     }
-    if (interpretationText.trim() && interpretationText.trim() === counterText.trim()) {
-      errs['counterText'] = 'Deutung und Gegen-Deutung dürfen nicht identisch sein.';
+    const filledCounters = filledCounterRows(counterRows);
+    if (filledCounters.length === 0) {
+      errs['counterText-0'] = 'Mindestens eine Gegen-Deutung ist erforderlich.';
+    } else {
+      filledCounters.forEach((row, i) => {
+        if (interpretationText.trim() && interpretationText.trim() === row.text) {
+          errs[`counterText-${i}`] = 'Deutung und Gegen-Deutung dürfen nicht identisch sein.';
+        }
+      });
+      for (let i = 0; i < filledCounters.length; i++) {
+        for (let j = i + 1; j < filledCounters.length; j++) {
+          if (filledCounters[i].text === filledCounters[j].text) {
+            errs[`counterText-${j}`] = 'Gegen-Deutungen dürfen nicht identisch sein.';
+          }
+        }
+      }
     }
     return errs;
   }
@@ -123,8 +146,10 @@
         isCameraDescribable,
         interpretationText: interpretationText.trim(),
         interpretationEvidenceType: interpretationEvidence,
-        counterInterpretationText: counterText.trim(),
-        counterInterpretationEvidenceType: counterEvidence,
+        counterInterpretations: filledCounterRows(counterRows).map((r) => ({
+          text: r.text,
+          evidenceType: r.evidence
+        })),
         uncertaintyLevel,
         uncertaintyRationale: uncertaintyRationale.trim()
       });
@@ -249,20 +274,43 @@
         zur Perspektiverweiterung und verhindert vorschnelle Festlegung.
       </p>
 
-      <label class="field" class:field-error={fieldErrors['counterText']}>
-        <span class="field-label">Gegen-Deutungstext</span>
-        <textarea id="field-counterText" bind:value={counterText} oninput={handleCounterInput} rows="4" placeholder="z.B. Kind A imitiert möglicherweise ein Verhalten, das es bei anderen Kindern beobachtet hat…"></textarea>
-        {#if fieldErrors['counterText']}<span class="field-error-msg">{fieldErrors['counterText']}</span>{/if}
-      </label>
-
-      <label class="field">
-        <span class="field-label">Evidenztyp</span>
-        <select bind:value={counterEvidence}>
-          {#each Object.entries(evidenceLabels) as [value, label]}
-            <option {value}>{label}</option>
-          {/each}
-        </select>
-      </label>
+      <fieldset class="counter-fieldset">
+        <legend class="field-label">Gegen-Deutungen</legend>
+        {#each counterRows as row, i}
+          <div class="counter-block">
+            <label class="field" class:field-error={fieldErrors[`counterText-${i}`]}>
+              <span class="sr-only">Gegen-Deutung {i + 1}</span>
+              <textarea
+                id={`field-counterText-${i}`}
+                bind:value={row.text}
+                oninput={() => handleCounterInput(i)}
+                rows="3"
+                placeholder="z.B. Kind A imitiert möglicherweise ein Verhalten, das es bei anderen Kindern beobachtet hat…"
+              ></textarea>
+              {#if fieldErrors[`counterText-${i}`]}<span class="field-error-msg">{fieldErrors[`counterText-${i}`]}</span>{/if}
+            </label>
+            <div class="counter-block-footer">
+              <label class="field field-counter-evidence">
+                <span class="sr-only">Evidenztyp Gegen-Deutung {i + 1}</span>
+                <select bind:value={row.evidence}>
+                  {#each Object.entries(evidenceLabels) as [value, label]}
+                    <option {value}>{label}</option>
+                  {/each}
+                </select>
+              </label>
+              <button
+                type="button"
+                class="btn-remove"
+                class:btn-remove--hidden={!shouldShowRemoveCounterRow(counterRows, row)}
+                onclick={() => removeCounterRow(i)}
+                aria-label={`Gegen-Deutung ${i + 1} entfernen`}
+                aria-hidden={!shouldShowRemoveCounterRow(counterRows, row) ? true : undefined}
+                tabindex={!shouldShowRemoveCounterRow(counterRows, row) ? -1 : undefined}
+              >×</button>
+            </div>
+          </div>
+        {/each}
+      </fieldset>
     </section>
 
     <!-- Sektion 5: Unsicherheit -->
@@ -436,6 +484,30 @@
   .btn-remove--hidden {
     visibility: hidden;
     pointer-events: none;
+  }
+  /* Counter-interpretation (Gegen-Deutung) blocks */
+  .counter-fieldset {
+    border: none;
+    padding: 0;
+    margin: 0;
+  }
+  .counter-fieldset legend {
+    padding: 0;
+  }
+  .counter-block {
+    margin-bottom: 0.75rem;
+  }
+  .counter-block .field {
+    margin-bottom: 0.25rem;
+  }
+  .counter-block-footer {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .field-counter-evidence {
+    flex: 1;
+    margin-bottom: 0;
   }
   .sr-only {
     position: absolute;

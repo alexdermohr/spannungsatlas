@@ -58,7 +58,7 @@ function validSnapshot(): ReflectionSnapshot {
   return {
     reflectedAt: "2026-03-28T10:00:00Z",
     interpretation: validInterpretation(),
-    counterInterpretation: validCounterInterpretation(),
+    counterInterpretations: [validCounterInterpretation()],
     uncertainty: { level: 3, rationale: "Nur ein Einzelereignis beobachtet." },
     tensions: [],
   };
@@ -473,7 +473,7 @@ describe("guardReflectionSnapshot", () => {
   it("returns an error for an invalid evidenceType in counterInterpretation", () => {
     const bad: ReflectionSnapshot = {
       ...validSnapshot(),
-      counterInterpretation: { text: "Eine Gegendeutung.", evidenceType: "unknown" as any },
+      counterInterpretations: [{ text: "Eine Gegendeutung.", evidenceType: "unknown" as any }],
     };
     const errors = guardReflectionSnapshot(bad);
     expect(errors.some((e) => /EvidenceType/i.test(e))).toBe(true);
@@ -483,7 +483,7 @@ describe("guardReflectionSnapshot", () => {
     const bad: ReflectionSnapshot = {
       reflectedAt: "2026-03-28T10:00:00Z",
       interpretation: { text: "", evidenceType: "observational" },
-      counterInterpretation: { text: "", evidenceType: "derived" },
+      counterInterpretations: [{ text: "", evidenceType: "derived" }],
       uncertainty: { level: 99 as any, rationale: "" },
       tensions: [],
     };
@@ -542,7 +542,7 @@ describe("guardCase", () => {
       currentReflection: {
         reflectedAt: "2026-03-28",
         interpretation: { text: "", evidenceType: "observational" },
-        counterInterpretation: { text: "", evidenceType: "derived" },
+        counterInterpretations: [{ text: "", evidenceType: "derived" }],
         uncertainty: { level: 3, rationale: "" },
         tensions: [],
       },

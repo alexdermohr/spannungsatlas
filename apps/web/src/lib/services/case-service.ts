@@ -10,8 +10,7 @@ export interface StartNewCaseInput {
   isCameraDescribable: boolean;
   interpretationText: string;
   interpretationEvidenceType: EvidenceType;
-  counterInterpretationText: string;
-  counterInterpretationEvidenceType: EvidenceType;
+  counterInterpretations: Array<{ text: string; evidenceType: EvidenceType }>;
   uncertaintyLevel: UncertaintyLevel;
   uncertaintyRationale: string;
 }
@@ -36,10 +35,7 @@ export function startNewCase(input: StartNewCaseInput): Case {
         text: input.interpretationText,
         evidenceType: input.interpretationEvidenceType
       },
-      counterInterpretation: {
-        text: input.counterInterpretationText,
-        evidenceType: input.counterInterpretationEvidenceType
-      },
+      counterInterpretations: input.counterInterpretations,
       uncertainty: {
         level: input.uncertaintyLevel,
         rationale: input.uncertaintyRationale

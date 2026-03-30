@@ -111,7 +111,7 @@ export interface TensionEdge {
 export interface ReflectionSnapshot {
   readonly reflectedAt: string;
   readonly interpretation: Interpretation;
-  readonly counterInterpretation: Interpretation;
+  readonly counterInterpretations: readonly Interpretation[];
   readonly uncertainty: Uncertainty;
   readonly tensions: readonly TensionEdge[];
 }

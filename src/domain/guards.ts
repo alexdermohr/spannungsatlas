@@ -336,14 +336,23 @@ export function guardReflectionSnapshot(
   push(guardIsoDateString(snapshot.reflectedAt, "reflectedAt"));
   push(guardInterpretationText(snapshot.interpretation.text));
   push(guardEvidenceType(snapshot.interpretation.evidenceType));
-  push(guardCounterInterpretationText(snapshot.counterInterpretation.text));
-  push(guardEvidenceType(snapshot.counterInterpretation.evidenceType));
-  push(
-    guardInterpretationsDistinct(
-      snapshot.interpretation,
-      snapshot.counterInterpretation,
-    ),
-  );
+  if (snapshot.counterInterpretations.length === 0) {
+    errors.push("At least one counter-interpretation is required.");
+  }
+  for (const counter of snapshot.counterInterpretations) {
+    push(guardCounterInterpretationText(counter.text));
+    push(guardEvidenceType(counter.evidenceType));
+    push(guardInterpretationsDistinct(snapshot.interpretation, counter));
+  }
+  for (let i = 0; i < snapshot.counterInterpretations.length; i++) {
+    for (let j = i + 1; j < snapshot.counterInterpretations.length; j++) {
+      const r = guardInterpretationsDistinct(
+        snapshot.counterInterpretations[i],
+        snapshot.counterInterpretations[j],
+      );
+      if (r) errors.push(r);
+    }
+  }
   push(guardUncertaintyLevel(snapshot.uncertainty.level));
   push(guardUncertaintyRationale(snapshot.uncertainty.rationale));
 
