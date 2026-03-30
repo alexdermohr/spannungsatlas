@@ -8,6 +8,7 @@
     filledParticipants,
     normalizeParticipants,
     refreshFieldErrors,
+    clearErrorKeysWithPrefix,
     shouldShowRemoveParticipant,
     type ParticipantRow,
     type CounterRow,
@@ -91,6 +92,8 @@
   function removeCounterRow(index: number) {
     counterRows = counterRows.filter((_, i) => i !== index);
     counterRows = normalizeCounterRows(counterRows);
+    // Purge all counterText-* error keys (including any stale higher indices) then re-validate
+    fieldErrors = clearErrorKeysWithPrefix(fieldErrors, 'counterText-');
     clearFieldErrors(counterRows.map((_, i) => `counterText-${i}`));
   }
 
@@ -102,6 +105,8 @@
   function removeUncertaintyRow(index: number) {
     uncertaintyRows = uncertaintyRows.filter((_, i) => i !== index);
     uncertaintyRows = normalizeUncertaintyRows(uncertaintyRows);
+    // Purge all uncertaintyRationale-* error keys (including any stale higher indices) then re-validate
+    fieldErrors = clearErrorKeysWithPrefix(fieldErrors, 'uncertaintyRationale-');
     clearFieldErrors(uncertaintyRows.map((_, i) => `uncertaintyRationale-${i}`));
   }
 
@@ -119,14 +124,21 @@
     if (filledCounters.length === 0) {
       errs['counterText-0'] = 'Mindestens eine Gegen-Deutung ist erforderlich.';
     } else {
-      filledCounters.forEach((row, i) => {
-        if (interpretationText.trim() && interpretationText.trim() === row.text) {
+      const interpTrimmed = interpretationText.trim();
+      // Validate per original counterRows index so error keys match visible UI rows
+      counterRows.forEach((row, i) => {
+        const rowTrimmed = row.text.trim();
+        if (rowTrimmed === '') return;
+        if (interpTrimmed && interpTrimmed === rowTrimmed) {
           errs[`counterText-${i}`] = 'Deutung und Gegen-Deutung dürfen nicht identisch sein.';
         }
       });
-      for (let i = 0; i < filledCounters.length; i++) {
-        for (let j = i + 1; j < filledCounters.length; j++) {
-          if (filledCounters[i].text === filledCounters[j].text) {
+      const trimmedCounters = counterRows.map((r) => r.text.trim());
+      for (let i = 0; i < trimmedCounters.length; i++) {
+        if (trimmedCounters[i] === '') continue;
+        for (let j = i + 1; j < trimmedCounters.length; j++) {
+          if (trimmedCounters[j] === '') continue;
+          if (trimmedCounters[i] === trimmedCounters[j]) {
             errs[`counterText-${j}`] = 'Gegen-Deutungen dürfen nicht identisch sein.';
           }
         }

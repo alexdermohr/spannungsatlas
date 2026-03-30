@@ -4,6 +4,7 @@ import {
   filledParticipants,
   normalizeParticipants,
   refreshFieldErrors,
+  clearErrorKeysWithPrefix,
   shouldShowRemoveParticipant,
   type ParticipantRow,
   filledCounterRows,
@@ -194,5 +195,36 @@ describe('uncertainty-row helpers', () => {
     expect(shouldShowRemoveUncertaintyRow(multi, multi[0]!)).toBe(true);
     expect(shouldShowRemoveUncertaintyRow(multi, multi[1]!)).toBe(true);
     expect(shouldShowRemoveUncertaintyRow(multi, multi[2]!)).toBe(false);
+  });
+});
+
+describe('clearErrorKeysWithPrefix', () => {
+  it('removes all keys that start with the given prefix', () => {
+    const errors = {
+      context: 'required',
+      'counterText-0': 'error A',
+      'counterText-2': 'error B',
+      interpretationText: 'required'
+    };
+    expect(clearErrorKeysWithPrefix(errors, 'counterText-')).toEqual({
+      context: 'required',
+      interpretationText: 'required'
+    });
+  });
+
+  it('returns the same reference when no keys match the prefix', () => {
+    const errors = { context: 'required' };
+    expect(clearErrorKeysWithPrefix(errors, 'counterText-')).toBe(errors);
+  });
+
+  it('removes uncertainty prefix keys without touching unrelated errors', () => {
+    const errors = {
+      'uncertaintyRationale-0': 'err',
+      'uncertaintyRationale-3': 'stale',
+      context: 'required'
+    };
+    expect(clearErrorKeysWithPrefix(errors, 'uncertaintyRationale-')).toEqual({
+      context: 'required'
+    });
   });
 });

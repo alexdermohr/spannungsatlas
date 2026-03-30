@@ -30,6 +30,30 @@ export function shouldShowRemoveParticipant(
   return row.name.trim() !== '' && filledParticipants(participants).length > 1;
 }
 
+/**
+ * Removes all error keys whose name starts with `prefix`.
+ * Use before re-validating dynamic list prefixes (e.g. 'counterText-', 'uncertaintyRationale-')
+ * so that stale indices left over from removed rows are cleaned up.
+ *
+ * @param fieldErrors - current error map
+ * @param prefix - key prefix to match (e.g. `'counterText-'`)
+ * @returns a new error map without matching keys, or the same reference if nothing changed
+ */
+export function clearErrorKeysWithPrefix(
+  fieldErrors: Record<string, string>,
+  prefix: string
+): Record<string, string> {
+  let changed = false;
+  const updated = { ...fieldErrors };
+  for (const key of Object.keys(updated)) {
+    if (key.startsWith(prefix)) {
+      delete updated[key];
+      changed = true;
+    }
+  }
+  return changed ? updated : fieldErrors;
+}
+
 export function refreshFieldErrors(
   fieldErrors: Record<string, string>,
   nextErrors: Record<string, string>,

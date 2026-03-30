@@ -36,7 +36,7 @@ Eine geordnete Übersicht aller Dokumente findet sich im [Dokumentationsindex](.
 
 ## Minimaler Arbeitsablauf
 
-1. **Fall anlegen** — Kontext und beteiligte Person erfassen.
+1. **Fall anlegen** — Kontext und beteiligte Personen erfassen.
 2. **Beobachtung dokumentieren** — beschreibend, möglichst kameraähnlich.
 3. **Deutung formulieren** — Hypothese mit markierter Evidenznähe.
 4. **Gegen-Deutungen formulieren** — alternative Lesarten derselben Beobachtung (mindestens eine).
