@@ -16,11 +16,13 @@
 			if (!res.ok) return;
 			const remote: Partial<AppVersion> = await res.json();
 			const newVersionFound = isUpdateAvailable(currentBuild, remote);
-			console.debug('[spannungsatlas] version check', {
-				current: currentBuild,
-				remote: remote.build ?? '(missing)',
-				updateAvailable: newVersionFound
-			});
+			if (import.meta.env.DEV) {
+				console.debug('[spannungsatlas] version check', {
+					current: currentBuild,
+					remote: remote.build ?? '(missing)',
+					updateAvailable: newVersionFound
+				});
+			}
 			if (newVersionFound) {
 				updateAvailable = true;
 			}
@@ -72,8 +74,8 @@
 	onMount(() => {
 		checkForUpdate();
 
-		// Log SW state once for debuggability.
-		if ('serviceWorker' in navigator) {
+		// Log SW state once for debuggability (dev only).
+		if ('serviceWorker' in navigator && import.meta.env.DEV) {
 			navigator.serviceWorker.getRegistration().then((reg) => {
 				console.debug('[spannungsatlas] SW state', {
 					active: reg?.active?.state ?? 'none',

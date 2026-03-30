@@ -182,8 +182,7 @@ Nutzer bekommen einen kontrollierten, dezenten Hinweis, wenn eine neue Version b
 
 ### 11.2 Build-Version und version.json
 
-Bei jedem Build und beim Start des Dev-Servers wird `apps/web/static/version.json` vom
-Vite-Plugin in `apps/web/vite.config.ts` erzeugt:
+Das Vite-Plugin in `apps/web/vite.config.ts` erzeugt die App-Version einmalig beim Start von Vite.
 
 ```json
 {
@@ -194,14 +193,15 @@ Vite-Plugin in `apps/web/vite.config.ts` erzeugt:
 }
 ```
 
-Die Datei wird geschrieben, sobald Vite den Build-Hook (`buildStart`) ausführt.
-Gleichzeitig wird `__APP_VERSION__` als globale Konstante in den App-Code eingebettet.
-Im Dev-Modus liefert ein `configureServer`-Middleware `/version.json` direkt aus dem Speicher
-– unabhängig vom Dateisystem-Stand von `static/version.json`.
+**Im Build** (`npm run build:web`) schreibt der `buildStart`-Hook `apps/web/static/version.json`
+in den Quellbaum. Gleichzeitig wird `__APP_VERSION__` als globale Konstante in den App-Code eingebettet.
 
-**Invariante:** `__APP_VERSION__` und `/version.json` stammen aus demselben `getBuildVersion()`-Aufruf
-zur selben Vite-Startzeit. Es gibt keinen Mechanismus, der sie auseinanderrücken kann, solange
-dieselbe laufende App-Instanz betrachtet wird.
+**Im Dev-Modus** (`npm run dev`) liefert ein `configureServer`-Middleware `/version.json`
+direkt aus dem Speicher — die Datei `apps/web/static/version.json` wird dabei nicht geschrieben.
+
+In beiden Fällen stammen `__APP_VERSION__` und der Inhalt von `/version.json` aus demselben
+`getBuildVersion()`-Aufruf zur selben Vite-Startzeit. Sie gehören damit immer zur selben
+laufenden App-Instanz.
 
 `apps/web/static/version.json` ist ein generiertes Artefakt und nicht im Repository eingecheckt.
 
@@ -259,15 +259,15 @@ Der Banner funktioniert auch ohne aktiven Service Worker (dann direkter Reload).
 
 #### Debug-Logging
 
-Jeder version-Check und der SW-State werden als `console.debug`-Ausgaben
-unter dem Präfix `[spannungsatlas]` geloggt:
+Im Dev-Modus werden version-Check und SW-State als `console.debug`-Ausgaben
+unter dem Präfix `[spannungsatlas]` geloggt (nur wenn `import.meta.env.DEV`):
 
 ```
 [spannungsatlas] version check { current: "abc123", remote: "def456", updateAvailable: true }
 [spannungsatlas] SW state { active: "activated", waiting: "none", installing: "none" }
 ```
 
-Dies ermöglicht Diagnose im Browser-Konsolefenster ohne zusätzliche DevTools-Suche.
+In Produktionsbuilds werden diese Ausgaben nicht erzeugt.
 
 ### 11.5 PWA-Basis
 
@@ -278,8 +278,8 @@ Dies ermöglicht Diagnose im Browser-Konsolefenster ohne zusätzliche DevTools-S
 
 ### 11.6 Cache-Control-Header auf Vercel
 
-Konfiguriert in `vercel.json`. Vercel verarbeitet Header-Regeln in Reihenfolge, spezifischere
-Regeln (z. B. `/version.json`) werden vor der allgemeineren Catch-All-Regel angewandt:
+Konfiguriert in `vercel.json`. Die Regeln sind so geordnet, dass spezifischere Einträge
+(z. B. `/version.json`) vor der allgemeinen Catch-All-Regel stehen:
 
 | Pfad | Cache-Control | Begründung |
 |---|---|---|
@@ -318,7 +318,7 @@ immer mit `__APP_VERSION__` überein, unabhängig vom Dateisystem-Stand.
 | Manifest geladen | Application → Manifest | Name, Theme-Color, Icon |
 | SW registriert | Application → Service Workers | Status "activated and is running" |
 | `version.json` frisch | Network → /version.json | `Cache-Control: no-store` in Response-Headers |
-| Debug-Log | Console (level: Verbose) | `[spannungsatlas] version check` |
+| Debug-Log | Console (level: Verbose) | `[spannungsatlas] version check` (nur im Dev-Modus) |
 
 **Simulierter Versionswechsel (nur im Preview-/Produktionsmodus sinnvoll):**
 
