@@ -35,17 +35,23 @@
 			try {
 				const reg = await navigator.serviceWorker.getRegistration();
 				if (reg?.waiting) {
+					// Declare safetyTimer before the handler so the handler can clear it.
+					let safetyTimer: ReturnType<typeof setTimeout> | undefined;
+
 					// Reload only after the new SW has actually taken control.
 					// controllerchange fires exactly when the new SW becomes the active
 					// controller — this is the correct, race-free moment to reload.
-					const reloadOnControllerChange = () => window.location.reload();
+					const reloadOnControllerChange = () => {
+						clearTimeout(safetyTimer);
+						window.location.reload();
+					};
 					navigator.serviceWorker.addEventListener('controllerchange', reloadOnControllerChange, {
 						once: true
 					});
 
 					// Safety timeout: if controllerchange doesn't fire within 1.5 s
 					// (e.g. no existing clients to claim), reload anyway.
-					const safetyTimer = setTimeout(() => {
+					safetyTimer = setTimeout(() => {
 						navigator.serviceWorker.removeEventListener(
 							'controllerchange',
 							reloadOnControllerChange
@@ -54,9 +60,6 @@
 					}, 1500);
 
 					reg.waiting.postMessage({ type: 'SKIP_WAITING' });
-
-					// controllerchange listener handles reload; safetyTimer is the fallback.
-					void safetyTimer;
 					return;
 				}
 			} catch {

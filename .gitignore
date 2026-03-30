@@ -3,3 +3,5 @@ node_modules/
 .svelte-kit/
 .vercel/
 build/
+# Generated at build/dev-server start by the Vite plugin – not a source file.
+apps/web/static/version.json

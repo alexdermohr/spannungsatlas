@@ -182,7 +182,8 @@ Nutzer bekommen einen kontrollierten, dezenten Hinweis, wenn eine neue Version b
 
 ### 11.2 Build-Version und version.json
 
-Bei jedem Build (und im Dev-Modus) wird automatisch `apps/web/static/version.json` erzeugt:
+Bei jedem Build und beim Start des Dev-Servers wird `apps/web/static/version.json` vom
+Vite-Plugin in `apps/web/vite.config.ts` erzeugt:
 
 ```json
 {
@@ -193,16 +194,28 @@ Bei jedem Build (und im Dev-Modus) wird automatisch `apps/web/static/version.jso
 }
 ```
 
-Die Datei wird vom Vite-Plugin in `apps/web/vite.config.ts` beim Build-Start geschrieben.
+Die Datei wird geschrieben, sobald Vite den Build-Hook (`buildStart`) ausführt.
 Gleichzeitig wird `__APP_VERSION__` als globale Konstante in den App-Code eingebettet.
+Im Dev-Modus liefert ein `configureServer`-Middleware `/version.json` direkt aus dem Speicher
+– unabhängig vom Dateisystem-Stand von `static/version.json`.
 
-**Invariante:** `version.json` ist die einzige laufzeitfähige Wahrheitsquelle für die Build-Identität.
+**Invariante:** `__APP_VERSION__` und `/version.json` stammen aus demselben `getBuildVersion()`-Aufruf
+zur selben Vite-Startzeit. Es gibt keinen Mechanismus, der sie auseinanderrücken kann, solange
+dieselbe laufende App-Instanz betrachtet wird.
 
-#### Atomic-Deploy-Garantie
+`apps/web/static/version.json` ist ein generiertes Artefakt und nicht im Repository eingecheckt.
 
-Vercel deployed atomisch: `version.json` und alle Assets einer neuen Version werden gemeinsam
-aktiviert. Es gibt keinen Zustand, in dem ein neues `version.json` mit alten Assets zusammenfällt.
-Der einzige Edge-Fall – offene Tabs während eines Deploys – ist durch den Update-Flow abgedeckt.
+#### Vercel-Deployment und Atomizität
+
+Vercel ist darauf ausgelegt, Deployments atomar zu aktivieren – d. h. alle Dateien einer
+Deployment-URL sind aus demselben Build-Artefakt. Das bedeutet in der Praxis, dass `version.json`
+und die zugehörigen Assets zur selben Deployment-Version gehören. Ein Mischzustand (neues
+`version.json`, alte Assets) ist unter normalen Vercel-Deployments nicht vorgesehen.
+Bei Edge-Cache-Konfigurationen außerhalb von Vercels Standard kann das Verhalten abweichen;
+das ist aber für dieses Projekt nicht relevant.
+
+Der einzige verbleibende Edge-Fall – offene Tabs während eines Deploys – ist durch den
+Update-Flow abgedeckt.
 
 ### 11.3 Service Worker und Cache-Strategie
 
@@ -265,8 +278,8 @@ Dies ermöglicht Diagnose im Browser-Konsolefenster ohne zusätzliche DevTools-S
 
 ### 11.6 Cache-Control-Header auf Vercel
 
-Konfiguriert in `vercel.json`. Vercel wendet alle passenden Regeln an; spezifischere Regeln
-(z. B. `version.json`) überschreiben die allgemeinere Catch-All-Regel:
+Konfiguriert in `vercel.json`. Vercel verarbeitet Header-Regeln in Reihenfolge, spezifischere
+Regeln (z. B. `/version.json`) werden vor der allgemeineren Catch-All-Regel angewandt:
 
 | Pfad | Cache-Control | Begründung |
 |---|---|---|
@@ -275,9 +288,10 @@ Konfiguriert in `vercel.json`. Vercel wendet alle passenden Regeln an; spezifisc
 | `/_app/immutable/…` | `public, max-age=31536000, immutable` | Content-hashed, nie veraltet |
 | alle anderen Pfade | `no-cache, must-revalidate` | HTML und statische Assets: immer revalidieren |
 
-**Hinweis:** Die Catch-All-Regel `/((?!_app/).*)` matcht bewusst alles außer `/_app/`,
-damit HTML-Seiten und öffentliche statische Dateien nie veraltet gecacht werden – auch
-wenn Vercel eigene Defaults anwenden würde.
+**Hinweis:** Die Catch-All-Regel `/((?!_app/).*)` ist darauf ausgelegt, alles außer `/_app/`
+zu erfassen. Negative Lookaheads in Header-Source-Patterns sind auf Vercel zulässig, wenn korrekt
+gruppiert. Falls diese Regel auf einem bestimmten Deployment nicht greift, können pro HTML-Route
+explizite Regeln ergänzt werden.
 
 ### 11.7 Verifikation (manuell)
 
@@ -285,13 +299,17 @@ wenn Vercel eigene Defaults anwenden würde.
 # 1. Build
 npm run build:web
 
-# 2. version.json prüfen
+# 2. Generierte version.json prüfen
 cat apps/web/static/version.json
 # Erwartet: { release, build, commit, builtAt } – alle Felder befüllt
 
 # 3. Lokaler Vorschau-Server (Produktionsbuild)
 npm run preview --workspace=apps/web
 ```
+
+**Hinweis zum Dev-Server:** Im Dev-Modus (`npm run dev`) wird `/version.json` direkt aus dem
+Speicher des Vite-Dev-Servers geliefert (via `configureServer`-Middleware). Der Inhalt stimmt
+immer mit `__APP_VERSION__` überein, unabhängig vom Dateisystem-Stand.
 
 **Browser DevTools:**
 
@@ -302,7 +320,7 @@ npm run preview --workspace=apps/web
 | `version.json` frisch | Network → /version.json | `Cache-Control: no-store` in Response-Headers |
 | Debug-Log | Console (level: Verbose) | `[spannungsatlas] version check` |
 
-**Simulierter Versionswechsel:**
+**Simulierter Versionswechsel (nur im Preview-/Produktionsmodus sinnvoll):**
 
 1. `apps/web/static/version.json` → `build`-Feld manuell ändern (z. B. `"build": "newbuild"`)
 2. Seite neu laden (ohne Hard-Reload – normaler Reload)

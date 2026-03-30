@@ -79,10 +79,9 @@ self.addEventListener('fetch', (event) => {
 				.match(req)
 				.then((cached) => cached ?? fetch(req))
 				.then((response) => {
-					// Re-populate cache if fetched from network (e.g. after cache eviction).
+					// Only cache successful network responses.
 					// Chrome extensions generate internal URLs that cannot be cached.
-					const UNCACHEABLE_URL_PREFIX = 'chrome-extension';
-					if (!response.url.startsWith(UNCACHEABLE_URL_PREFIX)) {
+					if (response.ok && !response.url.startsWith('chrome-extension://')) {
 						caches.open(CACHE).then((c) => c.put(req, response.clone()));
 					}
 					return response;
@@ -96,7 +95,8 @@ self.addEventListener('fetch', (event) => {
 		caches.open(CACHE).then(async (cache) => {
 			const cached = await cache.match(req);
 			const networkFetch = fetch(req).then((response) => {
-				cache.put(req, response.clone());
+				// Only cache successful responses to avoid persisting errors.
+				if (response.ok) cache.put(req, response.clone());
 				return response;
 			});
 			return cached ?? networkFetch;
