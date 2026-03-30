@@ -183,9 +183,15 @@
                 {/each}
               </select>
             </label>
-            {#if shouldShowRemoveParticipant(participants, row)}
-              <button type="button" class="btn-remove" onclick={() => removeParticipant(i)} aria-label={`Person ${i + 1} entfernen`}>×</button>
-            {/if}
+            <button
+              type="button"
+              class="btn-remove"
+              class:btn-remove--hidden={!shouldShowRemoveParticipant(participants, row)}
+              onclick={() => removeParticipant(i)}
+              aria-label={`Person ${i + 1} entfernen`}
+              aria-hidden={!shouldShowRemoveParticipant(participants, row) ? true : undefined}
+              tabindex={!shouldShowRemoveParticipant(participants, row) ? -1 : undefined}
+            >×</button>
           </div>
         {/each}
       </fieldset>
@@ -426,6 +432,10 @@
   .btn-remove:hover {
     color: var(--color-danger);
     border-color: var(--color-danger);
+  }
+  .btn-remove--hidden {
+    visibility: hidden;
+    pointer-events: none;
   }
   .sr-only {
     position: absolute;
