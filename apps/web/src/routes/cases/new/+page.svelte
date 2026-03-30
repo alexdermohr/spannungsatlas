@@ -87,9 +87,11 @@
 
   function handleCounterInput(index: number) {
     counterRows = ensureTrailingEmptyCounterRow(counterRows);
-    // Revalidate all counterText-* keys: duplicates and required-field rules are global
-    fieldErrors = clearErrorKeysWithPrefix(fieldErrors, 'counterText-');
-    fieldErrors = applyPrefixErrors(fieldErrors, validate(), 'counterText-');
+    // Revalidate all counterText-* keys: duplicates and required-field rules are global.
+    // Also clear _submit (service-level error) as the user is actively editing.
+    let errs = clearErrorKeysWithPrefix(fieldErrors, 'counterText-');
+    if ('_submit' in errs) { errs = { ...errs }; delete errs['_submit']; }
+    fieldErrors = applyPrefixErrors(errs, validate(), 'counterText-');
   }
 
   function removeCounterRow(index: number) {
@@ -103,9 +105,11 @@
 
   function handleUncertaintyInput(index: number) {
     uncertaintyRows = ensureTrailingEmptyUncertaintyRow(uncertaintyRows);
-    // Revalidate all uncertaintyRationale-* keys: required-field rule is global
-    fieldErrors = clearErrorKeysWithPrefix(fieldErrors, 'uncertaintyRationale-');
-    fieldErrors = applyPrefixErrors(fieldErrors, validate(), 'uncertaintyRationale-');
+    // Revalidate all uncertaintyRationale-* keys: required-field rule is global.
+    // Also clear _submit (service-level error) as the user is actively editing.
+    let errs = clearErrorKeysWithPrefix(fieldErrors, 'uncertaintyRationale-');
+    if ('_submit' in errs) { errs = { ...errs }; delete errs['_submit']; }
+    fieldErrors = applyPrefixErrors(errs, validate(), 'uncertaintyRationale-');
   }
 
   function removeUncertaintyRow(index: number) {
