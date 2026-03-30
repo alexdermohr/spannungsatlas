@@ -2,16 +2,11 @@
   import { page } from '$app/state';
   import { onMount } from 'svelte';
   import { getCase } from '$lib/services/case-service.js';
+  import { roleLabels, evidenceLabels } from '$lib/ui/labels.js';
   import type { Case, EvidenceType } from '$domain/types.js';
 
   let caseData: Case | null = $state(null);
   let loaded = $state(false);
-
-  const evidenceLabels: Record<EvidenceType, string> = {
-    observational: 'Beobachtungsnah',
-    derived: 'Abgeleitet',
-    speculative: 'Spekulativ'
-  };
 
   function evidenceBadgeClass(t: EvidenceType): string {
     return `badge badge-${t}`;
@@ -57,7 +52,7 @@
       <div class="participants">
         <strong>Beteiligte:</strong>
         {#each caseData.participants as p}
-          <span class="participant">{p.id}{#if p.role} ({p.role}){/if}</span>
+          <span class="participant">{p.id}{#if p.role} ({roleLabels[p.role] ?? p.role}){/if}</span>
         {/each}
       </div>
     </section>
@@ -80,28 +75,38 @@
       </span>
     </section>
 
-    <!-- Gegen-Deutung -->
+    <!-- Gegen-Deutungen -->
     <section class="card section">
-      <h2>Gegen-Deutung</h2>
-      <p>{caseData.currentReflection.counterInterpretation.text}</p>
-      <span class={evidenceBadgeClass(caseData.currentReflection.counterInterpretation.evidenceType)}>
-        {evidenceLabels[caseData.currentReflection.counterInterpretation.evidenceType]}
-      </span>
+      <h2>Gegen-Deutungen</h2>
+      {#each caseData.currentReflection.counterInterpretations as counter, i}
+        <div class="counter-item">
+          <strong class="sub-heading">Gegen-Deutung {i + 1}</strong>
+          <p>{counter.text}</p>
+          <span class={evidenceBadgeClass(counter.evidenceType)}>
+            {evidenceLabels[counter.evidenceType]}
+          </span>
+        </div>
+      {/each}
     </section>
 
-    <!-- Unsicherheit -->
+    <!-- Unsicherheiten -->
     <section class="card section">
-      <h2>Unsicherheit</h2>
-      <div class="uncertainty-level">
-        <strong>Stufe {caseData.currentReflection.uncertainty.level}</strong> / 5
-      </div>
-      <div class="uncertainty-bar">
-        <div
-          class="uncertainty-fill"
-          style="width: {(caseData.currentReflection.uncertainty.level / 5) * 100}%"
-        ></div>
-      </div>
-      <p class="rationale">{caseData.currentReflection.uncertainty.rationale}</p>
+      <h2>Unsicherheiten</h2>
+      {#each caseData.currentReflection.uncertainties as u, i}
+        <div class="uncertainty-item">
+          <strong class="sub-heading">Unsicherheit {i + 1}</strong>
+          <div class="uncertainty-level">
+            <strong>Stufe {u.level}</strong> / 5
+          </div>
+          <div class="uncertainty-bar">
+            <div
+              class="uncertainty-fill"
+              style="width: {(u.level / 5) * 100}%"
+            ></div>
+          </div>
+          <p class="rationale">{u.rationale}</p>
+        </div>
+      {/each}
     </section>
 
     <!-- Spannungen -->
@@ -242,5 +247,27 @@
   }
   .actions {
     margin: 1.5rem 0 2rem;
+  }
+  .counter-item {
+    margin-bottom: 0.75rem;
+  }
+  .counter-item:last-child {
+    margin-bottom: 0;
+  }
+  .uncertainty-item {
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+  .uncertainty-item:last-child {
+    margin-bottom: 0;
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+  .sub-heading {
+    display: block;
+    font-size: 0.82rem;
+    color: var(--color-text-muted);
+    margin-bottom: 0.15rem;
   }
 </style>

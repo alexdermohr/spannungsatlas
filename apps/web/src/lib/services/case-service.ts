@@ -1,20 +1,17 @@
-import type { Case, EvidenceType, ParticipantRole, UncertaintyLevel } from '$domain/types.js';
+import type { Case, CaseParticipant, EvidenceType, UncertaintyLevel } from '$domain/types.js';
 import type { CreateCaseInput } from '$domain/factories.js';
 import { createCase } from '$domain/factories.js';
 import { localStorageStore, type PersistenceStore } from '$lib/persistence/store.js';
 
 export interface StartNewCaseInput {
   context: string;
-  participantName: string;
-  participantRole?: ParticipantRole;
+  participants: CaseParticipant[];
   observationText: string;
   isCameraDescribable: boolean;
   interpretationText: string;
   interpretationEvidenceType: EvidenceType;
-  counterInterpretationText: string;
-  counterInterpretationEvidenceType: EvidenceType;
-  uncertaintyLevel: UncertaintyLevel;
-  uncertaintyRationale: string;
+  counterInterpretations: Array<{ text: string; evidenceType: EvidenceType }>;
+  uncertainties: Array<{ level: UncertaintyLevel; rationale: string }>;
 }
 
 const store: PersistenceStore = localStorageStore;
@@ -26,12 +23,7 @@ export function startNewCase(input: StartNewCaseInput): Case {
   const caseInput: CreateCaseInput = {
     id,
     context: input.context,
-    participants: [
-      {
-        id: input.participantName,
-        ...(input.participantRole ? { role: input.participantRole } : {})
-      }
-    ],
+    participants: input.participants,
     observation: {
       text: input.observationText,
       isCameraDescribable: input.isCameraDescribable
@@ -42,14 +34,8 @@ export function startNewCase(input: StartNewCaseInput): Case {
         text: input.interpretationText,
         evidenceType: input.interpretationEvidenceType
       },
-      counterInterpretation: {
-        text: input.counterInterpretationText,
-        evidenceType: input.counterInterpretationEvidenceType
-      },
-      uncertainty: {
-        level: input.uncertaintyLevel,
-        rationale: input.uncertaintyRationale
-      }
+      counterInterpretations: input.counterInterpretations,
+      uncertainties: input.uncertainties
     }
   };
 

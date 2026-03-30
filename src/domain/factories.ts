@@ -32,6 +32,7 @@ import {
   guardInterpretationText,
   guardEvidenceType,
   guardInterpretationsDistinct,
+  guardDistinctTexts,
   guardObservationInterpretationDistinct,
   guardUncertaintyLevel,
   guardUncertaintyRationale,
@@ -163,8 +164,8 @@ export function createTensionEdge(input: CreateTensionEdgeInput): TensionEdge {
 export interface CreateReflectionSnapshotInput {
   reflectedAt: string;
   interpretation: CreateInterpretationInput;
-  counterInterpretation: CreateInterpretationInput;
-  uncertainty: CreateUncertaintyInput;
+  counterInterpretations: CreateInterpretationInput[];
+  uncertainties: CreateUncertaintyInput[];
   tensions?: CreateTensionEdgeInput[];
 }
 
@@ -174,22 +175,35 @@ export function createReflectionSnapshot(
   throwIfError(guardIsoDateString(input.reflectedAt, "reflectedAt"));
 
   const interpretation = createInterpretation(input.interpretation);
-  const counterInterpretation = createInterpretation(
-    input.counterInterpretation,
-  );
 
-  throwIfError(
-    guardInterpretationsDistinct(interpretation, counterInterpretation),
-  );
+  if (input.counterInterpretations.length === 0) {
+    throw new Error("At least one counter-interpretation is required.");
+  }
+  const counterInterpretations = input.counterInterpretations.map(createInterpretation);
+  for (const counter of counterInterpretations) {
+    throwIfError(guardInterpretationsDistinct(interpretation, counter));
+  }
+  for (let i = 0; i < counterInterpretations.length; i++) {
+    for (let j = i + 1; j < counterInterpretations.length; j++) {
+      throwIfError(guardDistinctTexts(
+        counterInterpretations[i],
+        counterInterpretations[j],
+        "Two counter-interpretation texts must not be textually identical.",
+      ));
+    }
+  }
 
-  const uncertainty = createUncertainty(input.uncertainty);
+  if (input.uncertainties.length === 0) {
+    throw new Error("At least one uncertainty is required.");
+  }
+  const uncertainties = input.uncertainties.map(createUncertainty);
   const tensions = (input.tensions ?? []).map(createTensionEdge);
 
   const snapshot: ReflectionSnapshot = {
     reflectedAt: input.reflectedAt,
     interpretation,
-    counterInterpretation,
-    uncertainty,
+    counterInterpretations,
+    uncertainties,
     tensions,
   };
 

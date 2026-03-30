@@ -8,7 +8,7 @@ import {
   createRevision,
   createCase,
 } from "../../src/domain/factories.js";
-import type { ReflectionSnapshot } from "../../src/domain/types.js";
+import type { EvidenceType, ReflectionSnapshot } from "../../src/domain/types.js";
 
 // ---------------------------------------------------------------------------
 // Helpers: valid input builders
@@ -46,8 +46,8 @@ function validReflectionSnapshotInput() {
   return {
     reflectedAt: "2026-03-28T10:00:00Z",
     interpretation: validInterpretationInput(),
-    counterInterpretation: validCounterInterpretationInput(),
-    uncertainty: validUncertaintyInput(),
+    counterInterpretations: [validCounterInterpretationInput()],
+    uncertainties: [validUncertaintyInput()],
     tensions: [],
   };
 }
@@ -276,7 +276,7 @@ describe("createReflectionSnapshot", () => {
     expect(snap.interpretation.text).toBe(
       "Das Kind zeigt körperliche Anspannung.",
     );
-    expect(snap.counterInterpretation.text).toBe(
+    expect(snap.counterInterpretations[0].text).toBe(
       "Das Kind versucht Aufmerksamkeit zu gewinnen.",
     );
   });
@@ -285,7 +285,7 @@ describe("createReflectionSnapshot", () => {
     expect(() =>
       createReflectionSnapshot({
         ...validReflectionSnapshotInput(),
-        counterInterpretation: validInterpretationInput(), // same as interpretation
+        counterInterpretations: [validInterpretationInput()], // same as interpretation
       }),
     ).toThrow(/identical/i);
   });
@@ -303,7 +303,7 @@ describe("createReflectionSnapshot", () => {
     expect(() =>
       createReflectionSnapshot({
         ...validReflectionSnapshotInput(),
-        counterInterpretation: { text: "", evidenceType: "derived" },
+        counterInterpretations: [{ text: "", evidenceType: "derived" }],
       }),
     ).toThrow();
   });
@@ -315,6 +315,60 @@ describe("createReflectionSnapshot", () => {
         reflectedAt: "not-a-date",
       }),
     ).toThrow(/reflectedAt/i);
+  });
+
+  it("creates a valid snapshot with multiple counter-interpretations", () => {
+    const snap = createReflectionSnapshot({
+      ...validReflectionSnapshotInput(),
+      counterInterpretations: [
+        validCounterInterpretationInput(),
+        { text: "Eine weitere alternative Erklärung.", evidenceType: "speculative" as EvidenceType },
+      ],
+    });
+    expect(snap.counterInterpretations).toHaveLength(2);
+  });
+
+  it("throws when multiple counter-interpretations are identical to each other", () => {
+    expect(() =>
+      createReflectionSnapshot({
+        ...validReflectionSnapshotInput(),
+        counterInterpretations: [
+          validCounterInterpretationInput(),
+          validCounterInterpretationInput(),
+        ],
+      }),
+    ).toThrow(/identical/i);
+  });
+
+  it("throws when no counter-interpretations are provided", () => {
+    expect(() =>
+      createReflectionSnapshot({
+        ...validReflectionSnapshotInput(),
+        counterInterpretations: [],
+      }),
+    ).toThrow(/required/i);
+  });
+
+  it("creates a valid snapshot with multiple uncertainties", () => {
+    const snap = createReflectionSnapshot({
+      ...validReflectionSnapshotInput(),
+      uncertainties: [
+        validUncertaintyInput(),
+        { level: 1 as const, rationale: "Zweite Unsicherheitsbegründung." },
+      ],
+    });
+    expect(snap.uncertainties).toHaveLength(2);
+    expect(snap.uncertainties[0]!.level).toBe(3);
+    expect(snap.uncertainties[1]!.level).toBe(1);
+  });
+
+  it("throws when no uncertainties are provided", () => {
+    expect(() =>
+      createReflectionSnapshot({
+        ...validReflectionSnapshotInput(),
+        uncertainties: [],
+      }),
+    ).toThrow(/required/i);
   });
 });
 
@@ -489,7 +543,7 @@ describe("createCase", () => {
         ...validCaseInput(),
         currentReflection: {
           ...validReflectionSnapshotInput(),
-          counterInterpretation: { text: "", evidenceType: "derived" },
+          counterInterpretations: [{ text: "", evidenceType: "derived" }],
         },
       }),
     ).toThrow();
@@ -501,7 +555,7 @@ describe("createCase", () => {
         ...validCaseInput(),
         currentReflection: {
           ...validReflectionSnapshotInput(),
-          uncertainty: { level: 3, rationale: "" },
+          uncertainties: [{ level: 3, rationale: "" }],
         },
       }),
     ).toThrow(/rationale/i);

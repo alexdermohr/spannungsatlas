@@ -4,6 +4,7 @@ import {
   guardInterpretationText,
   guardCounterInterpretationText,
   guardInterpretationsDistinct,
+  guardDistinctTexts,
   guardObservationInterpretationDistinct,
   guardUncertaintyLevel,
   guardUncertaintyRationale,
@@ -58,8 +59,8 @@ function validSnapshot(): ReflectionSnapshot {
   return {
     reflectedAt: "2026-03-28T10:00:00Z",
     interpretation: validInterpretation(),
-    counterInterpretation: validCounterInterpretation(),
-    uncertainty: { level: 3, rationale: "Nur ein Einzelereignis beobachtet." },
+    counterInterpretations: [validCounterInterpretation()],
+    uncertainties: [{ level: 3, rationale: "Nur ein Einzelereignis beobachtet." }],
     tensions: [],
   };
 }
@@ -129,6 +130,27 @@ describe("guardInterpretationsDistinct", () => {
     const a = { ...validInterpretation(), text: "  Deutung  " };
     const b = { ...validCounterInterpretation(), text: "Deutung" };
     expect(guardInterpretationsDistinct(a, b)).toBeDefined();
+  });
+});
+
+describe("guardDistinctTexts", () => {
+  it("returns the supplied message when texts are identical", () => {
+    const a = validInterpretation();
+    const msg = "Two counter-interpretation texts must not be textually identical.";
+    expect(guardDistinctTexts(a, a, msg)).toBe(msg);
+  });
+
+  it("returns undefined when texts differ", () => {
+    expect(
+      guardDistinctTexts(validInterpretation(), validCounterInterpretation(), "msg"),
+    ).toBeUndefined();
+  });
+
+  it("uses the caller-supplied message, not a hardcoded one", () => {
+    const a = { ...validInterpretation(), text: "same" };
+    const b = { ...validCounterInterpretation(), text: "same" };
+    const customMsg = "Gegen-Deutungen dürfen nicht identisch sein.";
+    expect(guardDistinctTexts(a, b, customMsg)).toBe(customMsg);
   });
 });
 
@@ -473,7 +495,7 @@ describe("guardReflectionSnapshot", () => {
   it("returns an error for an invalid evidenceType in counterInterpretation", () => {
     const bad: ReflectionSnapshot = {
       ...validSnapshot(),
-      counterInterpretation: { text: "Eine Gegendeutung.", evidenceType: "unknown" as any },
+      counterInterpretations: [{ text: "Eine Gegendeutung.", evidenceType: "unknown" as any }],
     };
     const errors = guardReflectionSnapshot(bad);
     expect(errors.some((e) => /EvidenceType/i.test(e))).toBe(true);
@@ -483,12 +505,65 @@ describe("guardReflectionSnapshot", () => {
     const bad: ReflectionSnapshot = {
       reflectedAt: "2026-03-28T10:00:00Z",
       interpretation: { text: "", evidenceType: "observational" },
-      counterInterpretation: { text: "", evidenceType: "derived" },
-      uncertainty: { level: 99 as any, rationale: "" },
+      counterInterpretations: [{ text: "", evidenceType: "derived" }],
+      uncertainties: [{ level: 99 as any, rationale: "" }],
       tensions: [],
     };
     const errors = guardReflectionSnapshot(bad);
     expect(errors.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it("returns an error when counterInterpretations is empty", () => {
+    const bad: ReflectionSnapshot = { ...validSnapshot(), counterInterpretations: [] };
+    const errors = guardReflectionSnapshot(bad);
+    expect(errors.some((e) => /counter-interpretation/i.test(e))).toBe(true);
+  });
+
+  it("returns an error when a counter-interpretation is identical to the main interpretation", () => {
+    const bad: ReflectionSnapshot = {
+      ...validSnapshot(),
+      counterInterpretations: [validInterpretation()], // same text as interpretation
+    };
+    const errors = guardReflectionSnapshot(bad);
+    expect(errors.some((e) => /identical/i.test(e))).toBe(true);
+  });
+
+  it("returns an error when two counter-interpretations are identical to each other", () => {
+    const bad: ReflectionSnapshot = {
+      ...validSnapshot(),
+      counterInterpretations: [validCounterInterpretation(), validCounterInterpretation()],
+    };
+    const errors = guardReflectionSnapshot(bad);
+    expect(errors.some((e) => /identical/i.test(e))).toBe(true);
+  });
+
+  it("returns no errors for two distinct counter-interpretations", () => {
+    const good: ReflectionSnapshot = {
+      ...validSnapshot(),
+      counterInterpretations: [
+        validCounterInterpretation(),
+        { text: "Eine weitere alternative Erklärung.", evidenceType: "speculative" },
+      ],
+    };
+    expect(guardReflectionSnapshot(good)).toHaveLength(0);
+  });
+
+  it("returns an error when uncertainties is empty", () => {
+    const bad: ReflectionSnapshot = { ...validSnapshot(), uncertainties: [] };
+    const errors = guardReflectionSnapshot(bad);
+    expect(errors.some((e) => /uncertainty/i.test(e))).toBe(true);
+  });
+
+  it("returns errors for each invalid uncertainty entry", () => {
+    const bad: ReflectionSnapshot = {
+      ...validSnapshot(),
+      uncertainties: [
+        { level: 99 as any, rationale: "" },
+        { level: 2, rationale: "" },
+      ],
+    };
+    const errors = guardReflectionSnapshot(bad);
+    expect(errors.length).toBeGreaterThanOrEqual(3); // invalid level + 2 empty rationales
   });
 });
 
@@ -542,8 +617,8 @@ describe("guardCase", () => {
       currentReflection: {
         reflectedAt: "2026-03-28",
         interpretation: { text: "", evidenceType: "observational" },
-        counterInterpretation: { text: "", evidenceType: "derived" },
-        uncertainty: { level: 3, rationale: "" },
+        counterInterpretations: [{ text: "", evidenceType: "derived" }],
+        uncertainties: [{ level: 3, rationale: "" }],
         tensions: [],
       },
       revisions: [],

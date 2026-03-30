@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { getAllCases } from '$lib/services/case-service.js';
+  import { roleLabels } from '$lib/ui/labels.js';
   import type { Case } from '$domain/types.js';
 
   let cases: Case[] = $state([]);
@@ -15,10 +16,6 @@
     return text.length > max ? text.slice(0, max) + '…' : text;
   }
 
-  function shortId(id: string): string {
-    return id.slice(0, 8);
-  }
-
   function formatDate(iso: string): string {
     try {
       return new Date(iso).toLocaleDateString('de-DE', {
@@ -27,6 +24,18 @@
     } catch {
       return iso;
     }
+  }
+
+  function participantSummary(c: Case): string {
+    const ps = c.participants;
+    if (ps.length === 0) return '';
+    const first = ps[0];
+    const name = first.id;
+    const role = first.role ? roleLabels[first.role] ?? first.role : '';
+    const label = role ? `${name} (${role})` : name;
+    if (ps.length === 1) return label;
+    const rest = ps.length - 1;
+    return `${label} + ${rest} weitere ${rest === 1 ? 'Person' : 'Personen'}`;
   }
 </script>
 
@@ -50,7 +59,7 @@
       {#each cases as c (c.id)}
         <a href="/cases/{c.id}" class="card case-card">
           <div class="case-header">
-            <code class="case-id">{shortId(c.id)}</code>
+            <span class="case-participant">{participantSummary(c)}</span>
             <span class="case-date">{formatDate(c.currentReflection.reflectedAt)}</span>
           </div>
           <div class="case-context">{truncate(c.context, 80)}</div>
@@ -105,9 +114,9 @@
     align-items: center;
     margin-bottom: 0.4rem;
   }
-  .case-id {
-    font-family: var(--font-mono);
-    font-size: 0.8rem;
+  .case-participant {
+    font-size: 0.9rem;
+    font-weight: 600;
     color: var(--color-accent);
   }
   .case-date {

@@ -147,8 +147,8 @@ interface ReflectionSnapshot {
   selectedNeeds: NeedSelection[];
   selectedDeterminants: DeterminantSelection[];
   interpretation: Interpretation;
-  counterInterpretation: Interpretation;
-  uncertainty: Uncertainty;
+  counterInterpretations: Interpretation[]; // mindestens eine, keine Duplikate zur Hauptdeutung oder untereinander
+  uncertainties: Uncertainty[];             // mindestens eine; jeder Eintrag ist ein separat begründeter Unsicherheitsaspekt
   tensions: TensionEdge[];
 }
 

@@ -11,6 +11,93 @@ export interface PersistenceStore {
 
 const STORAGE_KEY = 'spannungsatlas-cases';
 
+/**
+ * Normalizes a raw ReflectionSnapshot object from storage into the current plural schema.
+ * Handles forward-migration from earlier single-value fields:
+ *   counterInterpretation (singular) → counterInterpretations: [value]
+ *   uncertainty (singular)           → uncertainties: [value]
+ */
+function normalizeSnapshotFromStorage(snap: Record<string, unknown>): Record<string, unknown> {
+  let changed = false;
+  const updated: Record<string, unknown> = { ...snap };
+
+  if (!Array.isArray(snap['counterInterpretations']) && snap['counterInterpretation'] !== undefined) {
+    updated['counterInterpretations'] = [snap['counterInterpretation']];
+    delete updated['counterInterpretation'];
+    changed = true;
+  }
+
+  if (!Array.isArray(snap['uncertainties']) && snap['uncertainty'] !== undefined) {
+    updated['uncertainties'] = [snap['uncertainty']];
+    delete updated['uncertainty'];
+    changed = true;
+  }
+
+  return changed ? updated : snap;
+}
+
+/**
+ * Normalizes a raw case entry from storage into the current plural schema.
+ *
+ * Supports forward-migration from earlier single-value fields in:
+ *   - currentReflection
+ *   - revisions[*].from and revisions[*].to
+ *
+ * Missing or invalid fields are left for guardCase to reject.
+ */
+function normalizeCaseFromStorage(raw: unknown): unknown {
+  if (typeof raw !== 'object' || raw === null) return raw;
+  const entry = raw as Record<string, unknown>;
+
+  let changed = false;
+  let updatedEntry: Record<string, unknown> = entry;
+
+  // Normalize currentReflection
+  const reflection = entry['currentReflection'];
+  if (typeof reflection === 'object' && reflection !== null) {
+    const normalized = normalizeSnapshotFromStorage(reflection as Record<string, unknown>);
+    if (normalized !== reflection) {
+      updatedEntry = { ...updatedEntry, currentReflection: normalized };
+      changed = true;
+    }
+  }
+
+  // Normalize revisions[*].from and revisions[*].to
+  const revisions = updatedEntry['revisions'];
+  if (Array.isArray(revisions)) {
+    const normalizedRevisions = revisions.map((rev) => {
+      if (typeof rev !== 'object' || rev === null) return rev;
+      const r = rev as Record<string, unknown>;
+      let revChanged = false;
+      let updatedRev: Record<string, unknown> = r;
+
+      if (typeof r['from'] === 'object' && r['from'] !== null) {
+        const normFrom = normalizeSnapshotFromStorage(r['from'] as Record<string, unknown>);
+        if (normFrom !== r['from']) {
+          updatedRev = { ...updatedRev, from: normFrom };
+          revChanged = true;
+        }
+      }
+      if (typeof r['to'] === 'object' && r['to'] !== null) {
+        const normTo = normalizeSnapshotFromStorage(r['to'] as Record<string, unknown>);
+        if (normTo !== r['to']) {
+          updatedRev = { ...updatedRev, to: normTo };
+          revChanged = true;
+        }
+      }
+      return revChanged ? updatedRev : r;
+    });
+
+    const anyRevChanged = normalizedRevisions.some((r, i) => r !== revisions[i]);
+    if (anyRevChanged) {
+      updatedEntry = { ...updatedEntry, revisions: normalizedRevisions };
+      changed = true;
+    }
+  }
+
+  return changed ? updatedEntry : entry;
+}
+
 function isStorageAvailable(): boolean {
   return typeof localStorage !== 'undefined';
 }
@@ -28,9 +115,11 @@ function readCases(): Case[] {
   try {
     const parsed: unknown = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
-    return (parsed as unknown[]).filter(
-      (entry) => typeof entry === 'object' && entry !== null && guardCase(entry as Case).length === 0
-    ) as Case[];
+    return (parsed as unknown[])
+      .map(normalizeCaseFromStorage)
+      .filter(
+        (entry) => typeof entry === 'object' && entry !== null && guardCase(entry as Case).length === 0
+      ) as Case[];
   } catch {
     return [];
   }
