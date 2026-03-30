@@ -42,6 +42,14 @@
     participants = [...filled, { name: '', role: 'primary' as ParticipantRole }];
   }
 
+  /** Called on input: only appends a trailing empty row when needed, never removes rows. */
+  function ensureTrailingEmptyRow() {
+    const last = participants[participants.length - 1];
+    if (last && last.name.trim() !== '') {
+      participants = [...participants, { name: '', role: 'primary' as ParticipantRole }];
+    }
+  }
+
   function removeParticipant(index: number) {
     participants = participants.filter((_, i) => i !== index);
     normalizeParticipants();
@@ -144,7 +152,8 @@
                 id="field-participant-{i}"
                 type="text"
                 bind:value={row.name}
-                oninput={() => normalizeParticipants()}
+                oninput={() => ensureTrailingEmptyRow()}
+                onblur={() => normalizeParticipants()}
                 placeholder="Name oder Pseudonym"
               />
               {#if fieldErrors[`participant-${i}`]}<span class="field-error-msg">{fieldErrors[`participant-${i}`]}</span>{/if}
