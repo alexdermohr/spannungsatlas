@@ -9,8 +9,8 @@
     <ul class="topnav-links">
       <li><a href="/">Übersicht</a></li>
       <li><a href="/cases/new">Neuer Fall</a></li>
-      <li><a href="/catalog" class="nav-inactive" aria-disabled="true">Katalog <span class="nav-phase">Phase 2</span></a></li>
-      <li><a href="/compare" class="nav-inactive" aria-disabled="true">Vergleich <span class="nav-phase">Phase 3</span></a></li>
+      <li><span class="nav-inactive" aria-label="Katalog (geplant für Phase 2)">Katalog <span class="nav-phase" aria-hidden="true">Phase 2</span></span></li>
+      <li><span class="nav-inactive" aria-label="Vergleich (geplant für Phase 3)">Vergleich <span class="nav-phase" aria-hidden="true">Phase 3</span></span></li>
     </ul>
   </div>
 </nav>
@@ -51,10 +51,12 @@
     gap: 1.25rem;
     font-size: 0.9rem;
   }
-  .topnav-links a {
+  .topnav-links a,
+  .topnav-links span {
     color: var(--color-text-muted);
     text-decoration: none;
     padding: 0.25rem 0;
+    display: inline-block;
   }
   .topnav-links a:hover {
     color: var(--color-accent);
@@ -62,7 +64,6 @@
   .nav-inactive {
     opacity: 0.45;
     cursor: default;
-    pointer-events: none;
   }
   .nav-phase {
     font-size: 0.65rem;

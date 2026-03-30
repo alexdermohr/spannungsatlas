@@ -37,22 +37,21 @@
     5: '5 — Hochspekulativ'
   };
 
-  function ensureEmptyRow() {
-    const last = participants[participants.length - 1];
-    if (last && last.name.trim() !== '') {
-      participants = [...participants, { name: '', role: 'primary' }];
-    }
+  function normalizeParticipants() {
+    const filled = participants.filter((p) => p.name.trim() !== '');
+    participants = [...filled, { name: '', role: 'primary' as ParticipantRole }];
   }
 
   function removeParticipant(index: number) {
-    if (participants.length <= 1) return;
     participants = participants.filter((_, i) => i !== index);
-    ensureEmptyRow();
+    normalizeParticipants();
   }
 
-  /** Returns non-empty participants (empty trailing row excluded). */
+  /** Returns non-empty participants with names trimmed. */
   function filledParticipants(): ParticipantRow[] {
-    return participants.filter((p) => p.name.trim() !== '');
+    return participants
+      .filter((p) => p.name.trim() !== '')
+      .map((p) => ({ ...p, name: p.name.trim() }));
   }
 
   function validate(): Record<string, string> {
@@ -92,7 +91,7 @@
       const created = startNewCase({
         context: context.trim(),
         participants: filledParticipants().map((p) => ({
-          id: p.name.trim(),
+          id: p.name,
           role: p.role
         })),
         observationText: observationText.trim(),
@@ -145,7 +144,7 @@
                 id="field-participant-{i}"
                 type="text"
                 bind:value={row.name}
-                oninput={() => ensureEmptyRow()}
+                oninput={() => normalizeParticipants()}
                 placeholder="Name oder Pseudonym"
               />
               {#if fieldErrors[`participant-${i}`]}<span class="field-error-msg">{fieldErrors[`participant-${i}`]}</span>{/if}
@@ -158,7 +157,7 @@
                 {/each}
               </select>
             </label>
-            {#if participants.length > 1 && row.name.trim() !== ''}
+            {#if row.name.trim() !== ''}
               <button type="button" class="btn-remove" onclick={() => removeParticipant(i)} aria-label="Person {i + 1} entfernen">×</button>
             {/if}
           </div>
