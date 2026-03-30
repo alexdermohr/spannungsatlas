@@ -1,22 +1,7 @@
-import type {
-  Case,
-  DriftType,
-  EvidenceType,
-  ParticipantRole,
-  TensionDirection,
-  UncertaintyLevel
-} from '$domain/types.js';
-import type { CreateCaseInput, CreateTensionEdgeInput } from '$domain/factories.js';
+import type { Case, DriftType, EvidenceType, ParticipantRole, UncertaintyLevel } from '$domain/types.js';
+import type { CreateCaseInput } from '$domain/factories.js';
 import { createCase, createReflectionSnapshot, createRevision } from '$domain/factories.js';
 import { localStorageStore, type PersistenceStore } from '$lib/persistence/store.js';
-
-export interface TensionEdgeInput {
-  source: string;
-  target: string;
-  label: string;
-  context: string;
-  direction: TensionDirection;
-}
 
 export interface StartNewCaseInput {
   context: string;
@@ -30,7 +15,6 @@ export interface StartNewCaseInput {
   counterInterpretationEvidenceType: EvidenceType;
   uncertaintyLevel: UncertaintyLevel;
   uncertaintyRationale: string;
-  tensions?: TensionEdgeInput[];
 }
 
 export interface AddRevisionInput {
@@ -42,7 +26,6 @@ export interface AddRevisionInput {
   uncertaintyRationale: string;
   driftType: DriftType;
   reason: string;
-  tensions?: TensionEdgeInput[];
 }
 
 const store: PersistenceStore = localStorageStore;
@@ -50,15 +33,6 @@ const store: PersistenceStore = localStorageStore;
 export function startNewCase(input: StartNewCaseInput): Case {
   const id = crypto.randomUUID();
   const now = new Date().toISOString();
-
-  const tensions: CreateTensionEdgeInput[] | undefined = input.tensions?.map((t) => ({
-    source: t.source,
-    target: t.target,
-    label: t.label,
-    context: t.context,
-    direction: t.direction,
-    timestamp: now
-  }));
 
   const caseInput: CreateCaseInput = {
     id,
@@ -86,8 +60,7 @@ export function startNewCase(input: StartNewCaseInput): Case {
       uncertainty: {
         level: input.uncertaintyLevel,
         rationale: input.uncertaintyRationale
-      },
-      tensions
+      }
     }
   };
 
@@ -96,10 +69,6 @@ export function startNewCase(input: StartNewCaseInput): Case {
   return created;
 }
 
-/**
- * Add a revision to an existing case: creates a new ReflectionSnapshot,
- * records the Revision (from → to), and updates the case's currentReflection.
- */
 export function addRevision(caseId: string, input: AddRevisionInput): Case {
   const existing = store.loadCase(caseId);
   if (!existing) {
@@ -108,16 +77,6 @@ export function addRevision(caseId: string, input: AddRevisionInput): Case {
 
   const now = new Date().toISOString();
   const from = existing.currentReflection;
-
-  const tensions: CreateTensionEdgeInput[] | undefined = input.tensions?.map((t) => ({
-    source: t.source,
-    target: t.target,
-    label: t.label,
-    context: t.context,
-    direction: t.direction,
-    timestamp: now
-  }));
-
   const to = createReflectionSnapshot({
     reflectedAt: now,
     interpretation: {
@@ -131,8 +90,7 @@ export function addRevision(caseId: string, input: AddRevisionInput): Case {
     uncertainty: {
       level: input.uncertaintyLevel,
       rationale: input.uncertaintyRationale
-    },
-    tensions
+    }
   });
 
   const revision = createRevision({

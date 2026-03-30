@@ -1,13 +1,11 @@
 <script lang="ts">
   import { page } from '$app/state';
-  import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
-  import { getCase, deleteCase } from '$lib/services/case-service.js';
+  import { getCase } from '$lib/services/case-service.js';
   import type { Case, DriftType, EvidenceType } from '$domain/types.js';
 
   let caseData: Case | null = $state(null);
   let loaded = $state(false);
-  let showDeleteConfirm = $state(false);
 
   const evidenceLabels: Record<EvidenceType, string> = {
     observational: 'Beobachtungsnah',
@@ -36,12 +34,6 @@
     }
   }
 
-  function confirmDelete() {
-    if (!caseData) return;
-    deleteCase(caseData.id);
-    goto('/');
-  }
-
   onMount(() => {
     const id = page.params.id ?? '';
     caseData = getCase(id);
@@ -64,7 +56,6 @@
       <span class="case-date">{formatDate(caseData.currentReflection.reflectedAt)}</span>
     </div>
 
-    <!-- Kontext -->
     <section class="card section">
       <h2>Kontext</h2>
       <p>{caseData.context}</p>
@@ -76,7 +67,6 @@
       </div>
     </section>
 
-    <!-- Beobachtung -->
     <section class="card section">
       <h2>Beobachtung</h2>
       <p>{caseData.observation.text}</p>
@@ -85,7 +75,6 @@
       {/if}
     </section>
 
-    <!-- Deutung -->
     <section class="card section">
       <h2>Deutung</h2>
       <p>{caseData.currentReflection.interpretation.text}</p>
@@ -94,7 +83,6 @@
       </span>
     </section>
 
-    <!-- Gegen-Deutung -->
     <section class="card section">
       <h2>Gegen-Deutung</h2>
       <p>{caseData.currentReflection.counterInterpretation.text}</p>
@@ -103,7 +91,6 @@
       </span>
     </section>
 
-    <!-- Unsicherheit -->
     <section class="card section">
       <h2>Unsicherheit</h2>
       <div class="uncertainty-level">
@@ -118,23 +105,6 @@
       <p class="rationale">{caseData.currentReflection.uncertainty.rationale}</p>
     </section>
 
-    <!-- Spannungen -->
-    {#if caseData.currentReflection.tensions.length > 0}
-      <section class="card section">
-        <h2>Spannungen</h2>
-        {#each caseData.currentReflection.tensions as tension}
-          <div class="tension-edge">
-            <span class="tension-source">{tension.source}</span>
-            <span class="tension-arrow">{tension.direction === 'bidirectional' ? '↔' : '→'}</span>
-            <span class="tension-target">{tension.target}</span>
-            <span class="tension-label">({tension.label})</span>
-          </div>
-          <p class="tension-context">{tension.context}</p>
-        {/each}
-      </section>
-    {/if}
-
-    <!-- Revisionen -->
     <section class="card section">
       <div class="section-header">
         <h2>Revisionshistorie</h2>
@@ -144,7 +114,7 @@
       {#if caseData.revisions.length === 0}
         <p class="no-revisions">
           Noch keine Revisionen dokumentiert. Eine Revision dokumentiert die Veränderung
-          Ihres Denkstands — nicht als stille Korrektur, sondern als nachvollziehbare Entwicklung.
+          des Denkstands — nicht als stille Korrektur, sondern als nachvollziehbare Entwicklung.
         </p>
       {:else}
         {#each caseData.revisions as rev, i}
@@ -170,6 +140,9 @@
                   <div class="compare-item">
                     <strong>Gegen-Deutung</strong>
                     <p>{rev.from.counterInterpretation.text}</p>
+                    <span class={evidenceBadgeClass(rev.from.counterInterpretation.evidenceType)}>
+                      {evidenceLabels[rev.from.counterInterpretation.evidenceType]}
+                    </span>
                   </div>
                   <div class="compare-item">
                     <strong>Unsicherheit</strong>
@@ -188,6 +161,9 @@
                   <div class="compare-item">
                     <strong>Gegen-Deutung</strong>
                     <p>{rev.to.counterInterpretation.text}</p>
+                    <span class={evidenceBadgeClass(rev.to.counterInterpretation.evidenceType)}>
+                      {evidenceLabels[rev.to.counterInterpretation.evidenceType]}
+                    </span>
                   </div>
                   <div class="compare-item">
                     <strong>Unsicherheit</strong>
@@ -201,21 +177,9 @@
       {/if}
     </section>
 
-    <!-- Actions -->
     <div class="actions">
       <a href="/cases/{caseData.id}/revise" class="btn btn-primary">Revision erstellen</a>
       <a href="/" class="btn">← Zurück zur Übersicht</a>
-      {#if !showDeleteConfirm}
-        <button class="btn btn-danger" onclick={() => { showDeleteConfirm = true; }}>
-          Fall löschen
-        </button>
-      {:else}
-        <div class="delete-confirm">
-          <span>Wirklich löschen?</span>
-          <button class="btn btn-danger" onclick={confirmDelete}>Ja, endgültig löschen</button>
-          <button class="btn" onclick={() => { showDeleteConfirm = false; }}>Abbrechen</button>
-        </div>
-      {/if}
     </div>
   {/if}
 </div>
@@ -297,28 +261,6 @@
     font-style: italic;
     color: var(--color-text-muted);
   }
-  .tension-edge {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    font-weight: 500;
-    margin-top: 0.5rem;
-  }
-  .tension-arrow {
-    font-size: 1.2rem;
-    color: var(--color-accent);
-  }
-  .tension-label {
-    color: var(--color-text-muted);
-    font-weight: 400;
-    font-size: 0.85rem;
-  }
-  .tension-context {
-    font-size: 0.85rem;
-    color: var(--color-text-muted);
-    margin-top: 0.1rem;
-    margin-bottom: 0.75rem;
-  }
   .no-revisions {
     color: var(--color-text-muted);
     font-size: 0.9rem;
@@ -362,7 +304,9 @@
     margin-top: 0.5rem;
   }
   @media (max-width: 600px) {
-    .revision-compare { grid-template-columns: 1fr; }
+    .revision-compare {
+      grid-template-columns: 1fr;
+    }
   }
   .compare-col {
     padding: 0.75rem;
@@ -401,20 +345,5 @@
     gap: 0.75rem;
     flex-wrap: wrap;
     align-items: center;
-  }
-  .btn-danger {
-    background: var(--color-danger);
-    color: #fff;
-    border-color: var(--color-danger);
-  }
-  .btn-danger:hover {
-    background: #9b2c2c;
-  }
-  .delete-confirm {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.85rem;
-    color: var(--color-danger);
   }
 </style>

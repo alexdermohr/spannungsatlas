@@ -8,7 +8,12 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "rootDir": "."
+    "rootDir": ".",
+    "paths": {
+      "$domain": ["./src/domain"],
+      "$domain/*": ["./src/domain/*"],
+      "$lib/*": ["./apps/web/src/lib/*"]
+    }
   },
   "include": ["src/**/*.ts", "tests/**/*.ts"]
 }
