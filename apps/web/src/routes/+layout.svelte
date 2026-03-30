@@ -1,5 +1,6 @@
 <script>
   import '../app.css';
+  import UpdateBanner from '$lib/components/UpdateBanner.svelte';
   let { children } = $props();
 </script>
 
@@ -18,6 +19,8 @@
 <main>
   {@render children()}
 </main>
+
+<UpdateBanner />
 
 <style>
   .topnav {
