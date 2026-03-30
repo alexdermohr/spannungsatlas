@@ -9,8 +9,8 @@
     <ul class="topnav-links">
       <li><a href="/">Übersicht</a></li>
       <li><a href="/cases/new">Neuer Fall</a></li>
-      <li><a href="/catalog">Katalog</a></li>
-      <li><a href="/compare">Vergleich</a></li>
+      <li><a href="/catalog" class="nav-inactive" aria-disabled="true">Katalog <span class="nav-phase">Phase 2</span></a></li>
+      <li><a href="/compare" class="nav-inactive" aria-disabled="true">Vergleich <span class="nav-phase">Phase 3</span></a></li>
     </ul>
   </div>
 </nav>
@@ -58,5 +58,15 @@
   }
   .topnav-links a:hover {
     color: var(--color-accent);
+  }
+  .nav-inactive {
+    opacity: 0.45;
+    cursor: default;
+    pointer-events: none;
+  }
+  .nav-phase {
+    font-size: 0.65rem;
+    vertical-align: super;
+    opacity: 0.7;
   }
 </style>

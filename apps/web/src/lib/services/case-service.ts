@@ -1,12 +1,11 @@
-import type { Case, EvidenceType, ParticipantRole, UncertaintyLevel } from '$domain/types.js';
+import type { Case, CaseParticipant, EvidenceType, UncertaintyLevel } from '$domain/types.js';
 import type { CreateCaseInput } from '$domain/factories.js';
 import { createCase } from '$domain/factories.js';
 import { localStorageStore, type PersistenceStore } from '$lib/persistence/store.js';
 
 export interface StartNewCaseInput {
   context: string;
-  participantName: string;
-  participantRole?: ParticipantRole;
+  participants: CaseParticipant[];
   observationText: string;
   isCameraDescribable: boolean;
   interpretationText: string;
@@ -26,12 +25,7 @@ export function startNewCase(input: StartNewCaseInput): Case {
   const caseInput: CreateCaseInput = {
     id,
     context: input.context,
-    participants: [
-      {
-        id: input.participantName,
-        ...(input.participantRole ? { role: input.participantRole } : {})
-      }
-    ],
+    participants: input.participants,
     observation: {
       text: input.observationText,
       isCameraDescribable: input.isCameraDescribable

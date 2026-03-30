@@ -13,6 +13,13 @@
     speculative: 'Spekulativ'
   };
 
+  const roleLabels: Record<string, string> = {
+    primary: 'Primär',
+    secondary: 'Sekundär',
+    staff: 'Fachkraft',
+    contextual: 'Kontextuell'
+  };
+
   function evidenceBadgeClass(t: EvidenceType): string {
     return `badge badge-${t}`;
   }
@@ -57,7 +64,7 @@
       <div class="participants">
         <strong>Beteiligte:</strong>
         {#each caseData.participants as p}
-          <span class="participant">{p.id}{#if p.role} ({p.role}){/if}</span>
+          <span class="participant">{p.id}{#if p.role} ({roleLabels[p.role] ?? p.role}){/if}</span>
         {/each}
       </div>
     </section>

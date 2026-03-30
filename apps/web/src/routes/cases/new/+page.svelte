@@ -1,11 +1,16 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { tick } from 'svelte';
   import { startNewCase } from '$lib/services/case-service.js';
   import type { EvidenceType, ParticipantRole, UncertaintyLevel } from '$domain/types.js';
 
+  interface ParticipantRow {
+    name: string;
+    role: ParticipantRole;
+  }
+
   let context = $state('');
-  let participantName = $state('');
-  let participantRole = $state<ParticipantRole>('primary');
+  let participants = $state<ParticipantRow[]>([{ name: '', role: 'primary' }]);
 
   let observationText = $state('');
   let isCameraDescribable = $state(false);
@@ -19,7 +24,7 @@
   let uncertaintyLevel = $state<UncertaintyLevel>(3);
   let uncertaintyRationale = $state('');
 
-  let errors = $state<string[]>([]);
+  let fieldErrors = $state<Record<string, string>>({});
   let submitting = $state(false);
 
   const evidenceLabels: Record<EvidenceType, string> = {
@@ -28,7 +33,7 @@
     speculative: 'Spekulativ'
   };
 
-  const roleLabels: Record<string, string> = {
+  const roleLabels: Record<ParticipantRole, string> = {
     primary: 'Primär',
     secondary: 'Sekundär',
     staff: 'Fachkraft',
@@ -44,33 +49,64 @@
     5: '5 — Hochspekulativ'
   };
 
-  function validate(): string[] {
-    const errs: string[] = [];
-    if (!context.trim()) errs.push('Kontext darf nicht leer sein.');
-    if (!participantName.trim()) errs.push('Name der beteiligten Person fehlt.');
-    if (!observationText.trim()) errs.push('Beobachtung darf nicht leer sein.');
-    if (!interpretationText.trim()) errs.push('Deutung darf nicht leer sein.');
-    if (!counterText.trim()) errs.push('Gegen-Deutung darf nicht leer sein.');
-    if (!uncertaintyRationale.trim()) errs.push('Begründung der Unsicherheit fehlt.');
-    if (observationText.trim() === interpretationText.trim()) {
-      errs.push('Beobachtung und Deutung dürfen nicht identisch sein.');
+  function ensureEmptyRow() {
+    const last = participants[participants.length - 1];
+    if (last && last.name.trim() !== '') {
+      participants = [...participants, { name: '', role: 'primary' }];
     }
-    if (interpretationText.trim() === counterText.trim()) {
-      errs.push('Deutung und Gegen-Deutung dürfen nicht identisch sein.');
+  }
+
+  function removeParticipant(index: number) {
+    if (participants.length <= 1) return;
+    participants = participants.filter((_, i) => i !== index);
+    ensureEmptyRow();
+  }
+
+  /** Returns non-empty participants (empty trailing row excluded). */
+  function filledParticipants(): ParticipantRow[] {
+    return participants.filter((p) => p.name.trim() !== '');
+  }
+
+  function validate(): Record<string, string> {
+    const errs: Record<string, string> = {};
+    if (!context.trim()) errs['context'] = 'Kontext darf nicht leer sein.';
+    if (filledParticipants().length === 0)
+      errs['participant-0'] = 'Mindestens eine beteiligte Person ist erforderlich.';
+    if (!observationText.trim()) errs['observationText'] = 'Beobachtung darf nicht leer sein.';
+    if (!interpretationText.trim()) errs['interpretationText'] = 'Deutung darf nicht leer sein.';
+    if (!counterText.trim()) errs['counterText'] = 'Gegen-Deutung darf nicht leer sein.';
+    if (!uncertaintyRationale.trim())
+      errs['uncertaintyRationale'] = 'Begründung der Unsicherheit fehlt.';
+    if (observationText.trim() && observationText.trim() === interpretationText.trim()) {
+      errs['interpretationText'] = 'Beobachtung und Deutung dürfen nicht identisch sein.';
+    }
+    if (interpretationText.trim() && interpretationText.trim() === counterText.trim()) {
+      errs['counterText'] = 'Deutung und Gegen-Deutung dürfen nicht identisch sein.';
     }
     return errs;
   }
 
-  function submit() {
-    errors = validate();
-    if (errors.length > 0) return;
+  async function submit() {
+    fieldErrors = validate();
+    if (Object.keys(fieldErrors).length > 0) {
+      await tick();
+      const firstKey = Object.keys(fieldErrors)[0];
+      const el = document.getElementById(`field-${firstKey}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.focus();
+      }
+      return;
+    }
 
     submitting = true;
     try {
       const created = startNewCase({
         context: context.trim(),
-        participantName: participantName.trim(),
-        participantRole,
+        participants: filledParticipants().map((p) => ({
+          id: p.name.trim(),
+          ...(p.role ? { role: p.role } : {})
+        })),
         observationText: observationText.trim(),
         isCameraDescribable,
         interpretationText: interpretationText.trim(),
@@ -83,7 +119,7 @@
       goto(`/cases/${created.id}`);
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
-      errors = [msg];
+      fieldErrors = { _submit: msg };
       submitting = false;
     }
   }
@@ -93,11 +129,9 @@
   <h1>Neuer Fall</h1>
   <p class="subtitle">Reflexionsdisziplin: Beobachtung → Deutung → Gegen-Deutung → Unsicherheit</p>
 
-  {#if errors.length > 0}
+  {#if fieldErrors['_submit']}
     <div class="error-box">
-      {#each errors as err}
-        <p>{err}</p>
-      {/each}
+      <p>{fieldErrors['_submit']}</p>
     </div>
   {/if}
 
@@ -107,25 +141,41 @@
       <h2>1. Kontext</h2>
       <p class="helper">Beschreiben Sie die Situation und das Setting, in dem die Beobachtung stattfand.</p>
 
-      <label class="field">
+      <label class="field" class:field-error={fieldErrors['context']}>
         <span class="field-label">Situationskontext</span>
-        <textarea bind:value={context} rows="3" placeholder="z.B. Mittagssituation in der Kita, Gruppenraum, 12 Kinder anwesend…"></textarea>
+        <textarea id="field-context" bind:value={context} rows="3" placeholder="z.B. Mittagssituation in der Kita, Gruppenraum, 12 Kinder anwesend…"></textarea>
+        {#if fieldErrors['context']}<span class="field-error-msg">{fieldErrors['context']}</span>{/if}
       </label>
 
-      <div class="field-row">
-        <label class="field">
-          <span class="field-label">Beteiligte Person</span>
-          <input type="text" bind:value={participantName} placeholder="Name oder Pseudonym" />
-        </label>
-        <label class="field">
-          <span class="field-label">Rolle</span>
-          <select bind:value={participantRole}>
-            {#each Object.entries(roleLabels) as [value, label]}
-              <option {value}>{label}</option>
-            {/each}
-          </select>
-        </label>
-      </div>
+      <fieldset class="participants-fieldset">
+        <legend class="field-label">Beteiligte Personen</legend>
+        {#each participants as row, i}
+          <div class="field-row participant-row">
+            <label class="field" class:field-error={fieldErrors[`participant-${i}`]}>
+              <span class="sr-only">Name Person {i + 1}</span>
+              <input
+                id="field-participant-{i}"
+                type="text"
+                bind:value={row.name}
+                oninput={() => ensureEmptyRow()}
+                placeholder="Name oder Pseudonym"
+              />
+              {#if fieldErrors[`participant-${i}`]}<span class="field-error-msg">{fieldErrors[`participant-${i}`]}</span>{/if}
+            </label>
+            <label class="field">
+              <span class="sr-only">Rolle Person {i + 1}</span>
+              <select bind:value={row.role}>
+                {#each Object.entries(roleLabels) as [value, label]}
+                  <option {value}>{label}</option>
+                {/each}
+              </select>
+            </label>
+            {#if participants.length > 1 && row.name.trim() !== ''}
+              <button type="button" class="btn-remove" onclick={() => removeParticipant(i)} aria-label="Person {i + 1} entfernen">×</button>
+            {/if}
+          </div>
+        {/each}
+      </fieldset>
     </section>
 
     <!-- Sektion 2: Beobachtung -->
@@ -136,9 +186,10 @@
         hätte aufnehmen können — ohne Bewertung oder Interpretation.
       </p>
 
-      <label class="field">
+      <label class="field" class:field-error={fieldErrors['observationText']}>
         <span class="field-label">Beobachtungstext</span>
-        <textarea bind:value={observationText} rows="4" placeholder="z.B. Kind A nimmt Kind B den Stift aus der Hand. Kind B sagt ‚Nein' und wendet sich ab."></textarea>
+        <textarea id="field-observationText" bind:value={observationText} rows="4" placeholder="z.B. Kind A nimmt Kind B den Stift aus der Hand. Kind B sagt ‚Nein' und wendet sich ab."></textarea>
+        {#if fieldErrors['observationText']}<span class="field-error-msg">{fieldErrors['observationText']}</span>{/if}
       </label>
 
       <label class="checkbox-field">
@@ -155,9 +206,10 @@
         Markieren Sie die Evidenznähe Ihrer Deutung.
       </p>
 
-      <label class="field">
+      <label class="field" class:field-error={fieldErrors['interpretationText']}>
         <span class="field-label">Deutungstext</span>
-        <textarea bind:value={interpretationText} rows="4" placeholder="z.B. Kind A zeigt möglicherweise Frustration über die eigene Impulskontrolle…"></textarea>
+        <textarea id="field-interpretationText" bind:value={interpretationText} rows="4" placeholder="z.B. Kind A zeigt möglicherweise Frustration über die eigene Impulskontrolle…"></textarea>
+        {#if fieldErrors['interpretationText']}<span class="field-error-msg">{fieldErrors['interpretationText']}</span>{/if}
       </label>
 
       <label class="field">
@@ -178,9 +230,10 @@
         zur Perspektiverweiterung und verhindert vorschnelle Festlegung.
       </p>
 
-      <label class="field">
+      <label class="field" class:field-error={fieldErrors['counterText']}>
         <span class="field-label">Gegen-Deutungstext</span>
-        <textarea bind:value={counterText} rows="4" placeholder="z.B. Kind A imitiert möglicherweise ein Verhalten, das es bei anderen Kindern beobachtet hat…"></textarea>
+        <textarea id="field-counterText" bind:value={counterText} rows="4" placeholder="z.B. Kind A imitiert möglicherweise ein Verhalten, das es bei anderen Kindern beobachtet hat…"></textarea>
+        {#if fieldErrors['counterText']}<span class="field-error-msg">{fieldErrors['counterText']}</span>{/if}
       </label>
 
       <label class="field">
@@ -210,9 +263,10 @@
         </select>
       </label>
 
-      <label class="field">
+      <label class="field" class:field-error={fieldErrors['uncertaintyRationale']}>
         <span class="field-label">Begründung der Unsicherheit</span>
-        <textarea bind:value={uncertaintyRationale} rows="3" placeholder="z.B. Ich kenne die Vorgeschichte zwischen den Kindern nicht ausreichend…"></textarea>
+        <textarea id="field-uncertaintyRationale" bind:value={uncertaintyRationale} rows="3" placeholder="z.B. Ich kenne die Vorgeschichte zwischen den Kindern nicht ausreichend…"></textarea>
+        {#if fieldErrors['uncertaintyRationale']}<span class="field-error-msg">{fieldErrors['uncertaintyRationale']}</span>{/if}
       </label>
     </section>
 
@@ -309,5 +363,66 @@
     gap: 0.75rem;
     margin-top: 0.5rem;
     margin-bottom: 2rem;
+  }
+
+  /* Field-bound validation errors */
+  .field-error textarea,
+  .field-error input[type="text"] {
+    border-color: var(--color-danger);
+  }
+  .field-error textarea:focus,
+  .field-error input:focus {
+    outline-color: var(--color-danger);
+    border-color: var(--color-danger);
+  }
+  .field-error-msg {
+    display: block;
+    color: var(--color-danger);
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+  }
+
+  /* Multi-participant rows */
+  .participants-fieldset {
+    border: none;
+    padding: 0;
+    margin: 0;
+  }
+  .participants-fieldset legend {
+    padding: 0;
+  }
+  .participant-row {
+    grid-template-columns: 1fr 1fr auto;
+    align-items: start;
+  }
+  .participant-row .field {
+    margin-bottom: 0.4rem;
+  }
+  .btn-remove {
+    background: none;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-size: 1.1rem;
+    line-height: 1;
+    padding: 0.45rem 0.6rem;
+    color: var(--color-text-muted);
+    margin-top: 0;
+    align-self: start;
+  }
+  .btn-remove:hover {
+    color: var(--color-danger);
+    border-color: var(--color-danger);
+  }
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
   }
 </style>
