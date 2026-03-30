@@ -7,7 +7,7 @@ const ATTRIBUTE = 'data-theme';
 
 /** Read stored preference; default to 'system'. */
 function stored(): ThemeMode {
-	if (typeof localStorage === 'undefined') return 'system';
+	if (typeof window === 'undefined' || typeof localStorage === 'undefined') return 'system';
 	const v = localStorage.getItem(STORAGE_KEY);
 	if (v === 'light' || v === 'dark' || v === 'system') return v;
 	return 'system';
@@ -16,7 +16,7 @@ function stored(): ThemeMode {
 /** Resolve effective theme ('light' | 'dark') from mode. */
 function resolve(mode: ThemeMode): 'light' | 'dark' {
 	if (mode === 'light' || mode === 'dark') return mode;
-	if (typeof matchMedia === 'undefined') return 'light';
+	if (typeof window === 'undefined' || typeof matchMedia === 'undefined') return 'light';
 	return matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
 

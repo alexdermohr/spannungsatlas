@@ -6,12 +6,6 @@
     { value: 'dark', label: 'Dunkel', icon: '🌙' },
     { value: 'system', label: 'System', icon: '💻' }
   ];
-
-  function cycle(): void {
-    const order: ThemeMode[] = ['light', 'dark', 'system'];
-    const idx = order.indexOf(themeMode());
-    setThemeMode(order[(idx + 1) % order.length]);
-  }
 </script>
 
 <div class="theme-toggle" role="radiogroup" aria-label="Farbschema">
