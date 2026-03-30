@@ -9,6 +9,7 @@
     normalizeParticipants,
     refreshFieldErrors,
     clearErrorKeysWithPrefix,
+    applyPrefixErrors,
     shouldShowRemoveParticipant,
     type ParticipantRow,
     type CounterRow,
@@ -92,9 +93,10 @@
   function removeCounterRow(index: number) {
     counterRows = counterRows.filter((_, i) => i !== index);
     counterRows = normalizeCounterRows(counterRows);
-    // Purge all counterText-* error keys (including any stale higher indices) then re-validate
+    // Purge stale counterText-* keys, then re-apply any newly-required errors from
+    // a fresh validate() call — bypasses the early-return in refreshFieldErrors
     fieldErrors = clearErrorKeysWithPrefix(fieldErrors, 'counterText-');
-    clearFieldErrors(counterRows.map((_, i) => `counterText-${i}`));
+    fieldErrors = applyPrefixErrors(fieldErrors, validate(), 'counterText-');
   }
 
   function handleUncertaintyInput(index: number) {
@@ -105,9 +107,10 @@
   function removeUncertaintyRow(index: number) {
     uncertaintyRows = uncertaintyRows.filter((_, i) => i !== index);
     uncertaintyRows = normalizeUncertaintyRows(uncertaintyRows);
-    // Purge all uncertaintyRationale-* error keys (including any stale higher indices) then re-validate
+    // Purge stale uncertaintyRationale-* keys, then re-apply any newly-required errors
+    // from a fresh validate() call — bypasses the early-return in refreshFieldErrors
     fieldErrors = clearErrorKeysWithPrefix(fieldErrors, 'uncertaintyRationale-');
-    clearFieldErrors(uncertaintyRows.map((_, i) => `uncertaintyRationale-${i}`));
+    fieldErrors = applyPrefixErrors(fieldErrors, validate(), 'uncertaintyRationale-');
   }
 
   function validate(): Record<string, string> {

@@ -54,6 +54,31 @@ export function clearErrorKeysWithPrefix(
   return changed ? updated : fieldErrors;
 }
 
+/**
+ * Merges all error keys from `nextErrors` that start with `prefix` into `current`.
+ * Use after clearErrorKeysWithPrefix + validate() to re-apply any newly-required
+ * errors for the prefix family, even when `current` is empty (bypassing the
+ * early-return guard in refreshFieldErrors).
+ *
+ * @param current - current error map (may be empty after a prefix-clear)
+ * @param nextErrors - freshly computed error map from validate()
+ * @param prefix - key prefix to merge (e.g. `'counterText-'`)
+ * @returns a new error map with prefix errors from nextErrors applied, or the same
+ *          reference if nextErrors contains no matching keys
+ */
+export function applyPrefixErrors(
+  current: Record<string, string>,
+  nextErrors: Record<string, string>,
+  prefix: string
+): Record<string, string> {
+  const toMerge: Record<string, string> = {};
+  for (const [key, val] of Object.entries(nextErrors)) {
+    if (key.startsWith(prefix)) toMerge[key] = val;
+  }
+  if (Object.keys(toMerge).length === 0) return current;
+  return { ...current, ...toMerge };
+}
+
 export function refreshFieldErrors(
   fieldErrors: Record<string, string>,
   nextErrors: Record<string, string>,

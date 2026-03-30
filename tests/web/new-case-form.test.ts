@@ -5,6 +5,7 @@ import {
   normalizeParticipants,
   refreshFieldErrors,
   clearErrorKeysWithPrefix,
+  applyPrefixErrors,
   shouldShowRemoveParticipant,
   type ParticipantRow,
   filledCounterRows,
@@ -226,5 +227,37 @@ describe('clearErrorKeysWithPrefix', () => {
     expect(clearErrorKeysWithPrefix(errors, 'uncertaintyRationale-')).toEqual({
       context: 'required'
     });
+  });
+});
+
+describe('applyPrefixErrors', () => {
+  it('applies prefix errors from nextErrors even when current is empty', () => {
+    // This is the critical remove-handler scenario: after clearErrorKeysWithPrefix empties
+    // fieldErrors, applyPrefixErrors must still re-apply required-field errors from validate()
+    const current = {};
+    const nextErrors = {
+      'counterText-0': 'Mindestens eine Gegen-Deutung ist erforderlich.',
+      context: 'Kontext darf nicht leer sein.'
+    };
+    expect(applyPrefixErrors(current, nextErrors, 'counterText-')).toEqual({
+      'counterText-0': 'Mindestens eine Gegen-Deutung ist erforderlich.'
+    });
+  });
+
+  it('merges prefix errors into existing non-prefix errors without losing them', () => {
+    const current = { context: 'Kontext darf nicht leer sein.' };
+    const nextErrors = {
+      'uncertaintyRationale-0': 'Mindestens eine Unsicherheitsbegründung ist erforderlich.',
+      context: 'Kontext darf nicht leer sein.'
+    };
+    expect(applyPrefixErrors(current, nextErrors, 'uncertaintyRationale-')).toEqual({
+      context: 'Kontext darf nicht leer sein.',
+      'uncertaintyRationale-0': 'Mindestens eine Unsicherheitsbegründung ist erforderlich.'
+    });
+  });
+
+  it('returns the same reference when nextErrors has no matching prefix keys', () => {
+    const current = { context: 'required' };
+    expect(applyPrefixErrors(current, { context: 'required' }, 'counterText-')).toBe(current);
   });
 });
