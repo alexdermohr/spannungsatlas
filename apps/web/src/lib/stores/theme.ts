@@ -24,7 +24,7 @@ function resolve(mode: ThemeMode): 'light' | 'dark' {
 	if (mode === 'light' || mode === 'dark') return mode;
 	if (typeof window === 'undefined') return 'light';
 	try {
-		return matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+		return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 	} catch {
 		return 'light';
 	}
@@ -73,7 +73,7 @@ export function initTheme(): () => void {
 
 	let mq: MediaQueryList | null = null;
 	try {
-		mq = matchMedia('(prefers-color-scheme: dark)');
+		mq = window.matchMedia('(prefers-color-scheme: dark)');
 		mq.addEventListener('change', onSystemChange);
 	} catch {
 		// matchMedia not available

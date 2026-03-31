@@ -18,7 +18,7 @@
         if (t === 'light' || t === 'dark') {
           d = t;
         } else {
-          try { d = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; } catch(e) {}
+          try { d = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; } catch(e) {}
         }
         document.documentElement.setAttribute('data-theme', d);
         try {
