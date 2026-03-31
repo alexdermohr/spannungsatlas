@@ -129,6 +129,9 @@
     font-size: 0.9rem;
     flex: 1;
   }
+  .topnav-links li {
+    list-style: none;
+  }
   .topnav-links a,
   .topnav-links span {
     color: var(--color-text-muted);

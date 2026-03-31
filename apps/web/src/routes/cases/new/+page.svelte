@@ -480,6 +480,7 @@
   }
   @media (max-width: 500px) {
     .field-row { grid-template-columns: 1fr; }
+    .participant-row { grid-template-columns: 1fr; }
   }
   .checkbox-field {
     display: flex;
@@ -542,6 +543,7 @@
     color: var(--color-text-muted);
     margin-top: 0;
     align-self: start;
+    justify-self: start;
   }
   .btn-remove:hover {
     color: var(--color-danger);
