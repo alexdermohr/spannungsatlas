@@ -34,7 +34,7 @@ html[data-theme='dark'] {
 }
 
 /* ── Breakpoint convention ────────────────────────────
- * Mobile : max-width: 640px  (hamburger nav, single-column forms)
+ * Mobile: max-width: 640px  (hamburger nav, single-column forms)
  * All component-scoped @media queries use this single threshold.
  * ──────────────────────────────────────────────────── */
 

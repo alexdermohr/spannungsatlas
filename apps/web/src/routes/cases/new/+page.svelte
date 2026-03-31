@@ -618,15 +618,8 @@
     .field-row {
       grid-template-columns: 1fr;
     }
-    .participant-row {
-      grid-template-columns: 1fr;
-    }
-    .form-actions {
-      flex-wrap: wrap;
-    }
-    .counter-block-footer {
-      flex-wrap: wrap;
-    }
+    .form-actions,
+    .counter-block-footer,
     .uncertainty-block-footer {
       flex-wrap: wrap;
     }
