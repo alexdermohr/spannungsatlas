@@ -26,12 +26,13 @@
       class="menu-toggle"
       aria-label={menuOpen ? 'Menü schließen' : 'Menü öffnen'}
       aria-expanded={menuOpen}
+      aria-controls="topnav-body"
       onclick={() => (menuOpen = !menuOpen)}
     >
       <span class="hamburger" class:open={menuOpen}></span>
     </button>
 
-    <div class="topnav-body" class:open={menuOpen}>
+    <div id="topnav-body" class="topnav-body" class:open={menuOpen}>
       <ul class="topnav-links">
         <li><a href="/" onclick={closeMenu}>Übersicht</a></li>
         <li><a href="/cases/new" onclick={closeMenu}>Neuer Fall</a></li>
