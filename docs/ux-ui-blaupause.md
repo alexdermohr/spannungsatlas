@@ -102,6 +102,10 @@ Zonen müssen in zwingender Reihenfolge durchlaufen werden. Die Übergänge sind
 4. **Sichtbare epistemische Qualität:** Evidenztyp, Unsicherheit, Gegen-Deutung und die Begrenzung von Wiederkehr auf Aspektebene müssen visuell ablesbar sein.
 5. **Katalog als Lernraum:** Der Bedürfnisraum ist ein eigenständiger Arbeitsraum, kein kleines Dropdown-Menü.
 
+### Responsive-Konvention
+
+Die Web-App nutzt einen einzigen Mobile-Breakpoint: **640 px** (`max-width: 640px`). Alle komponentenlokalen `@media`-Regeln verwenden diesen Schwellwert. Unterhalb davon gelten: Hamburger-Navigation, einspaltige Formularfelder und `flex-wrap` auf Aktions-/Footer-Bereichen. Der Breakpoint ist in `app.css` als Kommentarkonvention dokumentiert.
+
 ## 6. Technische Zielarchitektur und Module
 
 **Frontend:** SvelteKit oder React + TypeScript. (SvelteKit für Zustandsklarheit, React für Ökosystembreite).
