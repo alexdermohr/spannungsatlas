@@ -33,6 +33,11 @@ html[data-theme='dark'] {
   --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
+/* ── Breakpoint convention ────────────────────────────
+ * Mobile : max-width: 640px  (hamburger nav, single-column forms)
+ * All component-scoped @media queries use this single threshold.
+ * ──────────────────────────────────────────────────── */
+
 *, *::before, *::after {
   box-sizing: border-box;
 }

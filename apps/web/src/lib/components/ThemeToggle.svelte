@@ -66,7 +66,7 @@
     line-height: 1;
   }
 
-  @media (max-width: 600px) {
+  @media (max-width: 640px) {
     .theme-label {
       display: none;
     }

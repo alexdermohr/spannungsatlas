@@ -478,9 +478,6 @@
     grid-template-columns: 1fr 1fr;
     gap: 0.75rem;
   }
-  @media (max-width: 500px) {
-    .field-row { grid-template-columns: 1fr; }
-  }
   .checkbox-field {
     display: flex;
     align-items: center;
@@ -527,9 +524,6 @@
   .participant-row {
     grid-template-columns: 1fr 1fr auto;
     align-items: start;
-  }
-  @media (max-width: 500px) {
-    .participant-row { grid-template-columns: 1fr; }
   }
   .participant-row .field {
     margin-bottom: 0.4rem;
@@ -617,5 +611,24 @@
     clip-path: inset(50%);
     white-space: nowrap;
     border: 0;
+  }
+
+  /* ── Mobile overrides (640px = shared breakpoint) ── */
+  @media (max-width: 640px) {
+    .field-row {
+      grid-template-columns: 1fr;
+    }
+    .participant-row {
+      grid-template-columns: 1fr;
+    }
+    .form-actions {
+      flex-wrap: wrap;
+    }
+    .counter-block-footer {
+      flex-wrap: wrap;
+    }
+    .uncertainty-block-footer {
+      flex-wrap: wrap;
+    }
   }
 </style>
