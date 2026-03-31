@@ -480,7 +480,6 @@
   }
   @media (max-width: 500px) {
     .field-row { grid-template-columns: 1fr; }
-    .participant-row { grid-template-columns: 1fr; }
   }
   .checkbox-field {
     display: flex;
@@ -528,6 +527,9 @@
   .participant-row {
     grid-template-columns: 1fr 1fr auto;
     align-items: start;
+  }
+  @media (max-width: 500px) {
+    .participant-row { grid-template-columns: 1fr; }
   }
   .participant-row .field {
     margin-bottom: 0.4rem;
