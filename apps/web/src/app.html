@@ -12,13 +12,19 @@
     <script>
       // Prevent flash of wrong theme — runs before any rendering.
       (function() {
-        var t = localStorage.getItem('spannungsatlas-theme') || 'system';
-        var d = (t === 'system')
-          ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
-          : t;
+        var t = 'system';
+        try { t = localStorage.getItem('spannungsatlas-theme') || 'system'; } catch(e) {}
+        var d = 'light';
+        if (t === 'light' || t === 'dark') {
+          d = t;
+        } else {
+          try { d = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; } catch(e) {}
+        }
         document.documentElement.setAttribute('data-theme', d);
-        var m = document.querySelector('meta[name="theme-color"]');
-        if (m) m.setAttribute('content', d === 'dark' ? '#1a1a2e' : '#2d5a9b');
+        try {
+          var m = document.querySelector('meta[name="theme-color"]');
+          if (m) m.setAttribute('content', d === 'dark' ? '#1a1a2e' : '#2d5a9b');
+        } catch(e) {}
       })();
     </script>
     %sveltekit.body%

@@ -9,7 +9,7 @@
   let menuOpen = $state(false);
 
   onMount(() => {
-    initTheme();
+    return initTheme();
   });
 
   function closeMenu() {

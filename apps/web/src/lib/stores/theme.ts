@@ -1,5 +1,7 @@
 /** Theme preference store — persists to localStorage, applies via <html data-theme>. */
 
+import { writable } from 'svelte/store';
+
 export type ThemeMode = 'light' | 'dark' | 'system';
 
 const STORAGE_KEY = 'spannungsatlas-theme';
@@ -7,17 +9,25 @@ const ATTRIBUTE = 'data-theme';
 
 /** Read stored preference; default to 'system'. */
 function stored(): ThemeMode {
-	if (typeof window === 'undefined' || typeof localStorage === 'undefined') return 'system';
-	const v = localStorage.getItem(STORAGE_KEY);
-	if (v === 'light' || v === 'dark' || v === 'system') return v;
+	if (typeof window === 'undefined') return 'system';
+	try {
+		const v = localStorage.getItem(STORAGE_KEY);
+		if (v === 'light' || v === 'dark' || v === 'system') return v;
+	} catch {
+		// storage not accessible
+	}
 	return 'system';
 }
 
 /** Resolve effective theme ('light' | 'dark') from mode. */
 function resolve(mode: ThemeMode): 'light' | 'dark' {
 	if (mode === 'light' || mode === 'dark') return mode;
-	if (typeof window === 'undefined' || typeof matchMedia === 'undefined') return 'light';
-	return matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+	if (typeof window === 'undefined') return 'light';
+	try {
+		return matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+	} catch {
+		return 'light';
+	}
 }
 
 function apply(mode: ThemeMode): void {
@@ -31,32 +41,49 @@ function apply(mode: ThemeMode): void {
 	}
 }
 
-// ── Reactive state (Svelte 5 module-level) ──────────────────────────
+/** Reactive store for the current theme mode. */
+export const themeMode = writable<ThemeMode>('system');
 
-let _mode: ThemeMode = $state('system');
-let _mediaQuery: MediaQueryList | null = null;
-
-function onSystemChange(): void {
-	if (_mode === 'system') apply(_mode);
-}
-
-/** Initialise store — call once from root layout's onMount. */
-export function initTheme(): void {
-	_mode = stored();
-	apply(_mode);
-
-	_mediaQuery = matchMedia('(prefers-color-scheme: dark)');
-	_mediaQuery.addEventListener('change', onSystemChange);
-}
-
-/** Current mode (reactive). */
-export function themeMode(): ThemeMode {
-	return _mode;
-}
-
-/** Set mode and persist. */
+/** Set mode, persist to localStorage, and apply to DOM. */
 export function setThemeMode(mode: ThemeMode): void {
-	_mode = mode;
-	localStorage.setItem(STORAGE_KEY, mode);
+	themeMode.set(mode);
+	try {
+		localStorage.setItem(STORAGE_KEY, mode);
+	} catch {
+		// storage not accessible
+	}
 	apply(mode);
+}
+
+/**
+ * Initialise theme — call once from root layout's onMount.
+ * Returns a cleanup function that removes the OS-preference listener.
+ */
+export function initTheme(): () => void {
+	const initial = stored();
+	themeMode.set(initial);
+	apply(initial);
+
+	function onSystemChange(): void {
+		themeMode.update((mode) => {
+			if (mode === 'system') apply(mode);
+			return mode;
+		});
+	}
+
+	let mq: MediaQueryList | null = null;
+	try {
+		mq = matchMedia('(prefers-color-scheme: dark)');
+		mq.addEventListener('change', onSystemChange);
+	} catch {
+		// matchMedia not available
+	}
+
+	return () => {
+		try {
+			mq?.removeEventListener('change', onSystemChange);
+		} catch {
+			// ignore
+		}
+	};
 }

@@ -12,8 +12,8 @@
   {#each modes as m (m.value)}
     <button
       class="theme-btn"
-      class:active={themeMode() === m.value}
-      aria-checked={themeMode() === m.value}
+      class:active={$themeMode === m.value}
+      aria-checked={$themeMode === m.value}
       role="radio"
       title={m.label}
       onclick={() => setThemeMode(m.value)}
