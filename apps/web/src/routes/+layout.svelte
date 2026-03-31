@@ -22,6 +22,7 @@
     <a href="/" class="topnav-brand">Spannungsatlas</a>
 
     <button
+      type="button"
       class="menu-toggle"
       aria-label={menuOpen ? 'Menü schließen' : 'Menü öffnen'}
       aria-expanded={menuOpen}

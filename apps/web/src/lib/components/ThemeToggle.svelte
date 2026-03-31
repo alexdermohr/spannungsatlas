@@ -11,11 +11,12 @@
 <div class="theme-toggle" role="radiogroup" aria-label="Farbschema">
   {#each modes as m (m.value)}
     <button
+      type="button"
       class="theme-btn"
       class:active={$themeMode === m.value}
       aria-checked={$themeMode === m.value}
+      aria-label={m.label}
       role="radio"
-      title={m.label}
       onclick={() => setThemeMode(m.value)}
     >
       <span class="theme-icon" aria-hidden="true">{m.icon}</span>
