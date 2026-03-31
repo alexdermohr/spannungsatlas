@@ -37,6 +37,8 @@ import {
   guardUncertaintyLevel,
   guardUncertaintyRationale,
   guardParticipantsNotEmpty,
+  guardParticipantId,
+  guardParticipantRole,
   guardCaseId,
   guardCaseContext,
   guardDriftType,
@@ -258,6 +260,13 @@ export function createCase(input: CreateCaseInput): Case {
   throwIfError(guardCaseId(input.id));
   throwIfError(guardCaseContext(input.context));
   throwIfError(guardParticipantsNotEmpty(input.participants));
+
+  for (const p of input.participants) {
+    throwIfError(guardParticipantId(p.id));
+    if (p.role !== undefined) {
+      throwIfError(guardParticipantRole(p.role));
+    }
+  }
 
   const observation = createObservation(input.observation);
   const currentReflection = createReflectionSnapshot(input.currentReflection);

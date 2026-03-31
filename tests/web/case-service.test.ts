@@ -1,8 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   getAllCases,
-  startNewCase
+  startNewCase,
+  deleteCase
 } from '../../apps/web/src/lib/services/case-service.js';
+import { _resetCacheForTesting } from '../../apps/web/src/lib/persistence/store.js';
 
 class MemoryStorage implements Storage {
   #map = new Map<string, string>();
@@ -42,6 +44,7 @@ describe('startNewCase', () => {
       value: new MemoryStorage()
     });
     randomUuidSpy.mockReturnValue('123e4567-e89b-12d3-a456-426614174000');
+    _resetCacheForTesting();
   });
 
   afterEach(() => {
@@ -112,6 +115,23 @@ describe('startNewCase', () => {
     expect(persisted.currentReflection.counterInterpretations).toHaveLength(2);
     expect(persisted.currentReflection.uncertainties).toHaveLength(2);
   });
+
+  it('deletes a case by id and removes it from storage', () => {
+    const created = startNewCase({
+      context: 'Morgenkreis',
+      participants: [{ id: 'Anna', role: 'primary' }],
+      observationText: 'Anna schaut auf den Boden.',
+      isCameraDescribable: true,
+      interpretationText: 'Anna wirkt gehemmt.',
+      interpretationEvidenceType: 'derived',
+      counterInterpretations: [{ text: 'Anna ist müde.', evidenceType: 'speculative' }],
+      uncertainties: [{ level: 3, rationale: 'Nur eine Beobachtung.' }]
+    });
+
+    expect(getAllCases()).toHaveLength(1);
+    deleteCase(created.id);
+    expect(getAllCases()).toHaveLength(0);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -146,6 +166,7 @@ describe('migration — old singular schema', () => {
       configurable: true,
       value: new MemoryStorage()
     });
+    _resetCacheForTesting();
   });
 
   afterEach(() => {

@@ -25,7 +25,7 @@
  *   - TensionEdge direction is one of the two allowed enum values.
  *   - TensionEdge source, target, label, context are non-empty.
  *   - Date/time fields (reflectedAt, Revision.at, observedAt, TensionEdge.timestamp)
- *     are parseable date strings (Date.parse()-based plausibility; ISO 8601 recommended).
+ *     must be valid ISO 8601 date strings (enforced by regex + Date.parse()).
  *
  * WHAT THESE GUARDS DO NOT ENFORCE (semantic, requires future work):
  *   - Whether observation text is genuinely camera-describable (MASTERPLAN §2 #19).
@@ -63,16 +63,28 @@ function isNonEmptyString(value: unknown): value is string {
 // ---------------------------------------------------------------------------
 
 /**
- * Checks that a value is a non-empty, parseable date string.
- * Uses Date.parse() for plausibility — not a full ISO 8601 calendar check.
+ * ISO 8601 date-time pattern.
+ * Accepts:
+ *   2024-01-15T10:30:00Z
+ *   2024-01-15T10:30:00.000Z
+ *   2024-01-15T10:30:00+02:00
+ *   2024-01-15T10:30:00.123+02:00
+ *   2024-01-15 (date-only)
+ */
+const ISO_DATE_RE =
+  /^\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?)?$/;
+
+/**
+ * Checks that a value is a non-empty, valid ISO 8601 date string.
+ * Enforces format via regex AND parseability via Date.parse().
  * fieldName is included in the error message for context.
  */
 export function guardIsoDateString(value: string, fieldName: string): GuardResult {
   if (!isNonEmptyString(value)) {
     return `${fieldName} must not be empty.`;
   }
-  if (isNaN(Date.parse(value))) {
-    return `${fieldName} must be a parseable date string (ISO 8601 recommended), got "${value}".`;
+  if (!ISO_DATE_RE.test(value) || isNaN(Date.parse(value))) {
+    return `${fieldName} must be a valid ISO 8601 date string, got "${value}".`;
   }
   return undefined;
 }

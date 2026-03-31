@@ -12,23 +12,38 @@ export interface PersistenceStore {
 const STORAGE_KEY = 'spannungsatlas-cases';
 
 /**
+ * Checks whether a value is a non-null object (valid for migration wrapping).
+ * Prevents wrapping null, strings, numbers, etc. in an array during migration.
+ */
+function isMigratableObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+/**
  * Normalizes a raw ReflectionSnapshot object from storage into the current plural schema.
  * Handles forward-migration from earlier single-value fields:
  *   counterInterpretation (singular) → counterInterpretations: [value]
  *   uncertainty (singular)           → uncertainties: [value]
+ *
+ * Only migrates values that are valid objects (not null, strings, etc.)
+ * to avoid creating invalid data from malformed legacy entries.
  */
 function normalizeSnapshotFromStorage(snap: Record<string, unknown>): Record<string, unknown> {
   let changed = false;
   const updated: Record<string, unknown> = { ...snap };
 
   if (!Array.isArray(snap['counterInterpretations']) && snap['counterInterpretation'] !== undefined) {
-    updated['counterInterpretations'] = [snap['counterInterpretation']];
+    if (isMigratableObject(snap['counterInterpretation'])) {
+      updated['counterInterpretations'] = [snap['counterInterpretation']];
+    }
     delete updated['counterInterpretation'];
     changed = true;
   }
 
   if (!Array.isArray(snap['uncertainties']) && snap['uncertainty'] !== undefined) {
-    updated['uncertainties'] = [snap['uncertainty']];
+    if (isMigratableObject(snap['uncertainty'])) {
+      updated['uncertainties'] = [snap['uncertainty']];
+    }
     delete updated['uncertainty'];
     changed = true;
   }
@@ -98,34 +113,58 @@ function normalizeCaseFromStorage(raw: unknown): unknown {
   return changed ? updatedEntry : entry;
 }
 
+/** Cached result — `null` means not yet loaded this session. */
+let _storageAvailable: boolean | null = null;
+
 function isStorageAvailable(): boolean {
-  return typeof localStorage !== 'undefined';
+  if (_storageAvailable !== null) return _storageAvailable;
+  try {
+    const testKey = '__spannungsatlas_test__';
+    localStorage.setItem(testKey, testKey);
+    localStorage.removeItem(testKey);
+    _storageAvailable = true;
+  } catch {
+    _storageAvailable = false;
+  }
+  return _storageAvailable;
 }
 
+/**
+ * Type predicate: checks whether a normalized entry passes all Case guards.
+ */
+function isValidCase(entry: unknown): entry is Case {
+  return typeof entry === 'object' && entry !== null && guardCase(entry as Record<string, unknown> & Case).length === 0;
+}
+
+/** In-memory cache to avoid repeated localStorage reads + JSON parsing. */
+let _cache: Case[] | null = null;
+
 function readCases(): Case[] {
+  if (_cache !== null) return _cache;
   if (!isStorageAvailable()) return [];
   let raw: string | null;
   try {
     raw = localStorage.getItem(STORAGE_KEY);
-  } catch {
-    console.warn('Failed to read cases from localStorage');
+  } catch (error) {
+    console.warn('Failed to read cases from localStorage', error);
     return [];
   }
   if (!raw) return [];
   try {
     const parsed: unknown = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
-    return (parsed as unknown[])
+    const cases = (parsed as unknown[])
       .map(normalizeCaseFromStorage)
-      .filter(
-        (entry) => typeof entry === 'object' && entry !== null && guardCase(entry as Case).length === 0
-      ) as Case[];
+      .filter(isValidCase);
+    _cache = cases;
+    return cases;
   } catch {
     return [];
   }
 }
 
 function writeCases(cases: Case[]): void {
+  _cache = cases;
   if (!isStorageAvailable()) return;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(cases));
@@ -144,7 +183,7 @@ export const localStorageStore: PersistenceStore = {
   },
 
   saveCase(c: Case): void {
-    const cases = readCases();
+    const cases = [...readCases()];
     const idx = cases.findIndex((existing) => existing.id === c.id);
     if (idx >= 0) {
       cases[idx] = c;
@@ -158,3 +197,12 @@ export const localStorageStore: PersistenceStore = {
     writeCases(readCases().filter((c) => c.id !== id));
   }
 };
+
+/**
+ * Reset internal cache. Exported only for use in tests.
+ * @internal
+ */
+export function _resetCacheForTesting(): void {
+  _cache = null;
+  _storageAvailable = null;
+}
