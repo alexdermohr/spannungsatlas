@@ -271,6 +271,24 @@ export function guardParticipantRole(role: string): GuardResult {
   return undefined;
 }
 
+/**
+ * Participant ids must be unique within a case.
+ * Duplicate IDs would cause one participant to silently overwrite another in
+ * any id-keyed lookup. Returns the first duplicate found.
+ */
+export function guardParticipantIdsUnique(
+  participants: readonly CaseParticipant[],
+): GuardResult {
+  const seen = new Set<string>();
+  for (const p of participants) {
+    if (seen.has(p.id)) {
+      return `Participant id "${p.id}" appears more than once.`;
+    }
+    seen.add(p.id);
+  }
+  return undefined;
+}
+
 // ---------------------------------------------------------------------------
 // TensionEdge guards (UX-Blaupause §3 step 7)
 // ---------------------------------------------------------------------------
@@ -427,6 +445,7 @@ export function guardCase(
       push(guardParticipantRole(p.role));
     }
   }
+  push(guardParticipantIdsUnique(caseData.participants));
 
   if (caseData.observedAt !== undefined) {
     push(guardIsoDateString(caseData.observedAt, "observedAt"));

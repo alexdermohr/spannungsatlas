@@ -39,6 +39,7 @@ import {
   guardParticipantsNotEmpty,
   guardParticipantId,
   guardParticipantRole,
+  guardParticipantIdsUnique,
   guardCaseId,
   guardCaseContext,
   guardDriftType,
@@ -267,6 +268,7 @@ export function createCase(input: CreateCaseInput): Case {
       throwIfError(guardParticipantRole(p.role));
     }
   }
+  throwIfError(guardParticipantIdsUnique(input.participants));
 
   const observation = createObservation(input.observation);
   const currentReflection = createReflectionSnapshot(input.currentReflection);

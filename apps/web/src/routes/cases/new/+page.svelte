@@ -55,7 +55,9 @@
   function removeParticipant(index: number) {
     participants = participants.filter((_, i) => i !== index);
     participants = normalizeParticipants(participants);
-    clearFieldErrors(['participant-0']);
+    // Purge stale participant-* keys (indices may have shifted), re-apply fresh errors
+    fieldErrors = clearErrorKeysWithPrefix(fieldErrors, 'participant-');
+    fieldErrors = applyPrefixErrors(fieldErrors, validate(), 'participant-');
   }
 
   function clearFieldErrors(keys: string[]) {
@@ -68,12 +70,18 @@
 
   function handleParticipantInput(index: number) {
     participants = ensureTrailingEmptyRow(participants);
-    clearFieldErrors([`participant-${index}`, 'participant-0']);
+    // Revalidate all participant-* keys: duplicate checks are cross-row.
+    // Also clear _submit as the user is actively editing.
+    let errs = clearErrorKeysWithPrefix(fieldErrors, 'participant-');
+    if ('_submit' in errs) { errs = { ...errs }; delete errs['_submit']; }
+    fieldErrors = applyPrefixErrors(errs, validate(), 'participant-');
   }
 
   function handleParticipantBlur() {
     participants = normalizeParticipants(participants);
-    clearFieldErrors(['participant-0']);
+    // After normalization indices may change — clear all participant-* and re-apply
+    fieldErrors = clearErrorKeysWithPrefix(fieldErrors, 'participant-');
+    fieldErrors = applyPrefixErrors(fieldErrors, validate(), 'participant-');
   }
 
   function handleObservationInput() {
@@ -126,6 +134,16 @@
     if (!context.trim()) errs['context'] = 'Kontext darf nicht leer sein.';
     if (filledParticipants(participants).length === 0)
       errs['participant-0'] = 'Mindestens eine beteiligte Person ist erforderlich.';
+    // Check for duplicate participant names (the name is used as the domain ID)
+    const seenNames = new Set<string>();
+    participants.forEach((row, i) => {
+      const trimmed = row.name.trim();
+      if (trimmed === '') return;
+      if (seenNames.has(trimmed)) {
+        errs[`participant-${i}`] = 'Dieser Name ist bereits eingetragen.';
+      }
+      seenNames.add(trimmed);
+    });
     if (!observationText.trim()) errs['observationText'] = 'Beobachtung darf nicht leer sein.';
     if (!interpretationText.trim()) errs['interpretationText'] = 'Deutung darf nicht leer sein.';
     if (observationText.trim() && observationText.trim() === interpretationText.trim()) {
@@ -198,8 +216,8 @@
       });
       goto(`/cases/${created.id}`);
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : String(e);
-      fieldErrors = { _submit: msg };
+      console.error('Fehler beim Erstellen des Falls:', e);
+      fieldErrors = { _submit: 'Ein unerwarteter Fehler ist aufgetreten. Bitte prüfen Sie Ihre Eingaben und versuchen Sie es erneut.' };
       submitting = false;
     }
   }

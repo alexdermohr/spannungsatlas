@@ -1,4 +1,5 @@
 import type { Case } from '$domain/types.js';
+import type { CaseParticipant, Observation, ReflectionSnapshot, Revision } from '$domain/types.js';
 import { guardCase } from '$domain/guards.js';
 
 /** Abstraction over case persistence — swap localStorage for IndexedDB or API. */
@@ -131,9 +132,34 @@ function isStorageAvailable(): boolean {
 
 /**
  * Type predicate: checks whether a normalized entry passes all Case guards.
+ *
+ * Performs explicit structural pre-checks before calling guardCase to prevent
+ * runtime crashes — guardCase accesses nested fields (observation.text,
+ * currentReflection.interpretation, participants as an iterable) without
+ * null-guards of its own.
+ *
+ * Each `as` cast below is backed by the preceding structural check.
+ * guardCase then validates the *values* of those fields (non-empty, valid enum, etc.).
  */
 function isValidCase(entry: unknown): entry is Case {
-  return typeof entry === 'object' && entry !== null && guardCase(entry as Record<string, unknown> & Case).length === 0;
+  if (typeof entry !== 'object' || entry === null) return false;
+  const obj = entry as Record<string, unknown>;
+
+  // Pre-checks: ensure the fields that guardCase accesses without null-guards are present
+  if (!Array.isArray(obj['participants'])) return false;
+  if (!Array.isArray(obj['revisions'])) return false;
+  if (typeof obj['observation'] !== 'object' || obj['observation'] === null) return false;
+  if (typeof obj['currentReflection'] !== 'object' || obj['currentReflection'] === null) return false;
+
+  return guardCase({
+    id: obj['id'] as string,
+    context: obj['context'] as string,
+    participants: obj['participants'] as readonly CaseParticipant[],
+    observation: obj['observation'] as Observation,
+    currentReflection: obj['currentReflection'] as ReflectionSnapshot,
+    revisions: obj['revisions'] as readonly Revision[],
+    ...(typeof obj['observedAt'] === 'string' ? { observedAt: obj['observedAt'] } : {}),
+  }).length === 0;
 }
 
 /** In-memory cache to avoid repeated localStorage reads + JSON parsing. */
@@ -164,11 +190,20 @@ function readCases(): Case[] {
 }
 
 function writeCases(cases: Case[]): void {
-  _cache = cases;
-  if (!isStorageAvailable()) return;
+  if (!isStorageAvailable()) {
+    // No persistent storage available (e.g. SSR, sandboxed iframe, Private Browsing
+    // with QuotaExceeded). Keep the intended state in-memory only.
+    _cache = cases;
+    return;
+  }
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(cases));
+    // Update cache only after the write succeeds — localStorage stays canonical.
+    _cache = cases;
   } catch (error) {
+    // Write failed; invalidate cache so the next read falls back to localStorage
+    // rather than returning stale in-memory data.
+    _cache = null;
     console.warn('Failed to persist cases to localStorage', error);
   }
 }
