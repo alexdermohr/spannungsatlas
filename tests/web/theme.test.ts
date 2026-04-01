@@ -9,6 +9,10 @@ describe('theme store', () => {
 	let metaSetAttributeMock: ReturnType<typeof vi.fn>;
 	let metaGetAttributeMock: ReturnType<typeof vi.fn>;
 
+	const originalWindow = globalThis.window;
+	const originalDocument = globalThis.document;
+	const originalLocalStorage = globalThis.localStorage;
+
 	beforeEach(() => {
 		const listeners = new Set<Function>();
 		const mockMq = {
@@ -25,42 +29,68 @@ describe('theme store', () => {
 
 		matchMediaMock = vi.fn().mockReturnValue(mockMq);
 
-		global.window = {
-			matchMedia: matchMediaMock,
-		} as unknown as Window & typeof globalThis;
+		Object.defineProperty(globalThis, 'window', {
+			value: { matchMedia: matchMediaMock },
+			writable: true,
+			configurable: true
+		});
 
-		global.localStorage = {
-			getItem: vi.fn(),
-			setItem: vi.fn(),
-			removeItem: vi.fn(),
-			clear: vi.fn(),
-			length: 0,
-			key: vi.fn()
-		} as unknown as Storage;
+		Object.defineProperty(globalThis, 'localStorage', {
+			value: {
+				getItem: vi.fn(),
+				setItem: vi.fn(),
+				removeItem: vi.fn(),
+				clear: vi.fn(),
+				length: 0,
+				key: vi.fn()
+			},
+			writable: true,
+			configurable: true
+		});
 
 		setAttributeMock = vi.fn();
 		getAttributeMock = vi.fn().mockReturnValue(null);
 		metaSetAttributeMock = vi.fn();
 		metaGetAttributeMock = vi.fn().mockReturnValue(null);
 
-		global.document = {
-			documentElement: {
-				setAttribute: setAttributeMock,
-				getAttribute: getAttributeMock
+		Object.defineProperty(globalThis, 'document', {
+			value: {
+				documentElement: {
+					setAttribute: setAttributeMock,
+					getAttribute: getAttributeMock
+				},
+				querySelector: vi.fn().mockReturnValue({
+					setAttribute: metaSetAttributeMock,
+					getAttribute: metaGetAttributeMock
+				})
 			},
-			querySelector: vi.fn().mockReturnValue({
-				setAttribute: metaSetAttributeMock,
-				getAttribute: metaGetAttributeMock
-			})
-		} as unknown as Document;
+			writable: true,
+			configurable: true
+		});
 	});
 
 	afterEach(() => {
 		vi.restoreAllMocks();
+
+		Object.defineProperty(globalThis, 'window', {
+			value: originalWindow,
+			writable: true,
+			configurable: true
+		});
+		Object.defineProperty(globalThis, 'document', {
+			value: originalDocument,
+			writable: true,
+			configurable: true
+		});
+		Object.defineProperty(globalThis, 'localStorage', {
+			value: originalLocalStorage,
+			writable: true,
+			configurable: true
+		});
 	});
 
 	it('initializes with system default when no localStorage value exists', () => {
-		vi.mocked(global.localStorage.getItem).mockReturnValue(null);
+		vi.mocked(globalThis.localStorage.getItem).mockReturnValue(null);
 
 		const cleanup = initTheme();
 		expect(get(themeMode)).toBe('system');
@@ -70,7 +100,7 @@ describe('theme store', () => {
 	});
 
 	it('initializes with dark mode when localStorage has dark', () => {
-		vi.mocked(global.localStorage.getItem).mockReturnValue('dark');
+		vi.mocked(globalThis.localStorage.getItem).mockReturnValue('dark');
 
 		const cleanup = initTheme();
 		expect(get(themeMode)).toBe('dark');
@@ -79,11 +109,21 @@ describe('theme store', () => {
 		cleanup();
 	});
 
+	it('treats invalid localStorage values as system default', () => {
+		vi.mocked(globalThis.localStorage.getItem).mockReturnValue('invalid-mode');
+
+		const cleanup = initTheme();
+		expect(get(themeMode)).toBe('system');
+		expect(setAttributeMock).toHaveBeenCalledWith('data-theme', 'light');
+
+		cleanup();
+	});
+
 	it('sets theme mode and updates DOM and localStorage', () => {
 		setThemeMode('light');
 
 		expect(get(themeMode)).toBe('light');
-		expect(global.localStorage.setItem).toHaveBeenCalledWith('spannungsatlas-theme', 'light');
+		expect(globalThis.localStorage.setItem).toHaveBeenCalledWith('spannungsatlas-theme', 'light');
 		expect(setAttributeMock).toHaveBeenCalledWith('data-theme', 'light');
 	});
 
@@ -103,7 +143,7 @@ describe('theme store', () => {
 	});
 
 	it('does not re-apply DOM attributes if they are already correct (idempotency)', () => {
-		vi.mocked(global.localStorage.getItem).mockReturnValue('dark');
+		vi.mocked(globalThis.localStorage.getItem).mockReturnValue('dark');
 		getAttributeMock.mockReturnValue('dark');
 		metaGetAttributeMock.mockReturnValue('#1a1a2e');
 
@@ -117,7 +157,7 @@ describe('theme store', () => {
 	});
 
 	it('system mode reacts to matchMedia changes', () => {
-		vi.mocked(global.localStorage.getItem).mockReturnValue('system');
+		vi.mocked(globalThis.localStorage.getItem).mockReturnValue('system');
 		const cleanup = initTheme();
 
 		// Initial state is light (matches = false in our mock setup)

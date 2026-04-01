@@ -12,9 +12,19 @@
     <script>
       // Minimal FOUC prevention — resolved state becomes initial truth
       (function() {
+        var d = 'light';
         try {
           var t = localStorage.getItem('spannungsatlas-theme') || 'system';
-          var d = t === 'system' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : t;
+          if (t !== 'light' && t !== 'dark' && t !== 'system') t = 'system';
+
+          if (t === 'system') {
+            d = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          } else {
+            d = t;
+          }
+        } catch(e) {}
+
+        try {
           document.documentElement.setAttribute('data-theme', d);
           var m = document.querySelector('meta[name="theme-color"]');
           if (m) m.setAttribute('content', d === 'dark' ? '#1a1a2e' : '#2d5a9b');
