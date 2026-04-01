@@ -10,18 +10,12 @@
   </head>
   <body data-sveltekit-preload-data="hover">
     <script>
-      // Prevent flash of wrong theme — runs before any rendering.
+      // Minimal FOUC prevention — resolved state becomes initial truth
       (function() {
-        var t = 'system';
-        try { t = localStorage.getItem('spannungsatlas-theme') || 'system'; } catch(e) {}
-        var d = 'light';
-        if (t === 'light' || t === 'dark') {
-          d = t;
-        } else {
-          try { d = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; } catch(e) {}
-        }
-        document.documentElement.setAttribute('data-theme', d);
         try {
+          var t = localStorage.getItem('spannungsatlas-theme') || 'system';
+          var d = t === 'system' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : t;
+          document.documentElement.setAttribute('data-theme', d);
           var m = document.querySelector('meta[name="theme-color"]');
           if (m) m.setAttribute('content', d === 'dark' ? '#1a1a2e' : '#2d5a9b');
         } catch(e) {}
