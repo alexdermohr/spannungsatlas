@@ -234,7 +234,9 @@ export const localStorageStore: PersistenceStore = {
 };
 
 /**
- * Reset internal cache. Exported only for use in tests.
+ * Reset internal state. Exported only for use in tests.
+ * Resets both _cache (loaded cases) and _storageAvailable (storage probe result)
+ * so that each test starts from a clean, un-probed state.
  * @internal
  */
 export function _resetCacheForTesting(): void {
