@@ -36,6 +36,8 @@ function normalizeSnapshotFromStorage(snap: Record<string, unknown>): Record<str
   if (!Array.isArray(snap['counterInterpretations']) && snap['counterInterpretation'] !== undefined) {
     if (isMigratableObject(snap['counterInterpretation'])) {
       updated['counterInterpretations'] = [snap['counterInterpretation']];
+    } else {
+      console.warn('Skipped migration of non-object counterInterpretation field:', snap['counterInterpretation']);
     }
     delete updated['counterInterpretation'];
     changed = true;
@@ -44,6 +46,8 @@ function normalizeSnapshotFromStorage(snap: Record<string, unknown>): Record<str
   if (!Array.isArray(snap['uncertainties']) && snap['uncertainty'] !== undefined) {
     if (isMigratableObject(snap['uncertainty'])) {
       updated['uncertainties'] = [snap['uncertainty']];
+    } else {
+      console.warn('Skipped migration of non-object uncertainty field:', snap['uncertainty']);
     }
     delete updated['uncertainty'];
     changed = true;
