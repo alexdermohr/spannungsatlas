@@ -32,12 +32,19 @@ function resolve(mode: ThemeMode): 'light' | 'dark' {
 
 function apply(mode: ThemeMode): void {
 	const effective = resolve(mode);
-	document.documentElement.setAttribute(ATTRIBUTE, effective);
+	const currentTheme = document.documentElement.getAttribute(ATTRIBUTE);
 
-	// Update meta theme-color to match
+	if (currentTheme !== effective) {
+		document.documentElement.setAttribute(ATTRIBUTE, effective);
+	}
+
 	const meta = document.querySelector('meta[name="theme-color"]');
 	if (meta) {
-		meta.setAttribute('content', effective === 'dark' ? '#1a1a2e' : '#2d5a9b');
+		const expectedColor = effective === 'dark' ? '#1a1a2e' : '#2d5a9b';
+		const currentColor = meta.getAttribute('content');
+		if (currentColor !== expectedColor) {
+			meta.setAttribute('content', expectedColor);
+		}
 	}
 }
 

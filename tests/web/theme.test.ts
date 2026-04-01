@@ -1,14 +1,15 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { themeMode, setThemeMode, initTheme } from '../../apps/web/src/lib/stores/theme.ts';
+import { themeMode, setThemeMode, initTheme } from '../../apps/web/src/lib/stores/theme.js';
 import { get } from 'svelte/store';
 
 describe('theme store', () => {
-	let originalWindow: typeof window | undefined;
-	let originalDocument: typeof document | undefined;
 	let matchMediaMock: ReturnType<typeof vi.fn>;
+	let setAttributeMock: ReturnType<typeof vi.fn>;
+	let getAttributeMock: ReturnType<typeof vi.fn>;
+	let metaSetAttributeMock: ReturnType<typeof vi.fn>;
+	let metaGetAttributeMock: ReturnType<typeof vi.fn>;
 
 	beforeEach(() => {
-		// Setup mock DOM environment
 		const listeners = new Set<Function>();
 		const mockMq = {
 			matches: false,
@@ -16,7 +17,8 @@ describe('theme store', () => {
 			removeEventListener: vi.fn((event, callback) => listeners.delete(callback)),
 			addListener: vi.fn((callback) => listeners.add(callback)),
 			removeListener: vi.fn((callback) => listeners.delete(callback)),
-			__simulateChange: () => {
+			__simulateChange: (matches: boolean) => {
+				mockMq.matches = matches;
 				listeners.forEach(cb => cb());
 			}
 		};
@@ -36,13 +38,19 @@ describe('theme store', () => {
 			key: vi.fn()
 		} as unknown as Storage;
 
-		const setAttributeMock = vi.fn();
+		setAttributeMock = vi.fn();
+		getAttributeMock = vi.fn().mockReturnValue(null);
+		metaSetAttributeMock = vi.fn();
+		metaGetAttributeMock = vi.fn().mockReturnValue(null);
+
 		global.document = {
 			documentElement: {
-				setAttribute: setAttributeMock
+				setAttribute: setAttributeMock,
+				getAttribute: getAttributeMock
 			},
 			querySelector: vi.fn().mockReturnValue({
-				setAttribute: setAttributeMock
+				setAttribute: metaSetAttributeMock,
+				getAttribute: metaGetAttributeMock
 			})
 		} as unknown as Document;
 	});
@@ -56,7 +64,7 @@ describe('theme store', () => {
 
 		const cleanup = initTheme();
 		expect(get(themeMode)).toBe('system');
-		expect(global.document.documentElement.setAttribute).toHaveBeenCalledWith('data-theme', 'light');
+		expect(setAttributeMock).toHaveBeenCalledWith('data-theme', 'light');
 
 		cleanup();
 	});
@@ -66,7 +74,7 @@ describe('theme store', () => {
 
 		const cleanup = initTheme();
 		expect(get(themeMode)).toBe('dark');
-		expect(global.document.documentElement.setAttribute).toHaveBeenCalledWith('data-theme', 'dark');
+		expect(setAttributeMock).toHaveBeenCalledWith('data-theme', 'dark');
 
 		cleanup();
 	});
@@ -76,11 +84,10 @@ describe('theme store', () => {
 
 		expect(get(themeMode)).toBe('light');
 		expect(global.localStorage.setItem).toHaveBeenCalledWith('spannungsatlas-theme', 'light');
-		expect(global.document.documentElement.setAttribute).toHaveBeenCalledWith('data-theme', 'light');
+		expect(setAttributeMock).toHaveBeenCalledWith('data-theme', 'light');
 	});
 
 	it('uses Safari fallback addListener if addEventListener is not available', () => {
-		// Mock matchMedia returning object WITHOUT addEventListener
 		const mockMqSafari = {
 			matches: true,
 			addListener: vi.fn(),
@@ -93,5 +100,36 @@ describe('theme store', () => {
 
 		cleanup();
 		expect(mockMqSafari.removeListener).toHaveBeenCalled();
+	});
+
+	it('does not re-apply DOM attributes if they are already correct (idempotency)', () => {
+		vi.mocked(global.localStorage.getItem).mockReturnValue('dark');
+		getAttributeMock.mockReturnValue('dark');
+		metaGetAttributeMock.mockReturnValue('#1a1a2e');
+
+		const cleanup = initTheme();
+
+		// DOM shouldn't be touched because getAttribute already matches
+		expect(setAttributeMock).not.toHaveBeenCalled();
+		expect(metaSetAttributeMock).not.toHaveBeenCalled();
+
+		cleanup();
+	});
+
+	it('system mode reacts to matchMedia changes', () => {
+		vi.mocked(global.localStorage.getItem).mockReturnValue('system');
+		const cleanup = initTheme();
+
+		// Initial state is light (matches = false in our mock setup)
+		expect(setAttributeMock).toHaveBeenCalledWith('data-theme', 'light');
+
+		// Change OS to dark mode
+		const mockMq = matchMediaMock();
+		mockMq.__simulateChange(true);
+
+		// Should have updated DOM to dark
+		expect(setAttributeMock).toHaveBeenCalledWith('data-theme', 'dark');
+
+		cleanup();
 	});
 });
