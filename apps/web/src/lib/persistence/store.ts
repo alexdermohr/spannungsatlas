@@ -13,11 +13,12 @@ export interface PersistenceStore {
 const STORAGE_KEY = 'spannungsatlas-cases';
 
 /**
- * Checks whether a value is a non-null object (valid for migration wrapping).
- * Prevents wrapping null, strings, numbers, etc. in an array during migration.
+ * Checks whether a value is a non-null, non-array object (valid for migration wrapping).
+ * Prevents wrapping null, strings, numbers, or arrays in a new array during migration.
+ * Arrays are excluded because an already-array-shaped value must never be double-wrapped.
  */
 function isMigratableObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 /**
@@ -37,7 +38,7 @@ function normalizeSnapshotFromStorage(snap: Record<string, unknown>): Record<str
     if (isMigratableObject(snap['counterInterpretation'])) {
       updated['counterInterpretations'] = [snap['counterInterpretation']];
     } else {
-      console.warn('Skipped migration of non-object counterInterpretation field:', snap['counterInterpretation']);
+      console.warn('Skipped migration of non-object counterInterpretation field (type:', typeof snap['counterInterpretation'], ')');
     }
     delete updated['counterInterpretation'];
     changed = true;
@@ -47,7 +48,7 @@ function normalizeSnapshotFromStorage(snap: Record<string, unknown>): Record<str
     if (isMigratableObject(snap['uncertainty'])) {
       updated['uncertainties'] = [snap['uncertainty']];
     } else {
-      console.warn('Skipped migration of non-object uncertainty field:', snap['uncertainty']);
+      console.warn('Skipped migration of non-object uncertainty field (type:', typeof snap['uncertainty'], ')');
     }
     delete updated['uncertainty'];
     changed = true;
@@ -119,22 +120,6 @@ function normalizeCaseFromStorage(raw: unknown): unknown {
 }
 
 /**
- * Probes whether localStorage is usable. Called on every storage access so the
- * result always reflects the current environment (e.g. tests that swap the
- * global localStorage object between runs). The probe is cheap — one write+delete.
- */
-function isStorageAvailable(): boolean {
-  try {
-    const testKey = '__spannungsatlas_test__';
-    localStorage.setItem(testKey, testKey);
-    localStorage.removeItem(testKey);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-/**
  * Type predicate: checks whether a normalized entry passes all Case guards.
  *
  * Performs explicit structural pre-checks before calling guardCase to prevent
@@ -151,9 +136,11 @@ function isValidCase(entry: unknown): entry is Case {
 
   // Pre-checks: ensure the fields that guardCase accesses without null-guards are present
   if (!Array.isArray(obj['participants'])) return false;
+  if (!(obj['participants'] as unknown[]).every((p) => typeof p === 'object' && p !== null)) return false;
   if (!Array.isArray(obj['revisions'])) return false;
-  if (typeof obj['observation'] !== 'object' || obj['observation'] === null) return false;
-  if (typeof obj['currentReflection'] !== 'object' || obj['currentReflection'] === null) return false;
+  if (!(obj['revisions'] as unknown[]).every((r) => typeof r === 'object' && r !== null)) return false;
+  if (typeof obj['observation'] !== 'object' || obj['observation'] === null || Array.isArray(obj['observation'])) return false;
+  if (typeof obj['currentReflection'] !== 'object' || obj['currentReflection'] === null || Array.isArray(obj['currentReflection'])) return false;
 
   return guardCase({
     id: obj['id'] as string,
@@ -167,7 +154,6 @@ function isValidCase(entry: unknown): entry is Case {
 }
 
 function readCases(): Case[] {
-  if (!isStorageAvailable()) return [];
   let raw: string | null;
   try {
     raw = localStorage.getItem(STORAGE_KEY);
@@ -188,7 +174,6 @@ function readCases(): Case[] {
 }
 
 function writeCases(cases: Case[]): void {
-  if (!isStorageAvailable()) return;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(cases));
   } catch (error) {

@@ -86,15 +86,16 @@ const ISO_DATE_RE =
 /**
  * Checks that a value is a non-empty string matching the supported date profile:
  * either a date-only string (YYYY-MM-DD) or a full timestamp with seconds
- * (YYYY-MM-DDTHH:MM:SS[.fff][Z|±HH:MM]). Format is enforced via regex and
- * parseability via Date.parse(). fieldName is included in the error for context.
+ * (YYYY-MM-DDTHH:MM:SS[.frac][Z|±HH:MM]), where `.frac` is one or more fractional
+ * second digits. Format is enforced via regex and parseability via Date.parse().
+ * fieldName is included in the error for context.
  */
 export function guardIsoDateString(value: string, fieldName: string): GuardResult {
   if (!isNonEmptyString(value)) {
     return `${fieldName} must not be empty.`;
   }
   if (!ISO_DATE_RE.test(value) || isNaN(Date.parse(value))) {
-    return `${fieldName} must be a date-only string (YYYY-MM-DD) or full timestamp with seconds (YYYY-MM-DDTHH:MM:SS[.fff][Z|±HH:MM]), got "${value}".`;
+    return `${fieldName} must be a date-only string (YYYY-MM-DD) or full timestamp with seconds (YYYY-MM-DDTHH:MM:SS[.frac][Z|±HH:MM]), got "${value}".`;
   }
   return undefined;
 }
