@@ -566,4 +566,16 @@ describe("createCase", () => {
       createCase({ ...validCaseInput(), observedAt: "" }),
     ).toThrow(/observedAt/i);
   });
+
+  it("throws when two participants share the same id", () => {
+    expect(() =>
+      createCase({
+        ...validCaseInput(),
+        participants: [
+          { id: "Anna", role: "primary" as const },
+          { id: "Anna", role: "contextual" as const },
+        ],
+      }),
+    ).toThrow(/Anna/i);
+  });
 });

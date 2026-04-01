@@ -84,6 +84,23 @@ describe('store migration — normalizeCaseFromStorage', () => {
     expect(cases[0].currentReflection.uncertainties[0].rationale).toBe('Quite uncertain about this.');
   });
 
+  it('does not wrap a legacy counterInterpretation that is already an array — case is skipped as invalid', () => {
+    // An array value in the legacy singular field must not be double-wrapped.
+    // isMigratableObject() excludes arrays, so the field is skipped and the
+    // case ends up with no counterInterpretations — guardCase then rejects it.
+    const raw = makeBaseCase({
+      currentReflection: makeSnap({
+        counterInterpretations: undefined,
+        // Malformed legacy data: already an array stored in the singular field
+        counterInterpretation: [{ text: 'Already an array.', evidenceType: 'speculative' }],
+      }),
+    });
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([raw]));
+    // Case is rejected by guardCase (no valid counterInterpretations), not double-wrapped
+    const cases = localStorageStore.loadAllCases();
+    expect(cases).toHaveLength(0);
+  });
+
   it('migrates singular counterInterpretation and uncertainty in revision.from and revision.to', () => {
     const oldSnap = makeSnap({
       reflectedAt: '2023-12-01T00:00:00.000Z',

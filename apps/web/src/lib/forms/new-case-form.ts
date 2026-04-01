@@ -43,15 +43,13 @@ export function clearErrorKeysWithPrefix(
   fieldErrors: Record<string, string>,
   prefix: string
 ): Record<string, string> {
-  let changed = false;
+  const keysToDelete = Object.keys(fieldErrors).filter((k) => k.startsWith(prefix));
+  if (keysToDelete.length === 0) return fieldErrors;
   const updated = { ...fieldErrors };
-  for (const key of Object.keys(updated)) {
-    if (key.startsWith(prefix)) {
-      delete updated[key];
-      changed = true;
-    }
+  for (const key of keysToDelete) {
+    delete updated[key];
   }
-  return changed ? updated : fieldErrors;
+  return updated;
 }
 
 /**

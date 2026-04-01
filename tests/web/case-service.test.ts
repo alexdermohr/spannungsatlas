@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   getAllCases,
-  startNewCase
+  startNewCase,
+  deleteCase
 } from '../../apps/web/src/lib/services/case-service.js';
 
 class MemoryStorage implements Storage {
@@ -111,6 +112,23 @@ describe('startNewCase', () => {
     const persisted = getAllCases()[0]!;
     expect(persisted.currentReflection.counterInterpretations).toHaveLength(2);
     expect(persisted.currentReflection.uncertainties).toHaveLength(2);
+  });
+
+  it('deletes a case by id and removes it from storage', () => {
+    const created = startNewCase({
+      context: 'Morgenkreis',
+      participants: [{ id: 'Anna', role: 'primary' }],
+      observationText: 'Anna schaut auf den Boden.',
+      isCameraDescribable: true,
+      interpretationText: 'Anna wirkt gehemmt.',
+      interpretationEvidenceType: 'derived',
+      counterInterpretations: [{ text: 'Anna ist müde.', evidenceType: 'speculative' }],
+      uncertainties: [{ level: 3, rationale: 'Nur eine Beobachtung.' }]
+    });
+
+    expect(getAllCases()).toHaveLength(1);
+    deleteCase(created.id);
+    expect(getAllCases()).toHaveLength(0);
   });
 });
 

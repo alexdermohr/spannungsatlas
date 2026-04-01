@@ -1,4 +1,5 @@
 import type { Case } from '$domain/types.js';
+import type { CaseParticipant, Observation, ReflectionSnapshot, Revision } from '$domain/types.js';
 import { guardCase } from '$domain/guards.js';
 
 /** Abstraction over case persistence — swap localStorage for IndexedDB or API. */
@@ -12,23 +13,43 @@ export interface PersistenceStore {
 const STORAGE_KEY = 'spannungsatlas-cases';
 
 /**
+ * Checks whether a value is a non-null, non-array object (valid for migration wrapping).
+ * Prevents wrapping null, strings, numbers, or arrays in a new array during migration.
+ * Arrays are excluded because an already-array-shaped value must never be double-wrapped.
+ */
+function isMigratableObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+/**
  * Normalizes a raw ReflectionSnapshot object from storage into the current plural schema.
  * Handles forward-migration from earlier single-value fields:
  *   counterInterpretation (singular) → counterInterpretations: [value]
  *   uncertainty (singular)           → uncertainties: [value]
+ *
+ * Only migrates values that are valid objects (not null, strings, etc.)
+ * to avoid creating invalid data from malformed legacy entries.
  */
 function normalizeSnapshotFromStorage(snap: Record<string, unknown>): Record<string, unknown> {
   let changed = false;
   const updated: Record<string, unknown> = { ...snap };
 
   if (!Array.isArray(snap['counterInterpretations']) && snap['counterInterpretation'] !== undefined) {
-    updated['counterInterpretations'] = [snap['counterInterpretation']];
+    if (isMigratableObject(snap['counterInterpretation'])) {
+      updated['counterInterpretations'] = [snap['counterInterpretation']];
+    } else {
+      console.warn('Skipped migration of non-object counterInterpretation field (type:', typeof snap['counterInterpretation'], ')');
+    }
     delete updated['counterInterpretation'];
     changed = true;
   }
 
   if (!Array.isArray(snap['uncertainties']) && snap['uncertainty'] !== undefined) {
-    updated['uncertainties'] = [snap['uncertainty']];
+    if (isMigratableObject(snap['uncertainty'])) {
+      updated['uncertainties'] = [snap['uncertainty']];
+    } else {
+      console.warn('Skipped migration of non-object uncertainty field (type:', typeof snap['uncertainty'], ')');
+    }
     delete updated['uncertainty'];
     changed = true;
   }
@@ -98,17 +119,46 @@ function normalizeCaseFromStorage(raw: unknown): unknown {
   return changed ? updatedEntry : entry;
 }
 
-function isStorageAvailable(): boolean {
-  return typeof localStorage !== 'undefined';
+/**
+ * Type predicate: checks whether a normalized entry passes all Case guards.
+ *
+ * Performs explicit structural pre-checks before calling guardCase to prevent
+ * runtime crashes — guardCase accesses nested fields (observation.text,
+ * currentReflection.interpretation, participants as an iterable) without
+ * null-guards of its own.
+ *
+ * Each `as` cast below is backed by the preceding structural check.
+ * guardCase then validates the *values* of those fields (non-empty, valid enum, etc.).
+ */
+function isValidCase(entry: unknown): entry is Case {
+  if (typeof entry !== 'object' || entry === null) return false;
+  const obj = entry as Record<string, unknown>;
+
+  // Pre-checks: ensure the fields that guardCase accesses without null-guards are present
+  if (!Array.isArray(obj['participants'])) return false;
+  if (!(obj['participants'] as unknown[]).every((p) => typeof p === 'object' && p !== null)) return false;
+  if (!Array.isArray(obj['revisions'])) return false;
+  if (!(obj['revisions'] as unknown[]).every((r) => typeof r === 'object' && r !== null)) return false;
+  if (typeof obj['observation'] !== 'object' || obj['observation'] === null || Array.isArray(obj['observation'])) return false;
+  if (typeof obj['currentReflection'] !== 'object' || obj['currentReflection'] === null || Array.isArray(obj['currentReflection'])) return false;
+
+  return guardCase({
+    id: obj['id'] as string,
+    context: obj['context'] as string,
+    participants: obj['participants'] as readonly CaseParticipant[],
+    observation: obj['observation'] as Observation,
+    currentReflection: obj['currentReflection'] as ReflectionSnapshot,
+    revisions: obj['revisions'] as readonly Revision[],
+    ...(typeof obj['observedAt'] === 'string' ? { observedAt: obj['observedAt'] } : {}),
+  }).length === 0;
 }
 
 function readCases(): Case[] {
-  if (!isStorageAvailable()) return [];
   let raw: string | null;
   try {
     raw = localStorage.getItem(STORAGE_KEY);
-  } catch {
-    console.warn('Failed to read cases from localStorage');
+  } catch (error) {
+    console.warn('Failed to read cases from localStorage', error);
     return [];
   }
   if (!raw) return [];
@@ -117,16 +167,13 @@ function readCases(): Case[] {
     if (!Array.isArray(parsed)) return [];
     return (parsed as unknown[])
       .map(normalizeCaseFromStorage)
-      .filter(
-        (entry) => typeof entry === 'object' && entry !== null && guardCase(entry as Case).length === 0
-      ) as Case[];
+      .filter(isValidCase);
   } catch {
     return [];
   }
 }
 
 function writeCases(cases: Case[]): void {
-  if (!isStorageAvailable()) return;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(cases));
   } catch (error) {
@@ -144,7 +191,7 @@ export const localStorageStore: PersistenceStore = {
   },
 
   saveCase(c: Case): void {
-    const cases = readCases();
+    const cases = [...readCases()];
     const idx = cases.findIndex((existing) => existing.id === c.id);
     if (idx >= 0) {
       cases[idx] = c;

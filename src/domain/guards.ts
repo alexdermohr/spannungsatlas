@@ -25,7 +25,8 @@
  *   - TensionEdge direction is one of the two allowed enum values.
  *   - TensionEdge source, target, label, context are non-empty.
  *   - Date/time fields (reflectedAt, Revision.at, observedAt, TensionEdge.timestamp)
- *     are parseable date strings (Date.parse()-based plausibility; ISO 8601 recommended).
+ *     must match the supported date profile: date-only (YYYY-MM-DD) or full timestamp
+ *     with seconds (YYYY-MM-DDTHH:MM:SS[.fff][Z|±HH:MM]). Enforced by regex + Date.parse().
  *
  * WHAT THESE GUARDS DO NOT ENFORCE (semantic, requires future work):
  *   - Whether observation text is genuinely camera-describable (MASTERPLAN §2 #19).
@@ -63,16 +64,38 @@ function isNonEmptyString(value: unknown): value is string {
 // ---------------------------------------------------------------------------
 
 /**
- * Checks that a value is a non-empty, parseable date string.
- * Uses Date.parse() for plausibility — not a full ISO 8601 calendar check.
- * fieldName is included in the error message for context.
+ * Supported date/time profile.
+ *
+ * Accepted forms:
+ *   2024-01-15                         (date-only)
+ *   2024-01-15T10:30:00                (local time, seconds required)
+ *   2024-01-15T10:30:00Z               (UTC)
+ *   2024-01-15T10:30:00.000Z           (UTC with fractional seconds)
+ *   2024-01-15T10:30:00+02:00          (offset)
+ *   2024-01-15T10:30:00.123+02:00      (offset with fractional seconds)
+ *
+ * NOT accepted (outside this profile):
+ *   10:30:00          (time-only)
+ *   2024-01-15T10:30  (hours and minutes only, seconds required)
+ *   2024-W03-2        (ISO week date)
+ *   2024-016          (ordinal date)
+ */
+const ISO_DATE_RE =
+  /^\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?)?$/;
+
+/**
+ * Checks that a value is a non-empty string matching the supported date profile:
+ * either a date-only string (YYYY-MM-DD) or a full timestamp with seconds
+ * (YYYY-MM-DDTHH:MM:SS[.frac][Z|±HH:MM]), where `.frac` is one or more fractional
+ * second digits. Format is enforced via regex and parseability via Date.parse().
+ * fieldName is included in the error for context.
  */
 export function guardIsoDateString(value: string, fieldName: string): GuardResult {
   if (!isNonEmptyString(value)) {
     return `${fieldName} must not be empty.`;
   }
-  if (isNaN(Date.parse(value))) {
-    return `${fieldName} must be a parseable date string (ISO 8601 recommended), got "${value}".`;
+  if (!ISO_DATE_RE.test(value) || isNaN(Date.parse(value))) {
+    return `${fieldName} must be a date-only string (YYYY-MM-DD) or full timestamp with seconds (YYYY-MM-DDTHH:MM:SS[.frac][Z|±HH:MM]), got "${value}".`;
   }
   return undefined;
 }
@@ -259,6 +282,24 @@ export function guardParticipantRole(role: string): GuardResult {
   return undefined;
 }
 
+/**
+ * Participant ids must be unique within a case.
+ * Duplicate IDs would cause one participant to silently overwrite another in
+ * any id-keyed lookup. Returns the first duplicate found.
+ */
+export function guardParticipantIdsUnique(
+  participants: readonly CaseParticipant[],
+): GuardResult {
+  const seen = new Set<string>();
+  for (const p of participants) {
+    if (seen.has(p.id)) {
+      return `Participant id "${p.id}" appears more than once.`;
+    }
+    seen.add(p.id);
+  }
+  return undefined;
+}
+
 // ---------------------------------------------------------------------------
 // TensionEdge guards (UX-Blaupause §3 step 7)
 // ---------------------------------------------------------------------------
@@ -415,6 +456,7 @@ export function guardCase(
       push(guardParticipantRole(p.role));
     }
   }
+  push(guardParticipantIdsUnique(caseData.participants));
 
   if (caseData.observedAt !== undefined) {
     push(guardIsoDateString(caseData.observedAt, "observedAt"));

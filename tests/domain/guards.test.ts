@@ -13,6 +13,7 @@ import {
   guardParticipantsNotEmpty,
   guardParticipantId,
   guardParticipantRole,
+  guardParticipantIdsUnique,
   guardEvidenceType,
   guardDriftType,
   guardRevisionReason,
@@ -345,6 +346,46 @@ describe("guardParticipantRole", () => {
 
   it("rejects empty role string", () => {
     expect(guardParticipantRole("")).toBeDefined();
+  });
+});
+
+describe("guardParticipantIdsUnique", () => {
+  it("passes when all ids are distinct", () => {
+    expect(
+      guardParticipantIdsUnique([
+        { id: "p1", role: "primary" },
+        { id: "p2", role: "secondary" },
+      ]),
+    ).toBeUndefined();
+  });
+
+  it("passes for a single participant", () => {
+    expect(guardParticipantIdsUnique([{ id: "p1" }])).toBeUndefined();
+  });
+
+  it("passes for an empty array", () => {
+    expect(guardParticipantIdsUnique([])).toBeUndefined();
+  });
+
+  it("returns an error for duplicate ids", () => {
+    const result = guardParticipantIdsUnique([
+      { id: "Anna", role: "primary" },
+      { id: "Ben", role: "secondary" },
+      { id: "Anna", role: "contextual" },
+    ]);
+    expect(result).toBeDefined();
+    expect(result).toMatch(/Anna/);
+  });
+
+  it("returns an error for the first duplicate, not all duplicates", () => {
+    const result = guardParticipantIdsUnique([
+      { id: "x" },
+      { id: "x" },
+      { id: "y" },
+      { id: "y" },
+    ]);
+    expect(result).toBeDefined();
+    expect(result).toMatch(/x/);
   });
 });
 
@@ -688,6 +729,21 @@ describe("guardCase", () => {
       ],
     });
     expect(errors.some((e) => /DriftType/i.test(e))).toBe(true);
+  });
+
+  it("returns an error when two participants share the same id", () => {
+    const errors = guardCase({
+      id: "case-001",
+      context: "Klassenraum",
+      participants: [
+        { id: "Anna", role: "primary" },
+        { id: "Anna", role: "contextual" },
+      ],
+      observation: validObservation(),
+      currentReflection: validSnapshot(),
+      revisions: [],
+    });
+    expect(errors.some((e) => /Anna/i.test(e))).toBe(true);
   });
 });
 
