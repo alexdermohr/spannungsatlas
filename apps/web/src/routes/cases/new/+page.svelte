@@ -216,6 +216,8 @@
       });
       goto(`/cases/${created.id}`);
     } catch (e: unknown) {
+      // Safety net for truly unexpected errors (e.g. storage quota exceeded, JS exceptions).
+      // Expected validation errors are caught earlier by validate() and never reach here.
       console.error('Fehler beim Erstellen des Falls:', e);
       fieldErrors = { _submit: 'Ein unerwarteter Fehler ist aufgetreten. Bitte prüfen Sie Ihre Eingaben und versuchen Sie es erneut.' };
       submitting = false;

@@ -25,7 +25,8 @@
  *   - TensionEdge direction is one of the two allowed enum values.
  *   - TensionEdge source, target, label, context are non-empty.
  *   - Date/time fields (reflectedAt, Revision.at, observedAt, TensionEdge.timestamp)
- *     must be valid ISO 8601 date strings (enforced by regex + Date.parse()).
+ *     must match the supported date profile: date-only (YYYY-MM-DD) or full timestamp
+ *     with seconds (YYYY-MM-DDTHH:MM:SS[.fff][Z|±HH:MM]). Enforced by regex + Date.parse().
  *
  * WHAT THESE GUARDS DO NOT ENFORCE (semantic, requires future work):
  *   - Whether observation text is genuinely camera-describable (MASTERPLAN §2 #19).
@@ -63,28 +64,37 @@ function isNonEmptyString(value: unknown): value is string {
 // ---------------------------------------------------------------------------
 
 /**
- * ISO 8601 date-time pattern.
- * Accepts:
- *   2024-01-15T10:30:00Z
- *   2024-01-15T10:30:00.000Z
- *   2024-01-15T10:30:00+02:00
- *   2024-01-15T10:30:00.123+02:00
- *   2024-01-15 (date-only)
+ * Supported date/time profile.
+ *
+ * Accepted forms:
+ *   2024-01-15                         (date-only)
+ *   2024-01-15T10:30:00                (local time, seconds required)
+ *   2024-01-15T10:30:00Z               (UTC)
+ *   2024-01-15T10:30:00.000Z           (UTC with fractional seconds)
+ *   2024-01-15T10:30:00+02:00          (offset)
+ *   2024-01-15T10:30:00.123+02:00      (offset with fractional seconds)
+ *
+ * NOT accepted (outside this profile):
+ *   10:30:00          (time-only)
+ *   2024-01-15T10:30  (hours and minutes only, seconds required)
+ *   2024-W03-2        (ISO week date)
+ *   2024-016          (ordinal date)
  */
 const ISO_DATE_RE =
   /^\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?)?$/;
 
 /**
- * Checks that a value is a non-empty, valid ISO 8601 date string.
- * Enforces format via regex AND parseability via Date.parse().
- * fieldName is included in the error message for context.
+ * Checks that a value is a non-empty string matching the supported date profile:
+ * either a date-only string (YYYY-MM-DD) or a full timestamp with seconds
+ * (YYYY-MM-DDTHH:MM:SS[.fff][Z|±HH:MM]). Format is enforced via regex and
+ * parseability via Date.parse(). fieldName is included in the error for context.
  */
 export function guardIsoDateString(value: string, fieldName: string): GuardResult {
   if (!isNonEmptyString(value)) {
     return `${fieldName} must not be empty.`;
   }
   if (!ISO_DATE_RE.test(value) || isNaN(Date.parse(value))) {
-    return `${fieldName} must be a valid ISO 8601 date string, got "${value}".`;
+    return `${fieldName} must be a date-only string (YYYY-MM-DD) or full timestamp with seconds (YYYY-MM-DDTHH:MM:SS[.fff][Z|±HH:MM]), got "${value}".`;
   }
   return undefined;
 }

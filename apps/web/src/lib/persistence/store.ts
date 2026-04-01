@@ -114,20 +114,20 @@ function normalizeCaseFromStorage(raw: unknown): unknown {
   return changed ? updatedEntry : entry;
 }
 
-/** Cached result — `null` means not yet loaded this session. */
-let _storageAvailable: boolean | null = null;
-
+/**
+ * Probes whether localStorage is usable. Called on every storage access so the
+ * result always reflects the current environment (e.g. tests that swap the
+ * global localStorage object between runs). The probe is cheap — one write+delete.
+ */
 function isStorageAvailable(): boolean {
-  if (_storageAvailable !== null) return _storageAvailable;
   try {
     const testKey = '__spannungsatlas_test__';
     localStorage.setItem(testKey, testKey);
     localStorage.removeItem(testKey);
-    _storageAvailable = true;
+    return true;
   } catch {
-    _storageAvailable = false;
+    return false;
   }
-  return _storageAvailable;
 }
 
 /**
@@ -162,11 +162,7 @@ function isValidCase(entry: unknown): entry is Case {
   }).length === 0;
 }
 
-/** In-memory cache to avoid repeated localStorage reads + JSON parsing. */
-let _cache: Case[] | null = null;
-
 function readCases(): Case[] {
-  if (_cache !== null) return _cache;
   if (!isStorageAvailable()) return [];
   let raw: string | null;
   try {
@@ -179,31 +175,19 @@ function readCases(): Case[] {
   try {
     const parsed: unknown = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
-    const cases = (parsed as unknown[])
+    return (parsed as unknown[])
       .map(normalizeCaseFromStorage)
       .filter(isValidCase);
-    _cache = cases;
-    return cases;
   } catch {
     return [];
   }
 }
 
 function writeCases(cases: Case[]): void {
-  if (!isStorageAvailable()) {
-    // No persistent storage available (e.g. SSR, sandboxed iframe, Private Browsing
-    // with QuotaExceeded). Keep the intended state in-memory only.
-    _cache = cases;
-    return;
-  }
+  if (!isStorageAvailable()) return;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(cases));
-    // Update cache only after the write succeeds — localStorage stays canonical.
-    _cache = cases;
   } catch (error) {
-    // Write failed; invalidate cache so the next read falls back to localStorage
-    // rather than returning stale in-memory data.
-    _cache = null;
     console.warn('Failed to persist cases to localStorage', error);
   }
 }
@@ -232,14 +216,3 @@ export const localStorageStore: PersistenceStore = {
     writeCases(readCases().filter((c) => c.id !== id));
   }
 };
-
-/**
- * Reset internal state. Exported only for use in tests.
- * Resets both _cache (loaded cases) and _storageAvailable (storage probe result)
- * so that each test starts from a clean, un-probed state.
- * @internal
- */
-export function _resetCacheForTesting(): void {
-  _cache = null;
-  _storageAvailable = null;
-}

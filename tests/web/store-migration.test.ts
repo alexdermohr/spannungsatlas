@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { localStorageStore, _resetCacheForTesting } from '../../apps/web/src/lib/persistence/store.js';
+import { localStorageStore } from '../../apps/web/src/lib/persistence/store.js';
 
 const STORAGE_KEY = 'spannungsatlas-cases';
 
@@ -42,7 +42,6 @@ function makeBaseCase(overrides: Record<string, unknown> = {}): Record<string, u
 describe('store migration — normalizeCaseFromStorage', () => {
   beforeEach(() => {
     Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: new MemoryStorage() });
-    _resetCacheForTesting();
   });
 
   afterEach(() => {

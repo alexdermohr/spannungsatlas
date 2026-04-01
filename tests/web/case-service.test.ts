@@ -4,7 +4,6 @@ import {
   startNewCase,
   deleteCase
 } from '../../apps/web/src/lib/services/case-service.js';
-import { _resetCacheForTesting } from '../../apps/web/src/lib/persistence/store.js';
 
 class MemoryStorage implements Storage {
   #map = new Map<string, string>();
@@ -44,7 +43,6 @@ describe('startNewCase', () => {
       value: new MemoryStorage()
     });
     randomUuidSpy.mockReturnValue('123e4567-e89b-12d3-a456-426614174000');
-    _resetCacheForTesting();
   });
 
   afterEach(() => {
@@ -166,7 +164,6 @@ describe('migration — old singular schema', () => {
       configurable: true,
       value: new MemoryStorage()
     });
-    _resetCacheForTesting();
   });
 
   afterEach(() => {
