@@ -21,7 +21,6 @@
   },
   "devDependencies": {
     "jsdom": "^29.0.1",
-    "puppeteer": "^24.40.0",
     "typescript": "^6.0.2",
     "vitest": "^4.1.2"
   }

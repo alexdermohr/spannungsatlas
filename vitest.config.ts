@@ -7,8 +7,5 @@ export default defineConfig({
       $domain: resolve(__dirname, 'src/domain'),
       $lib: resolve(__dirname, 'apps/web/src/lib')
     }
-  },
-  test: {
-    environment: 'jsdom'
   }
 });
