@@ -2,10 +2,20 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { themeMode, setThemeMode, initTheme } from '../../apps/web/src/lib/stores/theme.js';
 import { get } from 'svelte/store';
 
+// Type helper for testing DOM element mocks
+type DummyElement = {
+	getAttribute: (name: string) => string | null;
+	setAttribute: (name: string, value: string) => void;
+	__attributes: Map<string, string>;
+};
+
 describe('theme store', () => {
 	let matchMediaMock: ReturnType<typeof vi.fn>;
 	let metaSetAttributeSpy: ReturnType<typeof vi.fn>;
 	let rootSetAttributeSpy: ReturnType<typeof vi.fn>;
+
+	let dummyRoot: DummyElement;
+	let dummyMeta: DummyElement;
 
 	const originalWindow = globalThis.window;
 	const originalDocument = globalThis.document;
@@ -47,22 +57,20 @@ describe('theme store', () => {
 		});
 
 		// Create stateful dummy elements for DOM assertions
-		const createDummyElement = (initialAttrs: Record<string, string> = {}) => {
+		const createDummyElement = (initialAttrs: Record<string, string> = {}): DummyElement => {
 			const attributes = new Map(Object.entries(initialAttrs));
-			const setAttribute = vi.fn((name, value) => attributes.set(name, value));
 			return {
 				getAttribute: vi.fn((name) => attributes.has(name) ? attributes.get(name) : null),
-				setAttribute,
-				_spy: setAttribute,
-				_internalState: attributes
+				setAttribute: vi.fn((name, value) => attributes.set(name, value)),
+				__attributes: attributes
 			};
 		};
 
-		const dummyRoot = createDummyElement();
-		const dummyMeta = createDummyElement();
+		dummyRoot = createDummyElement();
+		dummyMeta = createDummyElement();
 
-		rootSetAttributeSpy = dummyRoot._spy;
-		metaSetAttributeSpy = dummyMeta._spy;
+		rootSetAttributeSpy = dummyRoot.setAttribute as ReturnType<typeof vi.fn>;
+		metaSetAttributeSpy = dummyMeta.setAttribute as ReturnType<typeof vi.fn>;
 
 		Object.defineProperty(globalThis, 'document', {
 			value: {
@@ -70,9 +78,7 @@ describe('theme store', () => {
 				querySelector: vi.fn().mockImplementation((sel) => {
 					if (sel === 'meta[name="theme-color"]') return dummyMeta;
 					return null;
-				}),
-				_dummyRoot: dummyRoot,
-				_dummyMeta: dummyMeta
+				})
 			},
 			writable: true,
 			configurable: true
@@ -158,9 +164,9 @@ describe('theme store', () => {
 
 	it('does not re-apply DOM attributes if they are already correct (idempotency)', () => {
 		vi.mocked(globalThis.localStorage.getItem).mockReturnValue('dark');
-		// pre-populate dummy elements
-		(globalThis.document as any)._dummyRoot._internalState.set('data-theme', 'dark');
-		(globalThis.document as any)._dummyMeta._internalState.set('content', '#1a1a2e');
+		// pre-populate dummy elements cleanly
+		dummyRoot.__attributes.set('data-theme', 'dark');
+		dummyMeta.__attributes.set('content', '#1a1a2e');
 
 		const cleanup = initTheme();
 
