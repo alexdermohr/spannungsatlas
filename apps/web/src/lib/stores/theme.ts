@@ -34,8 +34,13 @@ function apply(mode: ThemeMode): void {
 	const effective = resolve(mode);
 	const currentTheme = document.documentElement.getAttribute(ATTRIBUTE);
 
-	if (currentTheme !== effective) {
+if (currentTheme !== effective) {
 		document.documentElement.setAttribute(ATTRIBUTE, effective);
+	}
+
+	if (document.body) {
+		document.body.classList.toggle('light-mode', effective === 'light');
+		document.body.classList.toggle('dark-mode', effective === 'dark');
 	}
 
 	const meta = document.querySelector('meta[name="theme-color"]');

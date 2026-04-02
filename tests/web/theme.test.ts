@@ -6,7 +6,12 @@ import { get } from 'svelte/store';
 type DummyElement = {
 	getAttribute: (name: string) => string | null;
 	setAttribute: (name: string, value: string) => void;
+	classList: {
+		contains: (name: string) => boolean;
+		toggle: (name: string, force?: boolean) => void;
+	};
 	__attributes: Map<string, string>;
+	__classes: Set<string>;
 };
 
 describe('theme store', () => {
@@ -16,6 +21,8 @@ describe('theme store', () => {
 
 	let dummyRoot: DummyElement;
 	let dummyMeta: DummyElement;
+	let dummyBody: DummyElement;
+	let bodyClassToggleSpy: ReturnType<typeof vi.fn>;
 
 	const originalWindow = globalThis.window;
 	const originalDocument = globalThis.document;
@@ -59,22 +66,40 @@ describe('theme store', () => {
 		// Create stateful dummy elements for DOM assertions
 		const createDummyElement = (initialAttrs: Record<string, string> = {}): DummyElement => {
 			const attributes = new Map(Object.entries(initialAttrs));
+			const classes = new Set<string>();
 			return {
-				getAttribute: vi.fn((name) => attributes.has(name) ? attributes.get(name) : null),
+				getAttribute: vi.fn((name) => {
+					const val = attributes.get(name);
+					return val !== undefined ? val : null;
+				}),
 				setAttribute: vi.fn((name, value) => attributes.set(name, value)),
-				__attributes: attributes
+				classList: {
+					contains: vi.fn((name) => classes.has(name)),
+					toggle: vi.fn((name, force) => {
+						if (force === true || (force === undefined && !classes.has(name))) {
+							classes.add(name);
+						} else {
+							classes.delete(name);
+						}
+					})
+				},
+				__attributes: attributes,
+				__classes: classes
 			};
 		};
 
 		dummyRoot = createDummyElement();
 		dummyMeta = createDummyElement();
+		dummyBody = createDummyElement();
 
 		rootSetAttributeSpy = dummyRoot.setAttribute as ReturnType<typeof vi.fn>;
 		metaSetAttributeSpy = dummyMeta.setAttribute as ReturnType<typeof vi.fn>;
+		bodyClassToggleSpy = dummyBody.classList.toggle as ReturnType<typeof vi.fn>;
 
 		Object.defineProperty(globalThis, 'document', {
 			value: {
 				documentElement: dummyRoot,
+				body: dummyBody,
 				querySelector: vi.fn().mockImplementation((sel) => {
 					if (sel === 'meta[name="theme-color"]') return dummyMeta;
 					return null;
@@ -111,6 +136,8 @@ describe('theme store', () => {
 		const cleanup = initTheme();
 		expect(get(themeMode)).toBe('system');
 		expect(globalThis.document.documentElement.getAttribute('data-theme')).toBe('light');
+		expect(globalThis.document.body.classList.contains('light-mode')).toBe(true);
+		expect(globalThis.document.body.classList.contains('dark-mode')).toBe(false);
 		expect(globalThis.document.querySelector('meta[name="theme-color"]')?.getAttribute('content')).toBe('#2d5a9b');
 
 		cleanup();
@@ -122,6 +149,8 @@ describe('theme store', () => {
 		const cleanup = initTheme();
 		expect(get(themeMode)).toBe('dark');
 		expect(globalThis.document.documentElement.getAttribute('data-theme')).toBe('dark');
+		expect(globalThis.document.body.classList.contains('dark-mode')).toBe(true);
+		expect(globalThis.document.body.classList.contains('light-mode')).toBe(false);
 		expect(globalThis.document.querySelector('meta[name="theme-color"]')?.getAttribute('content')).toBe('#1a1a2e');
 
 		cleanup();
@@ -133,6 +162,8 @@ describe('theme store', () => {
 		const cleanup = initTheme();
 		expect(get(themeMode)).toBe('system');
 		expect(globalThis.document.documentElement.getAttribute('data-theme')).toBe('light');
+		expect(globalThis.document.body.classList.contains('light-mode')).toBe(true);
+		expect(globalThis.document.body.classList.contains('dark-mode')).toBe(false);
 		expect(globalThis.document.querySelector('meta[name="theme-color"]')?.getAttribute('content')).toBe('#2d5a9b');
 
 		cleanup();
@@ -144,6 +175,8 @@ describe('theme store', () => {
 		expect(get(themeMode)).toBe('light');
 		expect(globalThis.localStorage.setItem).toHaveBeenCalledWith('spannungsatlas-theme', 'light');
 		expect(globalThis.document.documentElement.getAttribute('data-theme')).toBe('light');
+		expect(globalThis.document.body.classList.contains('light-mode')).toBe(true);
+		expect(globalThis.document.body.classList.contains('dark-mode')).toBe(false);
 		expect(globalThis.document.querySelector('meta[name="theme-color"]')?.getAttribute('content')).toBe('#2d5a9b');
 	});
 
@@ -173,8 +206,12 @@ describe('theme store', () => {
 		// Check idempotency through setter spies
 		expect(rootSetAttributeSpy).not.toHaveBeenCalled();
 		expect(metaSetAttributeSpy).not.toHaveBeenCalled();
+		// bodyClassToggleSpy is always called, but it shouldn't have changed state if already correct
+		expect(globalThis.document.body.classList.contains('dark-mode')).toBe(true);
 
 		expect(globalThis.document.documentElement.getAttribute('data-theme')).toBe('dark');
+		expect(globalThis.document.body.classList.contains('dark-mode')).toBe(true);
+		expect(globalThis.document.body.classList.contains('light-mode')).toBe(false);
 		expect(globalThis.document.querySelector('meta[name="theme-color"]')?.getAttribute('content')).toBe('#1a1a2e');
 
 		cleanup();
@@ -186,10 +223,12 @@ describe('theme store', () => {
 
 		expect(globalThis.document.documentElement.getAttribute('data-theme')).toBe('light');
 
-		const mockMq = matchMediaMock();
+		const mockMq = globalThis.window.matchMedia('(prefers-color-scheme: dark)') as any;
 		mockMq.__simulateChange(true);
 
 		expect(globalThis.document.documentElement.getAttribute('data-theme')).toBe('dark');
+		expect(globalThis.document.body.classList.contains('dark-mode')).toBe(true);
+		expect(globalThis.document.body.classList.contains('light-mode')).toBe(false);
 		expect(globalThis.document.querySelector('meta[name="theme-color"]')?.getAttribute('content')).toBe('#1a1a2e');
 
 		cleanup();
