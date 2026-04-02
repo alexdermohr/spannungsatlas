@@ -2,12 +2,20 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { themeMode, setThemeMode, initTheme } from '../../apps/web/src/lib/stores/theme.js';
 import { get } from 'svelte/store';
 
+// Type helper for testing DOM element mocks
+type DummyElement = {
+	getAttribute: (name: string) => string | null;
+	setAttribute: (name: string, value: string) => void;
+	__attributes: Map<string, string>;
+};
+
 describe('theme store', () => {
 	let matchMediaMock: ReturnType<typeof vi.fn>;
-	let setAttributeMock: ReturnType<typeof vi.fn>;
-	let getAttributeMock: ReturnType<typeof vi.fn>;
-	let metaSetAttributeMock: ReturnType<typeof vi.fn>;
-	let metaGetAttributeMock: ReturnType<typeof vi.fn>;
+	let metaSetAttributeSpy: ReturnType<typeof vi.fn>;
+	let rootSetAttributeSpy: ReturnType<typeof vi.fn>;
+
+	let dummyRoot: DummyElement;
+	let dummyMeta: DummyElement;
 
 	const originalWindow = globalThis.window;
 	const originalDocument = globalThis.document;
@@ -48,20 +56,28 @@ describe('theme store', () => {
 			configurable: true
 		});
 
-		setAttributeMock = vi.fn();
-		getAttributeMock = vi.fn().mockReturnValue(null);
-		metaSetAttributeMock = vi.fn();
-		metaGetAttributeMock = vi.fn().mockReturnValue(null);
+		// Create stateful dummy elements for DOM assertions
+		const createDummyElement = (initialAttrs: Record<string, string> = {}): DummyElement => {
+			const attributes = new Map(Object.entries(initialAttrs));
+			return {
+				getAttribute: vi.fn((name) => attributes.has(name) ? attributes.get(name) : null),
+				setAttribute: vi.fn((name, value) => attributes.set(name, value)),
+				__attributes: attributes
+			};
+		};
+
+		dummyRoot = createDummyElement();
+		dummyMeta = createDummyElement();
+
+		rootSetAttributeSpy = dummyRoot.setAttribute as ReturnType<typeof vi.fn>;
+		metaSetAttributeSpy = dummyMeta.setAttribute as ReturnType<typeof vi.fn>;
 
 		Object.defineProperty(globalThis, 'document', {
 			value: {
-				documentElement: {
-					setAttribute: setAttributeMock,
-					getAttribute: getAttributeMock
-				},
-				querySelector: vi.fn().mockReturnValue({
-					setAttribute: metaSetAttributeMock,
-					getAttribute: metaGetAttributeMock
+				documentElement: dummyRoot,
+				querySelector: vi.fn().mockImplementation((sel) => {
+					if (sel === 'meta[name="theme-color"]') return dummyMeta;
+					return null;
 				})
 			},
 			writable: true,
@@ -94,7 +110,8 @@ describe('theme store', () => {
 
 		const cleanup = initTheme();
 		expect(get(themeMode)).toBe('system');
-		expect(setAttributeMock).toHaveBeenCalledWith('data-theme', 'light');
+		expect(globalThis.document.documentElement.getAttribute('data-theme')).toBe('light');
+		expect(globalThis.document.querySelector('meta[name="theme-color"]')?.getAttribute('content')).toBe('#2d5a9b');
 
 		cleanup();
 	});
@@ -104,7 +121,8 @@ describe('theme store', () => {
 
 		const cleanup = initTheme();
 		expect(get(themeMode)).toBe('dark');
-		expect(setAttributeMock).toHaveBeenCalledWith('data-theme', 'dark');
+		expect(globalThis.document.documentElement.getAttribute('data-theme')).toBe('dark');
+		expect(globalThis.document.querySelector('meta[name="theme-color"]')?.getAttribute('content')).toBe('#1a1a2e');
 
 		cleanup();
 	});
@@ -114,7 +132,8 @@ describe('theme store', () => {
 
 		const cleanup = initTheme();
 		expect(get(themeMode)).toBe('system');
-		expect(setAttributeMock).toHaveBeenCalledWith('data-theme', 'light');
+		expect(globalThis.document.documentElement.getAttribute('data-theme')).toBe('light');
+		expect(globalThis.document.querySelector('meta[name="theme-color"]')?.getAttribute('content')).toBe('#2d5a9b');
 
 		cleanup();
 	});
@@ -124,7 +143,8 @@ describe('theme store', () => {
 
 		expect(get(themeMode)).toBe('light');
 		expect(globalThis.localStorage.setItem).toHaveBeenCalledWith('spannungsatlas-theme', 'light');
-		expect(setAttributeMock).toHaveBeenCalledWith('data-theme', 'light');
+		expect(globalThis.document.documentElement.getAttribute('data-theme')).toBe('light');
+		expect(globalThis.document.querySelector('meta[name="theme-color"]')?.getAttribute('content')).toBe('#2d5a9b');
 	});
 
 	it('uses Safari fallback addListener if addEventListener is not available', () => {
@@ -144,14 +164,18 @@ describe('theme store', () => {
 
 	it('does not re-apply DOM attributes if they are already correct (idempotency)', () => {
 		vi.mocked(globalThis.localStorage.getItem).mockReturnValue('dark');
-		getAttributeMock.mockReturnValue('dark');
-		metaGetAttributeMock.mockReturnValue('#1a1a2e');
+		// pre-populate dummy elements cleanly
+		dummyRoot.__attributes.set('data-theme', 'dark');
+		dummyMeta.__attributes.set('content', '#1a1a2e');
 
 		const cleanup = initTheme();
 
-		// DOM shouldn't be touched because getAttribute already matches
-		expect(setAttributeMock).not.toHaveBeenCalled();
-		expect(metaSetAttributeMock).not.toHaveBeenCalled();
+		// Check idempotency through setter spies
+		expect(rootSetAttributeSpy).not.toHaveBeenCalled();
+		expect(metaSetAttributeSpy).not.toHaveBeenCalled();
+
+		expect(globalThis.document.documentElement.getAttribute('data-theme')).toBe('dark');
+		expect(globalThis.document.querySelector('meta[name="theme-color"]')?.getAttribute('content')).toBe('#1a1a2e');
 
 		cleanup();
 	});
@@ -160,15 +184,13 @@ describe('theme store', () => {
 		vi.mocked(globalThis.localStorage.getItem).mockReturnValue('system');
 		const cleanup = initTheme();
 
-		// Initial state is light (matches = false in our mock setup)
-		expect(setAttributeMock).toHaveBeenCalledWith('data-theme', 'light');
+		expect(globalThis.document.documentElement.getAttribute('data-theme')).toBe('light');
 
-		// Change OS to dark mode
 		const mockMq = matchMediaMock();
 		mockMq.__simulateChange(true);
 
-		// Should have updated DOM to dark
-		expect(setAttributeMock).toHaveBeenCalledWith('data-theme', 'dark');
+		expect(globalThis.document.documentElement.getAttribute('data-theme')).toBe('dark');
+		expect(globalThis.document.querySelector('meta[name="theme-color"]')?.getAttribute('content')).toBe('#1a1a2e');
 
 		cleanup();
 	});
