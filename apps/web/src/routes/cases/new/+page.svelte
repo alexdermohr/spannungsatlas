@@ -255,11 +255,15 @@
               <span class="sr-only">Name Person {i + 1}</span>
               <input
                 id={`field-participant-${i}`}
+                name={`participant-alias-${i}`}
                 type="text"
                 bind:value={row.name}
                 oninput={() => handleParticipantInput(i)}
                 onblur={handleParticipantBlur}
-                placeholder="Name oder Pseudonym"
+                autocomplete="off"
+                autocapitalize="none"
+                autocorrect="off"
+                spellcheck="false"
               />
               {#if fieldErrors[`participant-${i}`]}<span class="field-error-msg">{fieldErrors[`participant-${i}`]}</span>{/if}
             </label>
