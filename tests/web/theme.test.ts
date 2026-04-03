@@ -195,6 +195,27 @@ describe('theme store', () => {
 		expect(mockMqSafari.removeListener).toHaveBeenCalled();
 	});
 
+	it('synchronizes body classes even when data-theme was already correct (pre-initialization)', () => {
+		vi.mocked(globalThis.localStorage.getItem).mockReturnValue('dark');
+		// Simulate app.html successfully setting data-theme and theme-color, but NO body classes
+		dummyRoot.__attributes.set('data-theme', 'dark');
+		dummyMeta.__attributes.set('content', '#1a1a2e');
+		dummyBody.__classes.clear(); // Ensure it starts empty
+
+		const cleanup = initTheme();
+
+		// Should not write to attributes again (idempotent)
+		expect(rootSetAttributeSpy).not.toHaveBeenCalled();
+		expect(metaSetAttributeSpy).not.toHaveBeenCalled();
+
+		// BUT should have called toggle to fix the body classes
+		expect(bodyClassToggleSpy).toHaveBeenCalled();
+		expect(globalThis.document.body.classList.contains('dark-mode')).toBe(true);
+		expect(globalThis.document.body.classList.contains('light-mode')).toBe(false);
+
+		cleanup();
+	});
+
 	it('does not re-apply DOM attributes if they are already correct (idempotency)', () => {
 		vi.mocked(globalThis.localStorage.getItem).mockReturnValue('dark');
 		// pre-populate dummy elements cleanly

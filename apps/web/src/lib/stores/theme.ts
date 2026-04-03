@@ -36,10 +36,16 @@ function apply(mode: ThemeMode): void {
 
 	if (currentTheme !== effective) {
 		document.documentElement.setAttribute(ATTRIBUTE, effective);
+	}
 
-		if (document.body) {
-			document.body.classList.toggle('light-mode', effective === 'light');
-			document.body.classList.toggle('dark-mode', effective === 'dark');
+	if (document.body) {
+		const isLight = effective === 'light';
+		const isDark = effective === 'dark';
+		if (document.body.classList.contains('light-mode') !== isLight) {
+			document.body.classList.toggle('light-mode', isLight);
+		}
+		if (document.body.classList.contains('dark-mode') !== isDark) {
+			document.body.classList.toggle('dark-mode', isDark);
 		}
 	}
 
