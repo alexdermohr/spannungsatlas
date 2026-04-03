@@ -6,6 +6,8 @@ status: active
 canonicality: navigation
 summary: "Navigationsdokument: geordnete Einstiegskarte in die Repo-Dokumentation."
 related_docs:
+  - perspektiven-blaupause
+  - perspective-record
   - masterplan
   - ux-ui-blaupause
   - icf-integration-blaupause
@@ -36,12 +38,19 @@ last_reviewed: "2026-03-29"
 | Dokument | Beschreibung |
 |----------|-------------|
 | [UX/UI-Blaupause](ux-ui-blaupause.md) | Konzeptionelle UX/UI-Prinzipien, Ebenen, Nutzerfluss, Informationsarchitektur |
+| [Perspektiven-Blaupause](blueprints/perspektiven-blaupause.md) | Konzept zur blinden Erfassung von Perspektiven zur Vermeidung von Konformität |
 
 ## Integrationen
 
 | Dokument | Beschreibung |
 |----------|-------------|
 | [ICF-Integrations-Blaupause](icf-integration-blaupause.md) | Konzeptionelle Integration von icf-tool in den Spannungsatlas |
+
+## Datenmodelle
+
+| Dokument | Beschreibung |
+|----------|-------------|
+| [PerspectiveRecord](reference/perspective-record.md) | Domain-Modell für unabhängige Perspektiven-Artefakte |
 
 ## Planung
 
