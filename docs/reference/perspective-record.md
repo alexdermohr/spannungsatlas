@@ -57,7 +57,7 @@ interface PerspectiveRecord {
 - `counterInterpretations`: Pflichtfeld (mindestens eine), um die innere Selbstkorrektur auch innerhalb einer einzelnen Perspektive zu erhalten.
 - `uncertainties`: Pflichtfeld (mindestens eine), damit Nichtwissen nicht nachträglich ausradiert wird.
 
-*Hinweis: Das Content-Modell schließt explizit an die bestehende Domain-Semantik (z. B. `Observation`, `Interpretation`, `Uncertainty`) des Reflexionskerns an, um keine konkurrierende Datenwahrheit zu erzeugen. Es ist jedoch auf die Erfassung der isolierten Ansicht einer einzelnen Person fokussiert.*
+*Hinweis: Das Content-Modell schließt explizit an die bestehende Domain-Semantik (z. B. `Observation`, `Interpretation`, `Uncertainty`) des Reflexionskerns an, um keine konkurrierende Datenwahrheit zu erzeugen. Es ist jedoch auf die Erfassung der isolierten Perspektive einer einzelnen Person fokussiert.*
 
 ## 3. Lebenszyklus
 
