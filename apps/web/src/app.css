@@ -72,16 +72,6 @@ body {
   color: var(--color-text);
 }
 
-body.light-mode {
-  background: var(--color-bg);
-  color: var(--color-text);
-}
-
-body.dark-mode {
-  background: var(--color-bg);
-  color: var(--color-text);
-}
-
 h1, h2, h3 {
   line-height: 1.3;
   margin-top: 0;

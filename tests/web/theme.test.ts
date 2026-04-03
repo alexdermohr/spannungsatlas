@@ -200,14 +200,14 @@ describe('theme store', () => {
 		// pre-populate dummy elements cleanly
 		dummyRoot.__attributes.set('data-theme', 'dark');
 		dummyMeta.__attributes.set('content', '#1a1a2e');
+		dummyBody.__classes.add('dark-mode');
 
 		const cleanup = initTheme();
 
 		// Check idempotency through setter spies
 		expect(rootSetAttributeSpy).not.toHaveBeenCalled();
 		expect(metaSetAttributeSpy).not.toHaveBeenCalled();
-		// bodyClassToggleSpy is always called, but it shouldn't have changed state if already correct
-		expect(globalThis.document.body.classList.contains('dark-mode')).toBe(true);
+		expect(bodyClassToggleSpy).not.toHaveBeenCalled();
 
 		expect(globalThis.document.documentElement.getAttribute('data-theme')).toBe('dark');
 		expect(globalThis.document.body.classList.contains('dark-mode')).toBe(true);
