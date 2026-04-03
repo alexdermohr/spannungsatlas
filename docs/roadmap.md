@@ -9,7 +9,8 @@ related_docs:
   - masterplan
   - ux-ui-blaupause
   - deploy-blaupause
-last_reviewed: "2026-03-29"
+  - perspektiven-blaupause
+last_reviewed: "2026-04-03"
 ---
 
 # Spannungsatlas – Ausbauplan nach Phase 0/1
@@ -32,6 +33,7 @@ Bevor neue Schichten gebaut werden, sollte die epistemische Disziplin — die kl
 - Evidenznähe / Evidenztyp in Erfassung und Ansicht sichtbar machen.
 - Gegen-Deutung und Unsicherheitsbegründung im Fallfluss strukturell verankern, nicht nur als optionaler Zusatz.
 - Revisionsfähigkeit sichtbar machen: Revisionen als dokumentierte Veränderung des Denkstands, nicht als stille Korrektur.
+- **Blinddokumentation von Perspektiven:** Einführung von unabhängigen, getrennt erfassten Perspektiven-Artefakten (`PerspectiveRecord`) ohne vorschnelle Vergleichslogik, um Anchoring im Team zu verhindern.
 
 ### Phase 2b — Explorationsraum
 
