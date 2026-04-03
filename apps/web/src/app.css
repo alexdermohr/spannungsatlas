@@ -54,13 +54,10 @@ html[data-theme='dark'] {
   box-sizing: border-box;
 }
 
-html[data-theme='light'] { color-scheme: light; }
-html[data-theme='dark']  { color-scheme: dark; }
+
 
 html {
   font-family: var(--font-sans);
-  color: var(--color-text);
-  background: var(--color-bg);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
 }
@@ -68,6 +65,16 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
+}
+
+body.light-mode {
+  color-scheme: light;
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+body.dark-mode {
+  color-scheme: dark;
   background: var(--color-bg);
   color: var(--color-text);
 }
