@@ -89,8 +89,8 @@ In der Fallansicht gibt es einen neuen Abschnitt **Perspektiven** mit:
 1. Eigene Rahmung / Kontextsicht
 2. Beobachtung
 3. Deutung
-4. Gegen-Deutung
-5. Unsicherheit
+4. Gegen-Deutungen
+5. Unsicherheiten
 
 Optional: Rolle / Funktion im Team, freies Kurzlabel.
 
@@ -99,7 +99,7 @@ Optional: Rolle / Funktion im Team, freies Kurzlabel.
 - **Invariante 2:** Eine Perspektive hat genau einen Autor.
 - **Invariante 3:** Eine Perspektive ist vor Commit privat.
 - **Invariante 4:** Nach Commit ist sie nicht still editierbar.
-- **Invariante 5:** Beobachtung, Deutung, Gegen-Deutung und Unsicherheit sind getrennte Felder.
+- **Invariante 5:** Beobachtung, Deutung, Gegen-Deutungen und Unsicherheiten sind getrennte Felder.
 - **Invariante 6:** Andere Perspektiven sind während der Blindphase nicht sichtbar.
 
 ## 9. Datenmodell-Anpassung
