@@ -4,6 +4,7 @@
   import { getCase } from '$lib/services/case-service.js';
   import { roleLabels, evidenceLabels } from '$lib/ui/labels.js';
   import type { Case, EvidenceType } from '$domain/types.js';
+  import { renderCaseAsMarkdown } from '$lib/services/case-report.js';
 
   let caseData: Case | null = $state(null);
   let loaded = $state(false);
@@ -21,6 +22,20 @@
     } catch {
       return iso;
     }
+  }
+
+
+  let copyFeedback = $state(false);
+
+  function copyReport() {
+    if (!caseData) return;
+    const md = renderCaseAsMarkdown(caseData);
+    navigator.clipboard.writeText(md).then(() => {
+      copyFeedback = true;
+      setTimeout(() => {
+        copyFeedback = false;
+      }, 2000);
+    });
   }
 
   onMount(() => {
@@ -140,6 +155,13 @@
         {/each}
       </section>
     {/if}
+
+
+    <div class="actions">
+      <button class="btn btn-secondary" onclick={copyReport}>
+        {copyFeedback ? '✓ Kopiert!' : 'Bericht kopieren'}
+      </button>
+    </div>
 
     <div class="actions">
       <a href="/" class="btn">← Zurück zur Übersicht</a>
