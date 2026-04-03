@@ -12,7 +12,7 @@ related_docs:
   - ux-ui-blaupause
   - icf-integration-blaupause
   - roadmap
-last_reviewed: "2026-03-29"
+last_reviewed: "2026-04-03"
 ---
 
 # Spannungsatlas – Dokumentationsübersicht
