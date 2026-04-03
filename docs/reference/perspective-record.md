@@ -1,23 +1,23 @@
 ---
 id: perspective-record
-title: "PerspectiveRecord - Domain Modell"
+title: "PerspectiveRecord – Referenz des Perspektiven-Datenmodells"
 doc_type: data-model
 status: draft
 canonicality: derived
-summary: "Referenzdokument für das PerspectiveRecord Datenmodell zur Erfassung isolierter Perspektiven."
+summary: "Referenzdokument für das Perspektiven-Datenmodell (PerspectiveRecord) zur Erfassung isolierter Ansichten."
 related_docs:
   - perspektiven-blaupause
   - masterplan
 last_reviewed: "2026-03-30"
 ---
 
-# PerspectiveRecord
+# PerspectiveRecord – Referenz des Perspektiven-Datenmodells
 
-Dieses Dokument definiert das Datenmodell für eine `PerspectiveRecord`-Entität. Es stellt sicher, dass Perspektiven als unabhängige Dokumentationsartefakte erhalten bleiben, um epistemische Isolation im Spannungsatlas zu garantieren.
+Dieses Dokument operationalisiert und konkretisiert das Datenmodell für die in der [Perspektiven-Blaupause](../blueprints/perspektiven-blaupause.md) festgelegte Entität `PerspectiveRecord`. Es stellt technisch sicher, dass Perspektiven als unabhängige Dokumentationsartefakte erhalten bleiben, um epistemische Isolation im Spannungsatlas zu garantieren.
 
 ## 1. Minimales Datenmodell
 
-Ein `PerspectiveRecord` fasst die Erkenntnisse eines einzelnen Teammitglieds zu einem bestimmten Fall zusammen.
+Ein `PerspectiveRecord` fasst die Erkenntnisse eines einzelnen Teammitglieds zu einem bestimmten Fall zusammen. Die konkrete Integration dieses Objekts in das bestehende Fallmodell wird bewusst nicht hier festgelegt.
 
 ```typescript
 interface PerspectiveRecord {

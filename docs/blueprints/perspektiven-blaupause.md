@@ -80,7 +80,10 @@ Fall
 In der Fallansicht gibt es einen neuen Abschnitt **Perspektiven** mit:
 - Anzahl vorhandener Perspektiven
 - Eigenem Button: „Neue Perspektive erfassen“
-- Keine Sichtbarkeit anderer Perspektiven-Inhalte vor dem eigenen Commit.
+- Phase 1 ist primär Erfassung, nicht inhaltliche Mehrperspektiven-Übersicht.
+- Vor eigenem Commit: keine fremden Inhalte sichtbar.
+- Nach eigenem Commit (Modus A – streng blind): ebenfalls keine fremden Inhalte sichtbar.
+- Wenn in der Liste Perspektiven auftauchen, dann höchstens als Metadaten / Anzahl, nicht als inhaltliche Einblicke.
 
 **Erfassungsformular:**
 1. Eigene Rahmung / Kontextsicht
@@ -90,10 +93,6 @@ In der Fallansicht gibt es einen neuen Abschnitt **Perspektiven** mit:
 5. Unsicherheit
 
 Optional: Rolle / Funktion im Team, freies Kurzlabel.
-
-**Sichtbarkeitslogik (Nach Commit):**
-Modus A – streng blind (Empfehlung für Phase 1):
-Auch nach Commit sieht man andere Perspektiven erst später, wenn eine entsprechende Phase freigeschaltet wird.
 
 ## 8. Dokumentationsinvarianten
 - **Invariante 1:** Eine Perspektive gehört genau zu einem Fall.
@@ -106,4 +105,4 @@ Auch nach Commit sieht man andere Perspektiven erst später, wenn eine entsprech
 ## 9. Datenmodell-Anpassung
 Neue Entität: `PerspectiveRecord`.
 Der `Case` wird erweitert um `perspectives: PerspectiveRecord[]`.
-Der bisherige Reflexionskern des Falls wird mittelfristig zum Fallrahmen oder der initialen Master-Perspektive überführt.
+**Offene Integrationsfrage:** Die Zukunft des bisherigen Reflexionskerns des Falls ist noch nicht endgültig entschieden. Ob dieser mittelfristig zum Fallrahmen oder zu einer initialen Master-Perspektive überführt wird, ist eine bewusst offengelassene Architekturentscheidung und wird separat bewertet.
