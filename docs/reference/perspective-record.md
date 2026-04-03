@@ -4,11 +4,11 @@ title: "PerspectiveRecord – Referenz des Perspektiven-Datenmodells"
 doc_type: data-model
 status: draft
 canonicality: derived
-summary: "Referenzdokument für das Perspektiven-Datenmodell (PerspectiveRecord) zur Erfassung isolierter Ansichten."
+summary: "Referenzdokument für das Perspektiven-Datenmodell (PerspectiveRecord) zur Erfassung isolierter Perspektiven."
 related_docs:
   - perspektiven-blaupause
   - masterplan
-last_reviewed: "2026-03-30"
+last_reviewed: "2026-04-03"
 ---
 
 # PerspectiveRecord – Referenz des Perspektiven-Datenmodells

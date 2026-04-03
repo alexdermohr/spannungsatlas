@@ -8,7 +8,7 @@ summary: "Konzept zur blinden und unabhängigen Erfassung von Perspektiven, um A
 related_docs:
   - masterplan
   - perspective-record
-last_reviewed: "2026-03-30"
+last_reviewed: "2026-04-03"
 ---
 
 # Perspektiven-Blaupause für Spannungsatlas
