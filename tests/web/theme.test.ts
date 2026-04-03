@@ -8,7 +8,7 @@ type DummyElement = {
 	setAttribute: (name: string, value: string) => void;
 	classList: {
 		contains: (name: string) => boolean;
-		toggle: (name: string, force?: boolean) => void;
+		toggle: (name: string, force?: boolean) => boolean;
 	};
 	__attributes: Map<string, string>;
 	__classes: Set<string>;
@@ -76,10 +76,13 @@ describe('theme store', () => {
 				classList: {
 					contains: vi.fn((name) => classes.has(name)),
 					toggle: vi.fn((name, force) => {
-						if (force === true || (force === undefined && !classes.has(name))) {
+						const shouldAdd = force === true || (force === undefined && !classes.has(name));
+						if (shouldAdd) {
 							classes.add(name);
+							return true;
 						} else {
 							classes.delete(name);
+							return false;
 						}
 					})
 				},
