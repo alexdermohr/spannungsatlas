@@ -38,6 +38,17 @@ function apply(mode: ThemeMode): void {
 		document.documentElement.setAttribute(ATTRIBUTE, effective);
 	}
 
+	if (document.body) {
+		const isLight = effective === 'light';
+		const isDark = effective === 'dark';
+		if (document.body.classList.contains('light-mode') !== isLight) {
+			document.body.classList.toggle('light-mode', isLight);
+		}
+		if (document.body.classList.contains('dark-mode') !== isDark) {
+			document.body.classList.toggle('dark-mode', isDark);
+		}
+	}
+
 	const meta = document.querySelector('meta[name="theme-color"]');
 	if (meta) {
 		const expectedColor = effective === 'dark' ? '#1a1a2e' : '#2d5a9b';
