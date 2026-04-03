@@ -235,7 +235,7 @@
     </div>
   {/if}
 
-  <form onsubmit={(e) => { e.preventDefault(); submit(); }} autocomplete="off">
+  <form onsubmit={(e) => { e.preventDefault(); submit(); }}>
     <!-- Sektion 1: Kontext -->
     <section class="card form-section">
       <h2>1. Kontext</h2>
