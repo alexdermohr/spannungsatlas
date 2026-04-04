@@ -4,11 +4,6 @@ import { parseImportToDocument } from './case-import.js';
 describe('case-import', () => {
   describe('extractJsonFromHtml', () => {
 
-    // We strictly follow the request to NOT mock DOMParser with a complex brittle mock.
-    // However, if DOMParser isn't available (like in our basic vitest run), we should let
-    // the fallback logic be tested naturally by the environment, or we can use the
-    // regex fallback explicitly if DOMParser is absent.
-
     it('finds data when attributes are in different order', () => {
       const html = `
         <!DOCTYPE html>
@@ -25,7 +20,7 @@ describe('case-import', () => {
       expect(doc.cases).toEqual([]);
     });
 
-    it('finds data when type has different casing (using fallback in node)', () => {
+    it('finds data when type has different casing', () => {
       const html = `
         <!DOCTYPE html>
         <html>
@@ -60,12 +55,12 @@ describe('case-import', () => {
       expect(() => parseImportToDocument(html, 'html')).toThrow('HTML-Import: Script-Tag mit Exportdaten nicht gefunden.');
     });
 
-    describe('fallback logic explicitly', () => {
+    describe('fallback logic', () => {
       let tempDOMParser: any;
 
       beforeAll(() => {
         tempDOMParser = (globalThis as any).DOMParser;
-        delete (globalThis as any).DOMParser; // Force disable DOMParser for this block to guarantee regex usage
+        delete (globalThis as any).DOMParser;
       });
 
       afterAll(() => {

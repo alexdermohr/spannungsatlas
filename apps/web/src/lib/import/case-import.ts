@@ -80,23 +80,27 @@ function extractJsonFromHtml(html: string): string {
   }
 
   // Fallback for environments without DOMParser or if DOMParser approach failed
-  const match = html.match(/<script[^>]*>([\s\S]*?)<\/script>/ig);
-  if (match) {
-    for (const tag of match) {
-       if (tag.includes('id="spannungsatlas-data"') || tag.includes("id='spannungsatlas-data'")) {
-         const typeMatch = tag.match(/type=["']([^"']+)["']/i);
-         if (typeMatch && typeMatch[1].trim().toLowerCase() === 'application/json') {
-            const contentMatch = tag.match(/>([\s\S]*?)<\/script>/i);
-            if (contentMatch) {
-                return contentMatch[1]
-                  .replaceAll('&lt;', '<')
-                  .replaceAll('&gt;', '>')
-                  .replaceAll('&quot;', '"')
-                  .replaceAll('&amp;', '&')
-                  .trim();
-            }
-         }
-       }
+  const scripts = html.match(/<script[^>]*>([\s\S]*?)<\/script>/ig);
+  if (scripts) {
+    for (const scriptTag of scripts) {
+      const openTagMatch = scriptTag.match(/<script([^>]*)>/i);
+      if (!openTagMatch) continue;
+      const openTag = openTagMatch[1];
+
+      const hasId = /id\s*=\s*["']spannungsatlas-data["']/i.test(openTag);
+      const typeMatch = openTag.match(/type\s*=\s*["']([^"']+)["']/i);
+
+      if (hasId && typeMatch && typeMatch[1].trim().toLowerCase() === 'application/json') {
+        const contentMatch = scriptTag.match(/>([\s\S]*?)<\/script>/i);
+        if (contentMatch) {
+          return contentMatch[1]
+            .replaceAll('&lt;', '<')
+            .replaceAll('&gt;', '>')
+            .replaceAll('&quot;', '"')
+            .replaceAll('&amp;', '&')
+            .trim();
+        }
+      }
     }
   }
   throw new Error('HTML-Import: Script-Tag mit Exportdaten nicht gefunden.');
