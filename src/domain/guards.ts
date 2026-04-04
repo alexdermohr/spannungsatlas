@@ -82,6 +82,8 @@ function isNonEmptyString(value: unknown): value is string {
  */
 const ISO_DATE_RE =
   /^\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?)?$/;
+const ISO_DATETIME_RE =
+  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?$/;
 
 /**
  * Checks that a value is a non-empty string matching the supported date profile:
@@ -96,6 +98,17 @@ export function guardIsoDateString(value: string, fieldName: string): GuardResul
   }
   if (!ISO_DATE_RE.test(value) || isNaN(Date.parse(value))) {
     return `${fieldName} must be a date-only string (YYYY-MM-DD) or full timestamp with seconds (YYYY-MM-DDTHH:MM:SS[.frac][Z|±HH:MM]), got "${value}".`;
+  }
+  return undefined;
+}
+
+/** Checks that a value is a full ISO date-time string (no date-only form). */
+export function guardDateTimeString(value: string, fieldName: string): GuardResult {
+  if (!isNonEmptyString(value)) {
+    return `${fieldName} must not be empty.`;
+  }
+  if (!ISO_DATETIME_RE.test(value) || isNaN(Date.parse(value))) {
+    return `${fieldName} must be a full timestamp (YYYY-MM-DDTHH:MM:SS[.frac][Z|±HH:MM]), got "${value}".`;
   }
   return undefined;
 }
@@ -376,6 +389,25 @@ export function guardRevisionFromTo(
   return undefined;
 }
 
+
+export function guardCaseSource(source: unknown): readonly string[] {
+  const errors: string[] = [];
+  if (typeof source !== 'object' || source === null || Array.isArray(source)) {
+    return ['Case source must be an object.'];
+  }
+
+  const sourceRecord = source as Record<string, unknown>;
+  if (!isNonEmptyString(sourceRecord.type)) errors.push('Case source type must not be empty.');
+  if (!('payload' in sourceRecord)) errors.push('Case source payload must be present.');
+  if (!isNonEmptyString(sourceRecord.importedAt)) {
+    errors.push('Case source importedAt must not be empty.');
+  } else {
+    const dateErr = guardDateTimeString(sourceRecord.importedAt, 'CaseSource.importedAt');
+    if (dateErr) errors.push(dateErr);
+  }
+  return errors;
+}
+
 // ---------------------------------------------------------------------------
 // Composite guard: validate a full ReflectionSnapshot
 // ---------------------------------------------------------------------------
@@ -438,6 +470,7 @@ export function guardCase(
     currentReflection: ReflectionSnapshot;
     revisions: readonly Revision[];
     observedAt?: string;
+    sources?: unknown;
   },
 ): readonly string[] {
   const errors: string[] = [];
@@ -477,6 +510,14 @@ export function guardCase(
     push(guardIsoDateString(rev.at, "Revision.at"));
     push(guardDriftType(rev.driftType));
     push(guardRevisionReason(rev.reason));
+  }
+
+  if (caseData.sources !== undefined && !Array.isArray(caseData.sources)) {
+    errors.push("sources must be an array when provided.");
+  } else if (Array.isArray(caseData.sources)) {
+    for (const source of caseData.sources) {
+      errors.push(...guardCaseSource(source));
+    }
   }
 
   return errors;

@@ -1,15 +1,12 @@
 import type { Case, CaseParticipant, Interpretation, Uncertainty } from '$domain/types.js';
+import { roleLabels } from '$lib/ui/labels.js';
 
 function normalizeText(value: string | undefined | null): string {
   return (value ?? '').trim();
 }
 
 function renderParticipantRole(role: string): string {
-  if (role === 'primary') return 'Primär';
-  if (role === 'secondary') return 'Sekundär';
-  if (role === 'contextual') return 'Kontextuell';
-  if (role === 'staff') return 'Fachkraft';
-  return role;
+  return roleLabels[role as keyof typeof roleLabels] ?? role;
 }
 
 function renderParticipants(participants: readonly CaseParticipant[]): string[] {

@@ -8,6 +8,7 @@ export interface PersistenceStore {
   loadCase(id: string): Case | null;
   saveCase(c: Case): void;
   deleteCase(id: string): void;
+  replaceAllCases(cases: readonly Case[]): void;
 }
 
 const STORAGE_KEY = 'spannungsatlas-cases';
@@ -141,6 +142,7 @@ function isValidCase(entry: unknown): entry is Case {
   if (!(obj['revisions'] as unknown[]).every((r) => typeof r === 'object' && r !== null)) return false;
   if (typeof obj['observation'] !== 'object' || obj['observation'] === null || Array.isArray(obj['observation'])) return false;
   if (typeof obj['currentReflection'] !== 'object' || obj['currentReflection'] === null || Array.isArray(obj['currentReflection'])) return false;
+  if (obj['sources'] !== undefined && !Array.isArray(obj['sources'])) return false;
 
   return guardCase({
     id: obj['id'] as string,
@@ -150,6 +152,7 @@ function isValidCase(entry: unknown): entry is Case {
     currentReflection: obj['currentReflection'] as ReflectionSnapshot,
     revisions: obj['revisions'] as readonly Revision[],
     ...(typeof obj['observedAt'] === 'string' ? { observedAt: obj['observedAt'] } : {}),
+    ...(Array.isArray(obj['sources']) ? { sources: obj['sources'] as Case['sources'] } : {}),
   }).length === 0;
 }
 
@@ -203,5 +206,9 @@ export const localStorageStore: PersistenceStore = {
 
   deleteCase(id: string): void {
     writeCases(readCases().filter((c) => c.id !== id));
+  },
+
+  replaceAllCases(cases: readonly Case[]): void {
+    writeCases([...cases]);
   }
 };

@@ -133,6 +133,13 @@ export interface Revision {
   readonly to: ReflectionSnapshot;
 }
 
+
+export interface CaseSource {
+  readonly type: string;
+  readonly payload: unknown;
+  readonly importedAt: string;
+}
+
 /**
  * A case — the central observation/reflection unit.
  * MASTERPLAN §3.1 + UX-Blaupause §7.
@@ -145,4 +152,5 @@ export interface Case {
   readonly observation: Observation;
   readonly currentReflection: ReflectionSnapshot;
   readonly revisions: readonly Revision[];
+  readonly sources?: readonly CaseSource[];
 }
