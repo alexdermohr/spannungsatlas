@@ -55,24 +55,32 @@ describe('case-import', () => {
       expect(() => parseImportToDocument(html, 'html')).toThrow('HTML-Import: Script-Tag mit Exportdaten nicht gefunden.');
     });
 
-    describe('fallback logic', () => {
+    describe('fallback logic explicitly', () => {
       let originalDOMParser: typeof globalThis.DOMParser | undefined;
-      let wasDeleted = false;
 
       beforeAll(() => {
         if (Reflect.has(globalThis, 'DOMParser')) {
            originalDOMParser = globalThis.DOMParser;
-           wasDeleted = Reflect.deleteProperty(globalThis, 'DOMParser');
         }
+
+        // Force DOMParser to throw so we deterministically enter the catch block and run the Regex fallback.
+        // @ts-ignore
+        globalThis.DOMParser = class DOMParser {
+          parseFromString() {
+            throw new Error('Deterministic fallback test error');
+          }
+        };
       });
 
       afterAll(() => {
-        if (wasDeleted && originalDOMParser !== undefined) {
+        if (originalDOMParser !== undefined) {
            globalThis.DOMParser = originalDOMParser;
+        } else {
+           Reflect.deleteProperty(globalThis, 'DOMParser');
         }
       });
 
-      it('finds data when id is before type', () => {
+      it('finds data via fallback when id is before type', () => {
         const html = `
           <!DOCTYPE html>
           <html>
@@ -88,7 +96,7 @@ describe('case-import', () => {
         expect(doc.cases).toEqual([]);
       });
 
-      it('finds data when type is before id', () => {
+      it('finds data via fallback when type is before id', () => {
         const html = `
           <!DOCTYPE html>
           <html>
@@ -104,7 +112,7 @@ describe('case-import', () => {
         expect(doc.cases).toEqual([]);
       });
 
-      it('fails gracefully if type is incorrect', () => {
+      it('fails gracefully in fallback if type is incorrect', () => {
         const html = `
           <!DOCTYPE html>
           <html>
