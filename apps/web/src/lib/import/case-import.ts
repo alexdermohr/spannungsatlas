@@ -54,6 +54,16 @@ function extractJsonFromMarkdown(markdown: string): string {
   return fenced[1].trim();
 }
 
+
+function unescapeHtml(text: string): string {
+  return text
+    .replaceAll('&lt;', '<')
+    .replaceAll('&gt;', '>')
+    .replaceAll('&quot;', '"')
+    .replaceAll('&amp;', '&')
+    .trim();
+}
+
 function extractJsonFromHtml(html: string): string {
   if (typeof globalThis !== 'undefined' && 'DOMParser' in globalThis) {
     try {
@@ -93,12 +103,7 @@ function extractJsonFromHtml(html: string): string {
       if (hasId && typeMatch && typeMatch[1].trim().toLowerCase() === 'application/json') {
         const contentMatch = scriptTag.match(/>([\s\S]*?)<\/script>/i);
         if (contentMatch && contentMatch[1].trim()) {
-          return contentMatch[1]
-            .replaceAll('&lt;', '<')
-            .replaceAll('&gt;', '>')
-            .replaceAll('&quot;', '"')
-            .replaceAll('&amp;', '&')
-            .trim();
+          return unescapeHtml(contentMatch[1]);
         }
       }
     }

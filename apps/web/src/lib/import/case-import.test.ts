@@ -57,19 +57,19 @@ describe('case-import', () => {
 
     describe('fallback logic', () => {
       let originalDOMParser: typeof globalThis.DOMParser | undefined;
+      let wasDeleted = false;
 
       beforeAll(() => {
-        // We temporarily disable DOMParser to strictly test the regex fallback branch
         const globalObj = globalThis as { DOMParser?: unknown };
-        originalDOMParser = globalObj.DOMParser as typeof globalThis.DOMParser;
         if (Reflect.has(globalObj, 'DOMParser')) {
-           Reflect.deleteProperty(globalObj, 'DOMParser');
+           originalDOMParser = globalObj.DOMParser as typeof globalThis.DOMParser;
+           wasDeleted = Reflect.deleteProperty(globalObj, 'DOMParser');
         }
       });
 
       afterAll(() => {
         const globalObj = globalThis as { DOMParser?: unknown };
-        if (originalDOMParser !== undefined) {
+        if (wasDeleted) {
            globalObj.DOMParser = originalDOMParser;
         }
       });
