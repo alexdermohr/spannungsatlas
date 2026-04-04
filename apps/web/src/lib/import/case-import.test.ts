@@ -74,7 +74,23 @@ describe('case-import', () => {
         }
       });
 
-      it('falls back to regex if DOMParser is unavailable', () => {
+      it('falls back to regex if DOMParser is unavailable (id before type)', () => {
+        const html = `
+          <!DOCTYPE html>
+          <html>
+          <body>
+            <script id="spannungsatlas-data" type="application/json">
+              {"format": "spannungsatlas-case-export", "version": "1.0", "appVersion": "0.1.0", "exportedAt": "2024-01-01T00:00:00.000Z", "cases": []}
+            </script>
+          </body>
+          </html>
+        `;
+        const doc = parseImportToDocument(html, 'html');
+        expect(doc.format).toBe('spannungsatlas-case-export');
+        expect(doc.cases).toEqual([]);
+      });
+
+      it('falls back to regex if DOMParser is unavailable (type before id)', () => {
         const html = `
           <!DOCTYPE html>
           <html>
@@ -88,6 +104,20 @@ describe('case-import', () => {
         const doc = parseImportToDocument(html, 'html');
         expect(doc.format).toBe('spannungsatlas-case-export');
         expect(doc.cases).toEqual([]);
+      });
+
+      it('fails gracefully in fallback if type is incorrect', () => {
+        const html = `
+          <!DOCTYPE html>
+          <html>
+          <body>
+            <script type="text/javascript" id="spannungsatlas-data">
+              {"format": "spannungsatlas-case-export", "version": "1.0", "appVersion": "0.1.0", "exportedAt": "2024-01-01T00:00:00.000Z", "cases": []}
+            </script>
+          </body>
+          </html>
+        `;
+        expect(() => parseImportToDocument(html, 'html')).toThrow('HTML-Import: Script-Tag mit Exportdaten nicht gefunden.');
       });
     });
   });
