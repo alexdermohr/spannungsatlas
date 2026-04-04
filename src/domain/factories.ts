@@ -19,6 +19,8 @@ import type {
   EvidenceType,
   Interpretation,
   Observation,
+  Perspective,
+  PerspectiveContent,
   ReflectionSnapshot,
   Revision,
   TensionEdge,
@@ -50,6 +52,8 @@ import {
   guardRevisionFromTo,
   guardReflectionSnapshot,
   guardCase,
+  guardPerspective,
+  guardPerspectiveContentComplete,
 } from "./guards.js";
 
 // ---------------------------------------------------------------------------
@@ -299,4 +303,71 @@ export function createCase(input: CreateCaseInput): Case {
   throwIfErrors(guardCase(caseObj));
 
   return caseObj;
+}
+
+// ---------------------------------------------------------------------------
+// Perspective (Blindheits-Architektur)
+// ---------------------------------------------------------------------------
+
+export interface CreatePerspectiveInput {
+  id: string;
+  case_id: string;
+  actor_id: string;
+  content?: Partial<PerspectiveContent>;
+  created_at?: string;
+}
+
+/**
+ * Creates a new draft perspective. Content fields are optional at creation
+ * time — they can be filled incrementally before commit.
+ */
+export function createPerspective(input: CreatePerspectiveInput): Perspective {
+  const now = input.created_at ?? new Date().toISOString();
+
+  const perspective: Perspective = {
+    id: input.id,
+    case_id: input.case_id,
+    actor_id: input.actor_id,
+    status: "draft",
+    content: {
+      observation: input.content?.observation,
+      interpretation: input.content?.interpretation,
+      counterInterpretation: input.content?.counterInterpretation,
+      uncertainty: input.content?.uncertainty,
+    },
+    created_at: now,
+  };
+
+  throwIfErrors(guardPerspective(perspective));
+
+  return perspective;
+}
+
+/**
+ * Commits a draft perspective. All content fields must be non-empty.
+ * After commit the perspective is immutable and visible to other actors.
+ *
+ * @throws Error if content is incomplete or perspective is already committed.
+ */
+export function commitPerspective(perspective: Perspective): Perspective {
+  if (perspective.status === "committed") {
+    throw new Error("Perspective is already committed.");
+  }
+
+  const contentErrors = guardPerspectiveContentComplete(perspective.content);
+  if (contentErrors.length > 0) {
+    throw new Error(contentErrors.join(" | "));
+  }
+
+  const now = new Date().toISOString();
+
+  const committed: Perspective = {
+    ...perspective,
+    status: "committed",
+    committed_at: now,
+  };
+
+  throwIfErrors(guardPerspective(committed));
+
+  return committed;
 }

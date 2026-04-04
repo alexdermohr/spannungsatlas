@@ -49,6 +49,16 @@ export type TensionDirection = "unidirectional" | "bidirectional";
 /** Allowed participant roles. */
 export type ParticipantRole = "primary" | "secondary" | "staff" | "contextual";
 
+/**
+ * Lifecycle status of an independent perspective.
+ *
+ * - "draft":     Being authored; visible only to the owning actor.
+ *                Content may be incomplete. No other actor may read it.
+ * - "committed": Finalized and immutable. Visible to all actors on the case
+ *                once comparison is allowed (≥ 2 committed perspectives).
+ */
+export type PerspectiveStatus = "draft" | "committed";
+
 // ---------------------------------------------------------------------------
 // Domain Interfaces
 // ---------------------------------------------------------------------------
@@ -153,4 +163,43 @@ export interface Case {
   readonly currentReflection: ReflectionSnapshot;
   readonly revisions: readonly Revision[];
   readonly sources?: readonly CaseSource[];
+}
+
+// ---------------------------------------------------------------------------
+// Independent Perspective (Blindheits-Architektur)
+// ---------------------------------------------------------------------------
+
+/**
+ * Content of an independent perspective — the structured fields an actor
+ * fills in isolation, without seeing other actors' perspectives.
+ *
+ * All fields are optional while status is "draft" (partial save).
+ * All fields must be non-empty when the perspective is committed.
+ */
+export interface PerspectiveContent {
+  readonly observation?: string;
+  readonly interpretation?: string;
+  readonly counterInterpretation?: string;
+  readonly uncertainty?: string;
+}
+
+/**
+ * An independent perspective authored by a single actor for a case.
+ *
+ * Invariants (enforced by guards + access control, not only UI):
+ *   - While status = "draft": readable ONLY by the owning actor.
+ *     No metadata about other actors or perspectives is exposed.
+ *   - Transition to "committed": requires all content fields non-empty.
+ *     committed_at is set; content becomes immutable.
+ *   - After commit: readable by any actor, but not modifiable.
+ *   - Comparison mode requires ≥ 2 committed perspectives on the same case.
+ */
+export interface Perspective {
+  readonly id: string;
+  readonly case_id: string;
+  readonly actor_id: string;
+  readonly status: PerspectiveStatus;
+  readonly content: PerspectiveContent;
+  readonly created_at: string;
+  readonly committed_at?: string;
 }
