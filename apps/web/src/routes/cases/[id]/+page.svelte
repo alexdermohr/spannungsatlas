@@ -3,10 +3,12 @@
   import { onMount } from 'svelte';
   import { getCase } from '$lib/services/case-service.js';
   import { roleLabels, evidenceLabels } from '$lib/ui/labels.js';
+  import { renderCaseAsMarkdown } from '$lib/services/case-report.js';
   import type { Case, EvidenceType } from '$domain/types.js';
 
   let caseData: Case | null = $state(null);
   let loaded = $state(false);
+  let copyFeedback = $state('');
 
   function evidenceBadgeClass(t: EvidenceType): string {
     return `badge badge-${t}`;
@@ -21,6 +23,24 @@
     } catch {
       return iso;
     }
+  }
+
+
+
+  async function copyReport(): Promise<void> {
+    if (!caseData) return;
+
+    try {
+      const markdown = renderCaseAsMarkdown(caseData);
+      await navigator.clipboard.writeText(markdown);
+      copyFeedback = 'Kopiert';
+    } catch {
+      copyFeedback = 'Kopieren fehlgeschlagen';
+    }
+
+    setTimeout(() => {
+      copyFeedback = '';
+    }, 1500);
   }
 
   onMount(() => {
@@ -42,7 +62,9 @@
   {:else}
     <div class="case-header-row">
       <h1>Fall <code>{caseData.id.slice(0, 8)}</code></h1>
-      <span class="case-date">{formatDate(caseData.currentReflection.reflectedAt)}</span>
+      {#if caseData.currentReflection?.reflectedAt}
+        <span class="case-date">{formatDate(caseData.currentReflection.reflectedAt)}</span>
+      {/if}
     </div>
 
     <!-- Kontext -->
@@ -67,50 +89,56 @@
     </section>
 
     <!-- Deutung -->
-    <section class="card section">
-      <h2>Deutung</h2>
-      <p>{caseData.currentReflection.interpretation.text}</p>
-      <span class={evidenceBadgeClass(caseData.currentReflection.interpretation.evidenceType)}>
-        {evidenceLabels[caseData.currentReflection.interpretation.evidenceType]}
-      </span>
-    </section>
+    {#if caseData.currentReflection?.interpretation}
+      <section class="card section">
+        <h2>Deutung</h2>
+        <p>{caseData.currentReflection.interpretation.text}</p>
+        <span class={evidenceBadgeClass(caseData.currentReflection.interpretation.evidenceType)}>
+          {evidenceLabels[caseData.currentReflection.interpretation.evidenceType]}
+        </span>
+      </section>
+    {/if}
 
     <!-- Gegen-Deutungen -->
-    <section class="card section">
-      <h2>Gegen-Deutungen</h2>
-      {#each caseData.currentReflection.counterInterpretations as counter, i}
-        <div class="counter-item">
-          <strong class="sub-heading">Gegen-Deutung {i + 1}</strong>
-          <p>{counter.text}</p>
-          <span class={evidenceBadgeClass(counter.evidenceType)}>
-            {evidenceLabels[counter.evidenceType]}
-          </span>
-        </div>
-      {/each}
-    </section>
+    {#if caseData.currentReflection?.counterInterpretations?.length}
+      <section class="card section">
+        <h2>Gegen-Deutungen</h2>
+        {#each caseData.currentReflection.counterInterpretations as counter, i}
+          <div class="counter-item">
+            <strong class="sub-heading">Gegen-Deutung {i + 1}</strong>
+            <p>{counter.text}</p>
+            <span class={evidenceBadgeClass(counter.evidenceType)}>
+              {evidenceLabels[counter.evidenceType]}
+            </span>
+          </div>
+        {/each}
+      </section>
+    {/if}
 
     <!-- Unsicherheiten -->
-    <section class="card section">
-      <h2>Unsicherheiten</h2>
-      {#each caseData.currentReflection.uncertainties as u, i}
-        <div class="uncertainty-item">
-          <strong class="sub-heading">Unsicherheit {i + 1}</strong>
-          <div class="uncertainty-level">
-            <strong>Stufe {u.level}</strong> / 5
+    {#if caseData.currentReflection?.uncertainties?.length}
+      <section class="card section">
+        <h2>Unsicherheiten</h2>
+        {#each caseData.currentReflection.uncertainties as u, i}
+          <div class="uncertainty-item">
+            <strong class="sub-heading">Unsicherheit {i + 1}</strong>
+            <div class="uncertainty-level">
+              <strong>Stufe {u.level}</strong> / 5
+            </div>
+            <div class="uncertainty-bar">
+              <div
+                class="uncertainty-fill"
+                style="width: {(u.level / 5) * 100}%"
+              ></div>
+            </div>
+            <p class="rationale">{u.rationale}</p>
           </div>
-          <div class="uncertainty-bar">
-            <div
-              class="uncertainty-fill"
-              style="width: {(u.level / 5) * 100}%"
-            ></div>
-          </div>
-          <p class="rationale">{u.rationale}</p>
-        </div>
-      {/each}
-    </section>
+        {/each}
+      </section>
+    {/if}
 
     <!-- Spannungen -->
-    {#if caseData.currentReflection.tensions.length > 0}
+    {#if caseData.currentReflection?.tensions?.length}
       <section class="card section">
         <h2>Spannungen</h2>
         {#each caseData.currentReflection.tensions as tension}
@@ -142,6 +170,10 @@
     {/if}
 
     <div class="actions">
+      <button type="button" class="btn" onclick={copyReport}>Bericht kopieren</button>
+      {#if copyFeedback}
+        <span class="copy-feedback" role="status" aria-live="polite" aria-atomic="true">{copyFeedback}</span>
+      {/if}
       <a href="/" class="btn">← Zurück zur Übersicht</a>
     </div>
   {/if}
@@ -247,6 +279,14 @@
   }
   .actions {
     margin: 1.5rem 0 2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+  .copy-feedback {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
   }
   .counter-item {
     margin-bottom: 0.75rem;
