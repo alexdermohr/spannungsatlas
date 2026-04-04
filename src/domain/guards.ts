@@ -43,6 +43,7 @@ import type {
   ReflectionSnapshot,
   Revision,
   TensionEdge,
+  CaseSource,
 } from "./types.js";
 
 // ---------------------------------------------------------------------------
@@ -376,6 +377,20 @@ export function guardRevisionFromTo(
   return undefined;
 }
 
+
+export function guardCaseSource(source: CaseSource): readonly string[] {
+  const errors: string[] = [];
+  if (!isNonEmptyString(source.type)) errors.push('Case source type must not be empty.');
+  if (source.payload === undefined) errors.push('Case source payload must be present.');
+  if (!isNonEmptyString(source.importedAt)) {
+    errors.push('Case source importedAt must not be empty.');
+  } else {
+    const dateErr = guardIsoDateString(source.importedAt, 'CaseSource.importedAt');
+    if (dateErr) errors.push(dateErr);
+  }
+  return errors;
+}
+
 // ---------------------------------------------------------------------------
 // Composite guard: validate a full ReflectionSnapshot
 // ---------------------------------------------------------------------------
@@ -438,6 +453,7 @@ export function guardCase(
     currentReflection: ReflectionSnapshot;
     revisions: readonly Revision[];
     observedAt?: string;
+    sources?: readonly CaseSource[];
   },
 ): readonly string[] {
   const errors: string[] = [];
@@ -477,6 +493,12 @@ export function guardCase(
     push(guardIsoDateString(rev.at, "Revision.at"));
     push(guardDriftType(rev.driftType));
     push(guardRevisionReason(rev.reason));
+  }
+
+  if (caseData.sources !== undefined) {
+    for (const source of caseData.sources) {
+      errors.push(...guardCaseSource(source));
+    }
   }
 
   return errors;

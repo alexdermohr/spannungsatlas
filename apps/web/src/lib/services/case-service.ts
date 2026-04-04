@@ -59,3 +59,7 @@ export function saveCaseData(caseData: Case): void {
 export function deleteCase(id: string): void {
   store.deleteCase(id);
 }
+
+export function replaceAllCases(cases: readonly Case[]): void {
+  store.replaceAllCases(cases);
+}

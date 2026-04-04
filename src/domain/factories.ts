@@ -25,6 +25,7 @@ import type {
   Uncertainty,
   UncertaintyLevel,
   DriftType,
+  CaseSource,
 } from "./types.js";
 
 import {
@@ -255,6 +256,7 @@ export interface CreateCaseInput {
   observation: CreateObservationInput;
   currentReflection: CreateReflectionSnapshotInput;
   revisions?: CreateRevisionInput[];
+  sources?: CaseSource[];
 }
 
 export function createCase(input: CreateCaseInput): Case {
@@ -290,6 +292,7 @@ export function createCase(input: CreateCaseInput): Case {
     observation,
     currentReflection,
     revisions,
+    ...(input.sources ? { sources: [...input.sources] } : {}),
   };
 
   // Run composite guard as final sanity check
