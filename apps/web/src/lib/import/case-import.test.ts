@@ -55,6 +55,58 @@ describe('case-import', () => {
       expect(() => parseImportToDocument(html, 'html')).toThrow('HTML-Import: Script-Tag mit Exportdaten nicht gefunden.');
     });
 
+        describe('DOMParser success path', () => {
+      let originalDOMParser: typeof globalThis.DOMParser | undefined;
+
+      beforeAll(() => {
+        if (Reflect.has(globalThis, 'DOMParser')) {
+           originalDOMParser = globalThis.DOMParser;
+        }
+
+        // Use a minimal local mock that strictly succeeds to test unescaping behavior
+        // @ts-ignore
+        globalThis.DOMParser = class DOMParser {
+          parseFromString(html: string) {
+            return {
+              querySelector: (selector: string) => {
+                if (selector === 'script#spannungsatlas-data') {
+                  return {
+                    getAttribute: (attr: string) => attr === 'type' ? 'application/json' : null,
+                    textContent: '{&quot;format&quot;: &quot;spannungsatlas-case-export&quot;, &quot;version&quot;: &quot;1.0&quot;, &quot;appVersion&quot;: &quot;0.1.0&quot;, &quot;exportedAt&quot;: &quot;2024-01-01T00:00:00.000Z&quot;, &quot;cases&quot;: []}'
+                  };
+                }
+                return null;
+              }
+            };
+          }
+        };
+      });
+
+      afterAll(() => {
+        if (originalDOMParser !== undefined) {
+           globalThis.DOMParser = originalDOMParser;
+        } else {
+           Reflect.deleteProperty(globalThis, 'DOMParser');
+        }
+      });
+
+      it('finds and unescapes data successfully when DOMParser is available', () => {
+        const html = `
+          <!DOCTYPE html>
+          <html>
+          <body>
+            <script id="spannungsatlas-data" type="application/json">
+              // DOMParser mock ignores this HTML content and yields the encoded one directly
+            </script>
+          </body>
+          </html>
+        `;
+        const doc = parseImportToDocument(html, 'html');
+        expect(doc.format).toBe('spannungsatlas-case-export');
+        expect(doc.cases).toEqual([]);
+      });
+    });
+
     describe('fallback logic explicitly', () => {
       let originalDOMParser: typeof globalThis.DOMParser | undefined;
 

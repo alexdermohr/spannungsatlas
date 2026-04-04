@@ -1,8 +1,23 @@
-export const APP_RELEASE =
-  typeof __APP_VERSION__ !== 'undefined' && __APP_VERSION__
-    ? typeof __APP_VERSION__ === 'string'
-      ? __APP_VERSION__
-      : typeof __APP_VERSION__ === 'object' && 'release' in __APP_VERSION__ && typeof (__APP_VERSION__ as any).release === 'string'
-        ? (__APP_VERSION__ as any).release
-        : '0.1.0'
-    : '0.1.0';
+function resolveAppRelease(): string {
+  const value: unknown = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : undefined;
+
+  if (typeof value === 'string' && value.trim()) {
+    return value.trim();
+  }
+
+  if (
+    typeof value === 'object' &&
+    value !== null &&
+    'release' in value &&
+    typeof (value as { release?: unknown }).release === 'string'
+  ) {
+    const release = (value as { release: string }).release.trim();
+    if (release) {
+      return release;
+    }
+  }
+
+  return '0.1.0';
+}
+
+export const APP_RELEASE = resolveAppRelease();
