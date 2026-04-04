@@ -134,6 +134,26 @@ export interface Revision {
 }
 
 
+
+export type PerspectiveStatus = "draft" | "committed";
+
+export interface PerspectiveContent {
+  readonly observation: Observation;
+  readonly interpretation: Interpretation;
+  readonly counterInterpretations: readonly Interpretation[];
+  readonly uncertainties: readonly Uncertainty[];
+}
+
+export interface PerspectiveRecord {
+  readonly id: string;
+  readonly caseId: string;
+  readonly actorId: string;
+  readonly status: PerspectiveStatus;
+  readonly content: PerspectiveContent;
+  readonly createdAt: string;
+  readonly committedAt?: string;
+}
+
 export interface CaseSource {
   readonly type: string;
   readonly payload: unknown;
@@ -153,4 +173,5 @@ export interface Case {
   readonly currentReflection: ReflectionSnapshot;
   readonly revisions: readonly Revision[];
   readonly sources?: readonly CaseSource[];
+  readonly perspectives?: readonly PerspectiveRecord[];
 }

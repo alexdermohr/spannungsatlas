@@ -1,5 +1,5 @@
 import type { Case } from '$domain/types.js';
-import type { CaseParticipant, Observation, ReflectionSnapshot, Revision } from '$domain/types.js';
+import type { CaseParticipant, Observation, ReflectionSnapshot, Revision, PerspectiveRecord } from '$domain/types.js';
 import { guardCase } from '$domain/guards.js';
 
 /** Abstraction over case persistence — swap localStorage for IndexedDB or API. */
@@ -143,6 +143,7 @@ function isValidCase(entry: unknown): entry is Case {
   if (typeof obj['observation'] !== 'object' || obj['observation'] === null || Array.isArray(obj['observation'])) return false;
   if (typeof obj['currentReflection'] !== 'object' || obj['currentReflection'] === null || Array.isArray(obj['currentReflection'])) return false;
   if (obj['sources'] !== undefined && !Array.isArray(obj['sources'])) return false;
+  if (obj['perspectives'] !== undefined && !Array.isArray(obj['perspectives'])) return false;
 
   return guardCase({
     id: obj['id'] as string,
@@ -152,6 +153,7 @@ function isValidCase(entry: unknown): entry is Case {
     currentReflection: obj['currentReflection'] as ReflectionSnapshot,
     revisions: obj['revisions'] as readonly Revision[],
     ...(typeof obj['observedAt'] === 'string' ? { observedAt: obj['observedAt'] } : {}),
+    ...(Array.isArray(obj['perspectives']) ? { perspectives: obj['perspectives'] as Case['perspectives'] } : {}),
     ...(Array.isArray(obj['sources']) ? { sources: obj['sources'] as Case['sources'] } : {}),
   }).length === 0;
 }

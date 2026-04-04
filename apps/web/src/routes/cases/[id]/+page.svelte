@@ -1,7 +1,7 @@
 <script lang="ts">
   import { page } from '$app/state';
   import { onMount } from 'svelte';
-  import { getCase } from '$lib/services/case-service.js';
+  import { getCase, getCommittedPerspectivesForCase } from '$lib/services/case-service.js';
   import { roleLabels, evidenceLabels } from '$lib/ui/labels.js';
   import { renderCaseAsMarkdown } from '$lib/services/case-report.js';
   import type { Case, EvidenceType } from '$domain/types.js';
@@ -9,6 +9,7 @@
   let caseData: Case | null = $state(null);
   let loaded = $state(false);
   let copyFeedback = $state('');
+  let perspectives: PerspectiveRecord[] = $state([]);
 
   function evidenceBadgeClass(t: EvidenceType): string {
     return `badge badge-${t}`;
@@ -46,6 +47,7 @@
   onMount(() => {
     const id = page.params.id ?? '';
     caseData = getCase(id);
+    perspectives = getCommittedPerspectivesForCase(id);
     loaded = true;
   });
 </script>
@@ -76,6 +78,19 @@
         {#each caseData.participants as p}
           <span class="participant">{p.id}{#if p.role} ({roleLabels[p.role] ?? p.role}){/if}</span>
         {/each}
+      </div>
+    </section>
+
+
+    <!-- Perspektiven Status -->
+    <section class="card section">
+      <h2>Perspektiven (Isolation Phase)</h2>
+      <p>Committet: <strong>{perspectives.length}</strong> / {caseData.participants.length}</p>
+      <div class="actions" style="margin-top: 1rem; margin-bottom: 0;">
+        <a href="/cases/{caseData.id}/perspectives/new" class="btn btn-primary">Meine Perspektive hinzufügen</a>
+        {#if perspectives.length >= 2}
+          <a href="/cases/{caseData.id}/compare" class="btn">Zum Vergleichsmodus</a>
+        {/if}
       </div>
     </section>
 
