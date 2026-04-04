@@ -56,20 +56,25 @@ describe('case-import', () => {
     });
 
     describe('fallback logic', () => {
-      let tempDOMParser: any;
+      let originalDOMParser: typeof globalThis.DOMParser | undefined;
 
       beforeAll(() => {
-        tempDOMParser = (globalThis as any).DOMParser;
-        delete (globalThis as any).DOMParser;
-      });
-
-      afterAll(() => {
-        if (tempDOMParser) {
-           (globalThis as any).DOMParser = tempDOMParser;
+        // We temporarily disable DOMParser to strictly test the regex fallback branch
+        const globalObj = globalThis as { DOMParser?: unknown };
+        originalDOMParser = globalObj.DOMParser as typeof globalThis.DOMParser;
+        if (Reflect.has(globalObj, 'DOMParser')) {
+           Reflect.deleteProperty(globalObj, 'DOMParser');
         }
       });
 
-      it('falls back to regex if DOMParser is unavailable (id before type)', () => {
+      afterAll(() => {
+        const globalObj = globalThis as { DOMParser?: unknown };
+        if (originalDOMParser !== undefined) {
+           globalObj.DOMParser = originalDOMParser;
+        }
+      });
+
+      it('finds data when id is before type', () => {
         const html = `
           <!DOCTYPE html>
           <html>
@@ -85,7 +90,7 @@ describe('case-import', () => {
         expect(doc.cases).toEqual([]);
       });
 
-      it('falls back to regex if DOMParser is unavailable (type before id)', () => {
+      it('finds data when type is before id', () => {
         const html = `
           <!DOCTYPE html>
           <html>
@@ -101,7 +106,7 @@ describe('case-import', () => {
         expect(doc.cases).toEqual([]);
       });
 
-      it('fails gracefully in fallback if type is incorrect', () => {
+      it('fails gracefully if type is incorrect', () => {
         const html = `
           <!DOCTYPE html>
           <html>

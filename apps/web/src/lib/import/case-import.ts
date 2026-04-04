@@ -64,7 +64,7 @@ function extractJsonFromHtml(html: string): string {
         const type = (script.getAttribute('type') || '').trim().toLowerCase();
         if (type === 'application/json') {
           const content = script.textContent;
-          if (content) {
+          if (content && content.trim()) {
             return content
               .replaceAll('&lt;', '<')
               .replaceAll('&gt;', '>')
@@ -92,7 +92,7 @@ function extractJsonFromHtml(html: string): string {
 
       if (hasId && typeMatch && typeMatch[1].trim().toLowerCase() === 'application/json') {
         const contentMatch = scriptTag.match(/>([\s\S]*?)<\/script>/i);
-        if (contentMatch) {
+        if (contentMatch && contentMatch[1].trim()) {
           return contentMatch[1]
             .replaceAll('&lt;', '<')
             .replaceAll('&gt;', '>')
