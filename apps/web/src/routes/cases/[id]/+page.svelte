@@ -172,7 +172,7 @@
     <div class="actions">
       <button type="button" class="btn" onclick={copyReport}>Bericht kopieren</button>
       {#if copyFeedback}
-        <span class="copy-feedback">{copyFeedback}</span>
+        <span class="copy-feedback" role="status" aria-live="polite" aria-atomic="true">{copyFeedback}</span>
       {/if}
       <a href="/" class="btn">← Zurück zur Übersicht</a>
     </div>

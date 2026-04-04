@@ -114,13 +114,24 @@ describe('renderCaseAsMarkdown', () => {
       buildCase({
         participants: [
           { id: 'Alex', role: 'contextual' },
-          { id: 'Chris', role: 'staff' }
+          { id: 'Chris', role: 'staff' },
+          { id: 'Dana', role: 'custom-role' as Case['participants'][number]['role'] }
         ]
       })
     );
 
     expect(output).toContain('- Alex (Kontextuell)');
-    expect(output).toContain('- Chris (staff)');
+    expect(output).toContain('- Chris (Fachkraft)');
+    expect(output).toContain('- Dana (custom-role)');
+  });
+
+  it('renders list items in contiguous markdown list blocks without blank lines between bullets', () => {
+    const output = renderCaseAsMarkdown(buildCase());
+    expect(output).toContain('## Beteiligte\n\n- Anna (Primär)\n- Ben (Sekundär)');
+    expect(output).toContain('## Gegen-Deutungen\n\n- Anna hatte kurz vorher Streit.\n- Anna ist übermüdet.');
+    expect(output).toContain(
+      '## Unsicherheiten\n\n- Stufe 2: Bisher nur eine Beobachtungseinheit.\n- Stufe 4: Kein Wissen über den Morgen zu Hause.'
+    );
   });
 
   it('renders uncertainty without rationale as level-only bullet', () => {

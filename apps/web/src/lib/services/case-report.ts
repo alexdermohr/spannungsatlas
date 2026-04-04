@@ -8,6 +8,7 @@ function renderParticipantRole(role: string): string {
   if (role === 'primary') return 'Primär';
   if (role === 'secondary') return 'Sekundär';
   if (role === 'contextual') return 'Kontextuell';
+  if (role === 'staff') return 'Fachkraft';
   return role;
 }
 
@@ -70,7 +71,7 @@ export function renderCaseAsMarkdown(caseData: Case): string {
 
   const participants = renderParticipants(participantsSource);
   if (participants.length > 0) {
-    sections.push('## Beteiligte', ...participants);
+    sections.push('## Beteiligte', participants.join('\n'));
   }
 
   if (observationText.length > 0) {
@@ -90,14 +91,14 @@ export function renderCaseAsMarkdown(caseData: Case): string {
     Array.isArray(currentReflection.counterInterpretations) ? currentReflection.counterInterpretations : []
   );
   if (counterInterpretations.length > 0) {
-    sections.push('## Gegen-Deutungen', ...counterInterpretations);
+    sections.push('## Gegen-Deutungen', counterInterpretations.join('\n'));
   }
 
   const uncertainties = renderUncertainties(
     Array.isArray(currentReflection.uncertainties) ? currentReflection.uncertainties : []
   );
   if (uncertainties.length > 0) {
-    sections.push('## Unsicherheiten', ...uncertainties);
+    sections.push('## Unsicherheiten', uncertainties.join('\n'));
   }
 
   return `${sections.join('\n\n')}\n`;
