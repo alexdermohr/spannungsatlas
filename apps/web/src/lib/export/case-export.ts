@@ -1,5 +1,5 @@
-import type { Case, CaseSource } from '$domain/types.js';
-import { guardCase, guardCaseSource, guardIsoDateString } from '$domain/guards.js';
+import type { Case } from '$domain/types.js';
+import { guardCase, guardDateTimeString } from '$domain/guards.js';
 import schema from '../../../../../contracts/case-export.schema.json';
 
 export const CASE_EXPORT_FORMAT = 'spannungsatlas-case-export';
@@ -34,11 +34,6 @@ function assertSchemaRequired(obj: Record<string, unknown>, required: unknown, l
   }
 }
 
-function isSourceArrayValid(sources: readonly CaseSource[] | undefined): boolean {
-  if (!sources) return true;
-  return sources.every((source) => guardCaseSource(source).length === 0);
-}
-
 export function validateCaseExportDocument(input: unknown): CaseExportDocument {
   /**
    * Übergangsstatus (bewusst):
@@ -55,7 +50,7 @@ export function validateCaseExportDocument(input: unknown): CaseExportDocument {
   if (root.version !== CASE_EXPORT_VERSION) {
     throw new Error(`Nicht unterstützte Exportversion: ${String(root.version)}.`);
   }
-  if (typeof root.exportedAt !== 'string' || guardIsoDateString(root.exportedAt, 'exportedAt') !== undefined) {
+  if (typeof root.exportedAt !== 'string' || guardDateTimeString(root.exportedAt, 'exportedAt') !== undefined) {
     throw new Error('exportedAt muss ein gültiger ISO-Zeitstempel sein.');
   }
   if (typeof root.appVersion !== 'string' || root.appVersion.trim().length === 0) {
@@ -78,10 +73,6 @@ export function validateCaseExportDocument(input: unknown): CaseExportDocument {
     if (errors.length > 0) {
       throw new Error(`cases[${index}].case ist ungültig: ${errors.join(' | ')}`);
     }
-    if (!isSourceArrayValid(caseData.sources)) {
-      throw new Error(`cases[${index}].case.sources enthält ungültige Werte.`);
-    }
-
     return { case: caseData };
   });
 

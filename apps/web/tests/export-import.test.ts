@@ -79,6 +79,36 @@ describe('export/import', () => {
     expect(() => parseCaseExportJson(JSON.stringify(withBrokenSource))).toThrow(/payload/);
   });
 
+  it('fails with controlled validation error when source entry is malformed', () => {
+    const withMalformedSource = JSON.parse(serializeCases([buildCase('broken-source-shape')], '0.1.0')) as {
+      cases: Array<{ case: { sources?: unknown } }>;
+    };
+    withMalformedSource.cases[0].case.sources = ['bad'];
+    expect(() => parseCaseExportJson(JSON.stringify(withMalformedSource))).toThrow(/Case source must be an object|sources/i);
+  });
+
+  it('fails when sources is provided as non-array', () => {
+    const withInvalidSources = JSON.parse(serializeCases([buildCase('broken-sources-container')], '0.1.0')) as {
+      cases: Array<{ case: Record<string, unknown> }>;
+    };
+    withInvalidSources.cases[0].case.sources = { type: 'icf-tool' };
+    expect(() => parseCaseExportJson(JSON.stringify(withInvalidSources))).toThrow(/sources must be an array/i);
+  });
+
+  it('fails when exportedAt is date-only and date-time is required', () => {
+    const dateOnlyExport = JSON.parse(serializeCases([buildCase('date-only-export')], '0.1.0')) as Record<string, unknown>;
+    dateOnlyExport.exportedAt = '2026-03-01';
+    expect(() => parseCaseExportJson(JSON.stringify(dateOnlyExport))).toThrow(/exportedAt/);
+  });
+
+  it('fails when CaseSource.importedAt is date-only', () => {
+    const withDateOnlySource = JSON.parse(serializeCases([buildCase('date-only-source')], '0.1.0')) as {
+      cases: Array<{ case: { sources?: Array<Record<string, unknown>> } }>;
+    };
+    withDateOnlySource.cases[0].case.sources = [{ type: 'icf-tool', payload: { raw: true }, importedAt: '2026-03-01' }];
+    expect(() => parseCaseExportJson(JSON.stringify(withDateOnlySource))).toThrow(/CaseSource\.importedAt/);
+  });
+
   it('fails on version mismatch', () => {
     const doc = JSON.parse(serializeCases([buildCase('case-ver')], '0.1.0')) as Record<string, unknown>;
     doc.version = '2.0';

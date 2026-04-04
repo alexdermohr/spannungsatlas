@@ -142,6 +142,7 @@ function isValidCase(entry: unknown): entry is Case {
   if (!(obj['revisions'] as unknown[]).every((r) => typeof r === 'object' && r !== null)) return false;
   if (typeof obj['observation'] !== 'object' || obj['observation'] === null || Array.isArray(obj['observation'])) return false;
   if (typeof obj['currentReflection'] !== 'object' || obj['currentReflection'] === null || Array.isArray(obj['currentReflection'])) return false;
+  if (obj['sources'] !== undefined && !Array.isArray(obj['sources'])) return false;
 
   return guardCase({
     id: obj['id'] as string,

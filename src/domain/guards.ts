@@ -43,7 +43,6 @@ import type {
   ReflectionSnapshot,
   Revision,
   TensionEdge,
-  CaseSource,
 } from "./types.js";
 
 // ---------------------------------------------------------------------------
@@ -83,6 +82,8 @@ function isNonEmptyString(value: unknown): value is string {
  */
 const ISO_DATE_RE =
   /^\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?)?$/;
+const ISO_DATETIME_RE =
+  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?$/;
 
 /**
  * Checks that a value is a non-empty string matching the supported date profile:
@@ -97,6 +98,17 @@ export function guardIsoDateString(value: string, fieldName: string): GuardResul
   }
   if (!ISO_DATE_RE.test(value) || isNaN(Date.parse(value))) {
     return `${fieldName} must be a date-only string (YYYY-MM-DD) or full timestamp with seconds (YYYY-MM-DDTHH:MM:SS[.frac][Z|±HH:MM]), got "${value}".`;
+  }
+  return undefined;
+}
+
+/** Checks that a value is a full ISO date-time string (no date-only form). */
+export function guardDateTimeString(value: string, fieldName: string): GuardResult {
+  if (!isNonEmptyString(value)) {
+    return `${fieldName} must not be empty.`;
+  }
+  if (!ISO_DATETIME_RE.test(value) || isNaN(Date.parse(value))) {
+    return `${fieldName} must be a full timestamp (YYYY-MM-DDTHH:MM:SS[.frac][Z|±HH:MM]), got "${value}".`;
   }
   return undefined;
 }
@@ -378,14 +390,19 @@ export function guardRevisionFromTo(
 }
 
 
-export function guardCaseSource(source: CaseSource): readonly string[] {
+export function guardCaseSource(source: unknown): readonly string[] {
   const errors: string[] = [];
-  if (!isNonEmptyString(source.type)) errors.push('Case source type must not be empty.');
-  if (source.payload === undefined) errors.push('Case source payload must be present.');
-  if (!isNonEmptyString(source.importedAt)) {
+  if (typeof source !== 'object' || source === null || Array.isArray(source)) {
+    return ['Case source must be an object.'];
+  }
+
+  const sourceRecord = source as Record<string, unknown>;
+  if (!isNonEmptyString(sourceRecord.type)) errors.push('Case source type must not be empty.');
+  if (!('payload' in sourceRecord)) errors.push('Case source payload must be present.');
+  if (!isNonEmptyString(sourceRecord.importedAt)) {
     errors.push('Case source importedAt must not be empty.');
   } else {
-    const dateErr = guardIsoDateString(source.importedAt, 'CaseSource.importedAt');
+    const dateErr = guardDateTimeString(sourceRecord.importedAt, 'CaseSource.importedAt');
     if (dateErr) errors.push(dateErr);
   }
   return errors;
@@ -453,7 +470,7 @@ export function guardCase(
     currentReflection: ReflectionSnapshot;
     revisions: readonly Revision[];
     observedAt?: string;
-    sources?: readonly CaseSource[];
+    sources?: unknown;
   },
 ): readonly string[] {
   const errors: string[] = [];
@@ -495,7 +512,9 @@ export function guardCase(
     push(guardRevisionReason(rev.reason));
   }
 
-  if (caseData.sources !== undefined) {
+  if (caseData.sources !== undefined && !Array.isArray(caseData.sources)) {
+    errors.push("sources must be an array when provided.");
+  } else if (Array.isArray(caseData.sources)) {
     for (const source of caseData.sources) {
       errors.push(...guardCaseSource(source));
     }

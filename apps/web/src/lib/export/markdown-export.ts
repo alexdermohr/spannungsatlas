@@ -10,6 +10,5 @@ export function exportCasesAsMarkdown(cases: readonly Case[], appVersion: string
   if (!embedJson) return report;
 
   const json = serializeCases(cases, appVersion);
-  return `${report}\n\n${MD_EXPORT_START}\n\
-\`\`\`json\n${json}\n\`\`\`\n${MD_EXPORT_END}\n`;
+  return `${report}\n\n${MD_EXPORT_START}\n\`\`\`json\n${json}\n\`\`\`\n${MD_EXPORT_END}\n`;
 }
