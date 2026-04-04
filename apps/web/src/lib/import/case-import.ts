@@ -75,12 +75,7 @@ function extractJsonFromHtml(html: string): string {
         if (type === 'application/json') {
           const content = script.textContent;
           if (content && content.trim()) {
-            return content
-              .replaceAll('&lt;', '<')
-              .replaceAll('&gt;', '>')
-              .replaceAll('&quot;', '"')
-              .replaceAll('&amp;', '&')
-              .trim();
+            return unescapeHtml(content);
           }
         }
       }

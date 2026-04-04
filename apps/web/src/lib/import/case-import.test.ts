@@ -60,17 +60,15 @@ describe('case-import', () => {
       let wasDeleted = false;
 
       beforeAll(() => {
-        const globalObj = globalThis as { DOMParser?: unknown };
-        if (Reflect.has(globalObj, 'DOMParser')) {
-           originalDOMParser = globalObj.DOMParser as typeof globalThis.DOMParser;
-           wasDeleted = Reflect.deleteProperty(globalObj, 'DOMParser');
+        if (Reflect.has(globalThis, 'DOMParser')) {
+           originalDOMParser = globalThis.DOMParser;
+           wasDeleted = Reflect.deleteProperty(globalThis, 'DOMParser');
         }
       });
 
       afterAll(() => {
-        const globalObj = globalThis as { DOMParser?: unknown };
-        if (wasDeleted) {
-           globalObj.DOMParser = originalDOMParser;
+        if (wasDeleted && originalDOMParser !== undefined) {
+           globalThis.DOMParser = originalDOMParser;
         }
       });
 
