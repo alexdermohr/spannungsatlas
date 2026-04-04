@@ -55,6 +55,25 @@ function extractJsonFromMarkdown(markdown: string): string {
 }
 
 function extractJsonFromHtml(html: string): string {
+  if (typeof DOMParser !== 'undefined') {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    const script = doc.querySelector('script#spannungsatlas-data');
+    if (script && script.getAttribute('type') === 'application/json') {
+      const content = script.textContent || script.innerHTML;
+      if (content) {
+        return content
+          .replaceAll('&lt;', '<')
+          .replaceAll('&gt;', '>')
+          .replaceAll('&quot;', '"')
+          .replaceAll('&amp;', '&')
+          .trim();
+      }
+    }
+    throw new Error('HTML-Import: Script-Tag mit Exportdaten nicht gefunden.');
+  }
+
+  // Fallback for environments without DOMParser
   const match = html.match(/<script\s+type=["']application\/json["']\s+id=["']spannungsatlas-data["'][^>]*>([\s\S]*?)<\/script>/i);
   if (!match?.[1]) {
     throw new Error('HTML-Import: Script-Tag mit Exportdaten nicht gefunden.');
