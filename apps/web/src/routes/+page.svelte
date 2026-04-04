@@ -107,6 +107,14 @@
       return;
     }
 
+    if (importMode === 'replace') {
+      const confirmed = window.confirm('replace ersetzt alle aktuell gespeicherten Fälle im lokalen Speicher. Fortfahren?');
+      if (!confirmed) {
+        importNotice = 'Import abgebrochen.';
+        return;
+      }
+    }
+
     try {
       const importedCases = importCases(pendingImportText, cases, importMode);
       replaceAllCases(importedCases);
