@@ -54,17 +54,56 @@ function extractJsonFromMarkdown(markdown: string): string {
   return fenced[1].trim();
 }
 
-function extractJsonFromHtml(html: string): string {
-  const match = html.match(/<script\s+type=["']application\/json["']\s+id=["']spannungsatlas-data["'][^>]*>([\s\S]*?)<\/script>/i);
-  if (!match?.[1]) {
-    throw new Error('HTML-Import: Script-Tag mit Exportdaten nicht gefunden.');
-  }
-  return match[1]
+
+function unescapeHtml(text: string): string {
+  return text
     .replaceAll('&lt;', '<')
     .replaceAll('&gt;', '>')
     .replaceAll('&quot;', '"')
     .replaceAll('&amp;', '&')
     .trim();
+}
+
+function extractJsonFromHtml(html: string): string {
+  if (typeof globalThis !== 'undefined' && 'DOMParser' in globalThis) {
+    try {
+      const parser = new globalThis.DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+      const script = doc.querySelector('script#spannungsatlas-data');
+      if (script) {
+        const type = (script.getAttribute('type') || '').trim().toLowerCase();
+        if (type === 'application/json') {
+          const content = script.textContent;
+          if (content && content.trim()) {
+            return unescapeHtml(content);
+          }
+        }
+      }
+    } catch {
+      // Ignore DOMParser errors and fall through to regex
+    }
+  }
+
+  // Fallback for environments without DOMParser or if DOMParser approach failed
+  const scripts = html.match(/<script[^>]*>([\s\S]*?)<\/script>/ig);
+  if (scripts) {
+    for (const scriptTag of scripts) {
+      const openTagMatch = scriptTag.match(/<script([^>]*)>/i);
+      if (!openTagMatch) continue;
+      const openTag = openTagMatch[1];
+
+      const hasId = /id\s*=\s*["']spannungsatlas-data["']/i.test(openTag);
+      const typeMatch = openTag.match(/type\s*=\s*["']([^"']+)["']/i);
+
+      if (hasId && typeMatch && typeMatch[1].trim().toLowerCase() === 'application/json') {
+        const contentMatch = scriptTag.match(/>([\s\S]*?)<\/script>/i);
+        if (contentMatch && contentMatch[1].trim()) {
+          return unescapeHtml(contentMatch[1]);
+        }
+      }
+    }
+  }
+  throw new Error('HTML-Import: Script-Tag mit Exportdaten nicht gefunden.');
 }
 
 export function detectImportKind(content: string): ImportKind {
