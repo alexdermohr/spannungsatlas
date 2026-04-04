@@ -3,51 +3,11 @@ import { parseImportToDocument } from './case-import.js';
 
 describe('case-import', () => {
   describe('extractJsonFromHtml', () => {
-    let mockApplied = false;
-    const originalDOMParser = globalThis.DOMParser;
 
-    beforeAll(() => {
-      // Only mock if DOMParser is not already provided by the environment
-      if (!globalThis.DOMParser) {
-        mockApplied = true;
-        // @ts-ignore
-        globalThis.DOMParser = class DOMParser {
-          parseFromString(html: string, type: string) {
-            return {
-              querySelector: (selector: string) => {
-                if (selector === 'script#spannungsatlas-data') {
-                  if (!html.includes('id="spannungsatlas-data"') && !html.includes("id='spannungsatlas-data'")) {
-                    return null;
-                  }
-                  const matchType = html.match(/type=["']([^"']+)["']/i);
-                  const typeVal = matchType ? matchType[1] : null;
-
-                  let contentVal = '';
-                  const scriptStart = html.indexOf('<script');
-                  const scriptEnd = html.indexOf('</script>', scriptStart);
-                  if (scriptStart !== -1 && scriptEnd !== -1) {
-                     const startTagEnd = html.indexOf('>', scriptStart);
-                     contentVal = html.substring(startTagEnd + 1, scriptEnd);
-                  }
-
-                  return {
-                    getAttribute: (attr: string) => attr === 'type' ? typeVal : null,
-                    textContent: contentVal
-                  };
-                }
-                return null;
-              }
-            };
-          }
-        };
-      }
-    });
-
-    afterAll(() => {
-      if (mockApplied) {
-        delete (globalThis as any).DOMParser;
-      }
-    });
+    // We strictly follow the request to NOT mock DOMParser with a complex brittle mock.
+    // However, if DOMParser isn't available (like in our basic vitest run), we should let
+    // the fallback logic be tested naturally by the environment, or we can use the
+    // regex fallback explicitly if DOMParser is absent.
 
     it('finds data when attributes are in different order', () => {
       const html = `
@@ -65,7 +25,7 @@ describe('case-import', () => {
       expect(doc.cases).toEqual([]);
     });
 
-    it('finds data when type has different casing', () => {
+    it('finds data when type has different casing (using fallback in node)', () => {
       const html = `
         <!DOCTYPE html>
         <html>
@@ -100,16 +60,18 @@ describe('case-import', () => {
       expect(() => parseImportToDocument(html, 'html')).toThrow('HTML-Import: Script-Tag mit Exportdaten nicht gefunden.');
     });
 
-    describe('fallback logic', () => {
+    describe('fallback logic explicitly', () => {
       let tempDOMParser: any;
 
       beforeAll(() => {
-        tempDOMParser = globalThis.DOMParser;
-        delete (globalThis as any).DOMParser; // Disable DOMParser for this block to test regex
+        tempDOMParser = (globalThis as any).DOMParser;
+        delete (globalThis as any).DOMParser; // Force disable DOMParser for this block to guarantee regex usage
       });
 
       afterAll(() => {
-        globalThis.DOMParser = tempDOMParser;
+        if (tempDOMParser) {
+           (globalThis as any).DOMParser = tempDOMParser;
+        }
       });
 
       it('falls back to regex if DOMParser is unavailable', () => {

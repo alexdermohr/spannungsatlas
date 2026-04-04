@@ -80,16 +80,26 @@ function extractJsonFromHtml(html: string): string {
   }
 
   // Fallback for environments without DOMParser or if DOMParser approach failed
-  const match = html.match(/<script\s+type=["']application\/json["']\s+id=["']spannungsatlas-data["'][^>]*>([\s\S]*?)<\/script>/i);
-  if (!match?.[1]) {
-    throw new Error('HTML-Import: Script-Tag mit Exportdaten nicht gefunden.');
+  const match = html.match(/<script[^>]*>([\s\S]*?)<\/script>/ig);
+  if (match) {
+    for (const tag of match) {
+       if (tag.includes('id="spannungsatlas-data"') || tag.includes("id='spannungsatlas-data'")) {
+         const typeMatch = tag.match(/type=["']([^"']+)["']/i);
+         if (typeMatch && typeMatch[1].trim().toLowerCase() === 'application/json') {
+            const contentMatch = tag.match(/>([\s\S]*?)<\/script>/i);
+            if (contentMatch) {
+                return contentMatch[1]
+                  .replaceAll('&lt;', '<')
+                  .replaceAll('&gt;', '>')
+                  .replaceAll('&quot;', '"')
+                  .replaceAll('&amp;', '&')
+                  .trim();
+            }
+         }
+       }
+    }
   }
-  return match[1]
-    .replaceAll('&lt;', '<')
-    .replaceAll('&gt;', '>')
-    .replaceAll('&quot;', '"')
-    .replaceAll('&amp;', '&')
-    .trim();
+  throw new Error('HTML-Import: Script-Tag mit Exportdaten nicht gefunden.');
 }
 
 export function detectImportKind(content: string): ImportKind {
