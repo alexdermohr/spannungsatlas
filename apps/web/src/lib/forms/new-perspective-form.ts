@@ -1,4 +1,4 @@
-import type { EvidenceType, UncertaintyLevel, PerspectiveContent } from '$domain/types.js';
+import type { EvidenceType, UncertaintyLevel, PerspectiveRecord } from '$domain/types.js';
 
 export interface PerspectiveFormState {
   observationText: string;
@@ -26,7 +26,7 @@ export function createEmptyPerspectiveFormState(): PerspectiveFormState {
   };
 }
 
-export function mapDraftToFormState(draft: any): PerspectiveFormState {
+export function mapDraftToFormState(draft: PerspectiveRecord | null | undefined): PerspectiveFormState {
   if (!draft) return createEmptyPerspectiveFormState();
 
   return {
@@ -36,11 +36,11 @@ export function mapDraftToFormState(draft: any): PerspectiveFormState {
     isCameraDescribable: draft.content.observation?.isCameraDescribable || false,
     interpretationText: draft.content.interpretation?.text || '',
     interpretationEvidence: draft.content.interpretation?.evidenceType || 'observational',
-    counterRows: draft.content.counterInterpretations?.length > 0
-      ? draft.content.counterInterpretations.map((c: any) => ({ text: c.text, evidence: c.evidenceType }))
+    counterRows: draft.content.counterInterpretations && draft.content.counterInterpretations.length > 0
+      ? draft.content.counterInterpretations.map((c) => ({ text: c.text, evidence: c.evidenceType }))
       : [{ text: '', evidence: 'observational' }],
-    uncertaintyRows: draft.content.uncertainties?.length > 0
-      ? draft.content.uncertainties.map((u: any) => ({ level: u.level, rationale: u.rationale }))
+    uncertaintyRows: draft.content.uncertainties && draft.content.uncertainties.length > 0
+      ? draft.content.uncertainties.map((u) => ({ level: u.level, rationale: u.rationale }))
       : [{ level: 2, rationale: '' }],
     errorMsg: ''
   };
