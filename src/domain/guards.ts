@@ -40,6 +40,8 @@ import type {
   CaseParticipant,
   Interpretation,
   Observation,
+  Perspective,
+  PerspectiveContent,
   ReflectionSnapshot,
   Revision,
   TensionEdge,
@@ -517,6 +519,97 @@ export function guardCase(
   } else if (Array.isArray(caseData.sources)) {
     for (const source of caseData.sources) {
       errors.push(...guardCaseSource(source));
+    }
+  }
+
+  return errors;
+}
+
+// ---------------------------------------------------------------------------
+// Perspective guards (Blindheits-Architektur)
+// ---------------------------------------------------------------------------
+
+const VALID_PERSPECTIVE_STATUSES = new Set<string>(["draft", "committed"]);
+
+/** PerspectiveStatus must be "draft" or "committed". */
+export function guardPerspectiveStatus(status: string): GuardResult {
+  if (!VALID_PERSPECTIVE_STATUSES.has(status)) {
+    return `PerspectiveStatus must be "draft" or "committed", got "${status}".`;
+  }
+  return undefined;
+}
+
+/**
+ * All four content fields must be non-empty strings when a perspective is
+ * being committed. During draft, content may be partially filled.
+ */
+export function guardPerspectiveContentComplete(
+  content: PerspectiveContent,
+): readonly string[] {
+  const errors: string[] = [];
+  if (!isNonEmptyString(content.observation)) {
+    errors.push("Perspective observation must not be empty at commit time.");
+  }
+  if (!isNonEmptyString(content.interpretation)) {
+    errors.push("Perspective interpretation must not be empty at commit time.");
+  }
+  if (!isNonEmptyString(content.counterInterpretation)) {
+    errors.push("Perspective counter-interpretation must not be empty at commit time.");
+  }
+  if (!isNonEmptyString(content.uncertainty)) {
+    errors.push("Perspective uncertainty must not be empty at commit time.");
+  }
+  return errors;
+}
+
+/** Perspective id must not be empty. */
+export function guardPerspectiveId(id: string): GuardResult {
+  if (!isNonEmptyString(id)) {
+    return "Perspective id must not be empty.";
+  }
+  return undefined;
+}
+
+/** Perspective case_id must not be empty. */
+export function guardPerspectiveCaseId(caseId: string): GuardResult {
+  if (!isNonEmptyString(caseId)) {
+    return "Perspective case_id must not be empty.";
+  }
+  return undefined;
+}
+
+/** Perspective actor_id must not be empty. */
+export function guardPerspectiveActorId(actorId: string): GuardResult {
+  if (!isNonEmptyString(actorId)) {
+    return "Perspective actor_id must not be empty.";
+  }
+  return undefined;
+}
+
+/**
+ * Composite guard: validate a full Perspective.
+ * Structural checks always run. Content completeness is only checked when
+ * the perspective is committed.
+ */
+export function guardPerspective(perspective: Perspective): readonly string[] {
+  const errors: string[] = [];
+
+  const push = (r: GuardResult) => {
+    if (r) errors.push(r);
+  };
+
+  push(guardPerspectiveId(perspective.id));
+  push(guardPerspectiveCaseId(perspective.case_id));
+  push(guardPerspectiveActorId(perspective.actor_id));
+  push(guardPerspectiveStatus(perspective.status));
+  push(guardIsoDateString(perspective.created_at, "Perspective.created_at"));
+
+  if (perspective.status === "committed") {
+    errors.push(...guardPerspectiveContentComplete(perspective.content));
+    if (perspective.committed_at === undefined) {
+      errors.push("Committed perspective must have a committed_at timestamp.");
+    } else {
+      push(guardIsoDateString(perspective.committed_at, "Perspective.committed_at"));
     }
   }
 
