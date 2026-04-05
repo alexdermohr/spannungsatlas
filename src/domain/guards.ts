@@ -641,8 +641,19 @@ export function guardCase(
   if (caseData.perspectives !== undefined && !Array.isArray(caseData.perspectives)) {
     errors.push("perspectives must be an array when provided.");
   } else if (Array.isArray(caseData.perspectives)) {
+    const seenActors = new Set<string>();
     for (const p of caseData.perspectives) {
       errors.push(...guardPerspectiveRecord(p));
+
+      if (p !== null && typeof p === 'object' && !Array.isArray(p)) {
+        const rec = p as Record<string, unknown>;
+        if (typeof rec.actorId === 'string') {
+        if (seenActors.has(rec.actorId)) {
+          errors.push(`Only one perspective per actor is allowed. Found multiple for actor: "${rec.actorId}".`);
+        }
+        seenActors.add(rec.actorId);
+        }
+      }
     }
   }
 

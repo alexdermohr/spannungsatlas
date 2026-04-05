@@ -560,6 +560,55 @@ describe("guardPerspectiveRecord & guardPerspectiveContent", () => {
   });
 });
 
+
+  it("guardCase rejects multiple perspectives for the same actor", () => {
+    const invalidCase: any = {
+      id: "case-1",
+      context: "ctx",
+      participants: [{ id: "actor-1", role: "primary" }],
+      observation: { text: "obs", isCameraDescribable: true },
+      currentReflection: {
+        reflectedAt: "2026-04-01T10:00:00Z",
+        interpretation: { text: "int", evidenceType: "observational" },
+        counterInterpretations: [{ text: "c", evidenceType: "derived" }],
+        uncertainties: [{ level: 2, rationale: "unc" }],
+        tensions: []
+      },
+      revisions: [],
+      perspectives: [
+        {
+          id: "p1",
+          caseId: "case-1",
+          actorId: "actor-1",
+          status: "draft",
+          createdAt: "2026-04-01T10:00:00Z",
+          content: {
+            observation: { text: "obs" },
+            interpretation: { text: "int", evidenceType: "observational" },
+            counterInterpretations: [{ text: "c", evidenceType: "derived" }],
+            uncertainties: [{ level: 2, rationale: "unc" }]
+          }
+        },
+        {
+          id: "p2",
+          caseId: "case-1",
+          actorId: "actor-1",
+          status: "draft",
+          createdAt: "2026-04-01T10:00:00Z",
+          content: {
+            observation: { text: "obs" },
+            interpretation: { text: "int", evidenceType: "observational" },
+            counterInterpretations: [{ text: "c", evidenceType: "derived" }],
+            uncertainties: [{ level: 2, rationale: "unc" }]
+          }
+        }
+      ]
+    };
+    const errors = guardCase(invalidCase);
+    expect(errors.some(e => e.includes("Only one perspective per actor is allowed"))).toBe(true);
+  });
+
+
 describe("guardReflectionSnapshot", () => {
   it("returns no errors for a valid snapshot", () => {
     expect(guardReflectionSnapshot(validSnapshot())).toHaveLength(0);
