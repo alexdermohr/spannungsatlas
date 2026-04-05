@@ -23,6 +23,7 @@
   let uncertaintyRows = $state<{ level: UncertaintyLevel; rationale: string }[]>([{ level: 2, rationale: '' }]);
 
   let draftId = $state<string | null>(null);
+  let draftCreatedAt = $state<string | null>(null);
   let errorMsg = $state('');
 
   onMount(() => {
@@ -40,6 +41,7 @@
     const draft = getDraftPerspectiveForActor(caseId, currentActorId);
     if (draft) {
       draftId = draft.id;
+      draftCreatedAt = draft.createdAt;
       observationText = draft.content.observation.text;
       isCameraDescribable = draft.content.observation.isCameraDescribable;
       interpretationText = draft.content.interpretation.text;
@@ -48,6 +50,7 @@
       uncertaintyRows = draft.content.uncertainties.map(u => ({ level: u.level, rationale: u.rationale }));
     } else {
       draftId = crypto.randomUUID();
+      draftCreatedAt = null;
     }
   }
 
@@ -80,6 +83,7 @@
   function saveDraft(): { success: boolean; error?: string } {
     try {
       if (!draftId) draftId = crypto.randomUUID();
+      if (!draftCreatedAt) draftCreatedAt = new Date().toISOString();
 
       const counters = counterRows.filter(r => r.text.trim() !== '').map(r => ({ text: r.text, evidenceType: r.evidence }));
       const uncerts = uncertaintyRows.filter(r => r.rationale.trim() !== '').map(r => ({ level: r.level, rationale: r.rationale }));
@@ -88,7 +92,7 @@
         id: draftId,
         caseId,
         actorId: currentActorId,
-        createdAt: new Date().toISOString(),
+        createdAt: draftCreatedAt,
         observation: { text: observationText, isCameraDescribable },
         interpretation: { text: interpretationText, evidenceType: interpretationEvidence },
         counterInterpretations: counters,
@@ -117,7 +121,7 @@
       } else if (msg.includes('interpretation')) {
         msg = 'Für das Commit wird eine Deutung benötigt.';
       }
-      errorMsg = 'Die Perspektive ist noch unvollständig: ' + msg;
+      errorMsg = msg;
       return;
     }
 
