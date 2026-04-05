@@ -131,7 +131,7 @@
 
     <div class="card form-section simulated-auth">
       <h2>Wer sind Sie?</h2>
-      <p class="helper"><strong>Demo-Zugriffssimulation (später via Benutzerkonto).</strong> Ihr Draft ist nur für die gewählte Identität sichtbar, bis er committed wird.</p>
+      <p class="helper"><strong>Demo-Zugriffssimulation (später via Benutzerkonto).</strong> Ihr Draft ist nur für die gewählte Identität sichtbar, bis er committet wird.</p>
       <label class="field">
         <select value={currentActorId} onchange={handleActorChange}>
           {#each caseData.participants as p}

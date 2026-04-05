@@ -4,11 +4,9 @@ import {
   commitPerspective,
   getComparablePerspectivesForCase,
   getDraftPerspectiveForActor,
-  getCase,
-  saveCaseData
 } from '../../apps/web/src/lib/services/case-service.js';
 import { localStorageStore } from '../../apps/web/src/lib/persistence/store.js';
-import type { Case, PerspectiveRecord } from '../../src/domain/types.js';
+import type { Case } from '../../src/domain/types.js';
 
 // Setup Mock Storage
 class MemoryStorage implements Storage {
