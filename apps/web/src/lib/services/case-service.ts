@@ -1,6 +1,7 @@
 import type { Case, CaseParticipant, EvidenceType, UncertaintyLevel, PerspectiveRecord } from '$domain/types.js';
 import type { CreateCaseInput } from '$domain/factories.js';
 import { createCase, createPerspectiveRecord, commitPerspectiveRecord, type CreatePerspectiveRecordInput } from '$domain/factories.js';
+import { canReadPerspective, canWritePerspective, getComparablePerspectives, filterVisiblePerspectives } from '$domain/perspective-access.js';
 import { localStorageStore, type PersistenceStore } from '$lib/persistence/store.js';
 
 export interface StartNewCaseInput {
@@ -65,14 +66,16 @@ export function replaceAllCases(cases: readonly Case[]): void {
 }
 
 
-export function addDraftPerspective(caseId: string, input: CreatePerspectiveRecordInput): Case {
+export function addDraftPerspective(caseId: string, input: CreatePerspectiveRecordInput, requestingActorId: string): Case {
+  if (input.actorId !== requestingActorId) {
+    throw new Error("Access denied: You can only create drafts for yourself.");
+  }
   const c = getCase(caseId);
   if (!c) throw new Error("Case not found");
 
   const perspective = createPerspectiveRecord(input);
 
   const perspectives = [...(c.perspectives || [])];
-  // Remove any existing draft for this actor
   const existingIndex = perspectives.findIndex(p => p.actorId === input.actorId && p.status === 'draft');
   if (existingIndex >= 0) {
     perspectives[existingIndex] = perspective;
@@ -85,7 +88,7 @@ export function addDraftPerspective(caseId: string, input: CreatePerspectiveReco
   return updatedCase;
 }
 
-export function commitPerspective(caseId: string, perspectiveId: string): Case {
+export function commitPerspective(caseId: string, perspectiveId: string, requestingActorId: string): Case {
   const c = getCase(caseId);
   if (!c) throw new Error("Case not found");
 
@@ -93,7 +96,12 @@ export function commitPerspective(caseId: string, perspectiveId: string): Case {
   const index = perspectives.findIndex(p => p.id === perspectiveId);
   if (index === -1) throw new Error("Perspective not found");
 
-  const committed = commitPerspectiveRecord(perspectives[index], new Date().toISOString());
+  const p = perspectives[index];
+  if (!canWritePerspective(p, requestingActorId)) {
+    throw new Error("Access denied: Cannot commit this perspective.");
+  }
+
+  const committed = commitPerspectiveRecord(p, new Date().toISOString());
   perspectives[index] = committed;
 
   const updatedCase = { ...c, perspectives };
@@ -101,28 +109,34 @@ export function commitPerspective(caseId: string, perspectiveId: string): Case {
   return updatedCase;
 }
 
-export function getPerspectiveForActor(caseId: string, perspectiveId: string, currentActorId: string): PerspectiveRecord {
+export function getPerspectiveForActor(caseId: string, perspectiveId: string, requestingActorId: string): PerspectiveRecord {
   const c = getCase(caseId);
   if (!c) throw new Error("Case not found");
 
   const p = (c.perspectives || []).find(p => p.id === perspectiveId);
   if (!p) throw new Error("Perspective not found");
 
-  if (p.status === 'draft' && p.actorId !== currentActorId) {
-    throw new Error("Access denied: Cannot view another user's draft perspective.");
+  if (!canReadPerspective(p, requestingActorId)) {
+    throw new Error("Access denied: Cannot read this perspective.");
   }
 
   return p;
 }
 
-export function getCommittedPerspectivesForCase(caseId: string): PerspectiveRecord[] {
+export function getVisiblePerspectivesForCase(caseId: string, requestingActorId: string): PerspectiveRecord[] {
   const c = getCase(caseId);
   if (!c) return [];
-  return (c.perspectives || []).filter(p => p.status === 'committed');
+  return Array.from(filterVisiblePerspectives(c.perspectives || [], requestingActorId));
 }
 
-export function getDraftPerspectiveForActor(caseId: string, currentActorId: string): PerspectiveRecord | undefined {
+export function getComparablePerspectivesForCase(caseId: string): readonly PerspectiveRecord[] {
+  const c = getCase(caseId);
+  if (!c) return [];
+  return getComparablePerspectives(c.perspectives || []);
+}
+
+export function getDraftPerspectiveForActor(caseId: string, requestingActorId: string): PerspectiveRecord | undefined {
   const c = getCase(caseId);
   if (!c) return undefined;
-  return (c.perspectives || []).find(p => p.actorId === currentActorId && p.status === 'draft');
+  return (c.perspectives || []).find(p => p.actorId === requestingActorId && p.status === 'draft');
 }

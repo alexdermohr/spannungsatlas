@@ -91,7 +91,7 @@
         interpretation: { text: interpretationText, evidenceType: interpretationEvidence },
         counterInterpretations: counterRows.filter(r => r.text.trim() !== '').map(r => ({ text: r.text, evidenceType: r.evidence })),
         uncertainties: uncertaintyRows.filter(r => r.rationale.trim() !== '').map(r => ({ level: r.level, rationale: r.rationale }))
-      });
+      }, currentActorId);
       errorMsg = '';
     } catch (e: any) {
       errorMsg = e.message;
@@ -103,7 +103,7 @@
       saveDraft(); // ensure latest is saved
       if (errorMsg) return; // Wait if there are structural errors
 
-      commitPerspective(caseId, draftId!);
+      commitPerspective(caseId, draftId!, currentActorId);
       goto(`/cases/${caseId}`);
     } catch (e: any) {
       errorMsg = e.message;

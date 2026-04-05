@@ -1,7 +1,7 @@
 <script lang="ts">
   import { page } from '$app/state';
   import { onMount } from 'svelte';
-  import { getCase, getCommittedPerspectivesForCase } from '$lib/services/case-service.js';
+  import { getCase, getComparablePerspectivesForCase } from '$lib/services/case-service.js';
   import { roleLabels, evidenceLabels, uncertaintyLabels } from '$lib/ui/labels.js';
   import type { Case, PerspectiveRecord } from '$domain/types.js';
 
@@ -13,7 +13,7 @@
   onMount(() => {
     caseId = page.params.id ?? '';
     caseData = getCase(caseId);
-    perspectives = getCommittedPerspectivesForCase(caseId);
+    perspectives = getComparablePerspectivesForCase(caseId) as PerspectiveRecord[];
     loaded = true;
   });
 
