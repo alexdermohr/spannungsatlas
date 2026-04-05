@@ -461,6 +461,139 @@ export function guardReflectionSnapshot(
 // Composite guard: validate a full Case
 // ---------------------------------------------------------------------------
 
+
+// ---------------------------------------------------------------------------
+// PerspectiveRecord Guards
+// ---------------------------------------------------------------------------
+
+export function guardPerspectiveContent(content: unknown): readonly string[] {
+  const errors: string[] = [];
+  const push = (r: GuardResult) => { if (r) errors.push(r); };
+
+  if (typeof content !== 'object' || content === null || Array.isArray(content)) {
+    return ["PerspectiveContent must be an object."];
+  }
+
+  const c = content as Record<string, unknown>;
+
+  const obs = c.observation as Record<string, unknown> | undefined;
+  const hasValidObservation = typeof obs === 'object' && obs !== null && !Array.isArray(obs);
+  if (!hasValidObservation) {
+    errors.push("PerspectiveContent must have a valid observation object.");
+  } else {
+    push(guardObservationText(obs.text as string));
+    if (typeof obs.isCameraDescribable !== 'boolean') {
+      errors.push("PerspectiveContent.observation.isCameraDescribable must be a boolean.");
+    }
+  }
+
+  const interp = c.interpretation as Record<string, unknown> | undefined;
+  const hasValidInterpretation = typeof interp === 'object' && interp !== null && !Array.isArray(interp);
+  if (!hasValidInterpretation) {
+    errors.push("PerspectiveContent must have a valid interpretation object.");
+  } else {
+    push(guardInterpretationText(interp.text as string));
+    push(guardEvidenceType(interp.evidenceType as EvidenceType));
+  }
+
+  if (hasValidObservation && hasValidInterpretation) {
+    push(guardObservationInterpretationDistinct(obs as unknown as Observation, interp as unknown as Interpretation));
+  }
+
+  if (!Array.isArray(c.counterInterpretations) || c.counterInterpretations.length === 0) {
+    errors.push("At least one counter-interpretation is required.");
+  } else {
+    const validCounters: Interpretation[] = [];
+    for (const counter of c.counterInterpretations) {
+      if (typeof counter !== 'object' || counter === null || Array.isArray(counter)) {
+        errors.push("counterInterpretations array elements must be valid objects.");
+      } else {
+        const ct = counter as Record<string, unknown>;
+        push(guardCounterInterpretationText(ct.text as string));
+        push(guardEvidenceType(ct.evidenceType as EvidenceType));
+        if (hasValidInterpretation) {
+          push(guardInterpretationsDistinct(interp as unknown as Interpretation, ct as unknown as Interpretation));
+        }
+
+        // Collect for pairwise checks if structurally minimal valid
+        if (typeof ct.text === 'string' && typeof ct.evidenceType === 'string') {
+          validCounters.push(ct as unknown as Interpretation);
+        }
+      }
+    }
+
+    // Pairwise distinctness check matching the factory
+    for (let i = 0; i < validCounters.length; i++) {
+      for (let j = i + 1; j < validCounters.length; j++) {
+        push(guardDistinctTexts(
+          validCounters[i],
+          validCounters[j],
+          "Two counter-interpretation texts must not be textually identical.",
+        ));
+      }
+    }
+  }
+
+  if (!Array.isArray(c.uncertainties) || c.uncertainties.length === 0) {
+    errors.push("At least one uncertainty is required.");
+  } else {
+    for (const u of c.uncertainties) {
+      if (typeof u !== 'object' || u === null || Array.isArray(u)) {
+         errors.push("uncertainties array elements must be valid objects.");
+      } else {
+        const unc = u as Record<string, unknown>;
+        push(guardUncertaintyLevel(unc.level as number));
+        push(guardUncertaintyRationale(unc.rationale as string));
+      }
+    }
+  }
+
+  return errors;
+}
+
+export function guardPerspectiveRecord(record: unknown): readonly string[] {
+  const errors: string[] = [];
+  const push = (r: GuardResult) => { if (r) errors.push(r); };
+
+  if (typeof record !== 'object' || record === null || Array.isArray(record)) {
+    return ["PerspectiveRecord must be an object."];
+  }
+
+  const rec = record as Record<string, unknown>;
+
+  if (!isNonEmptyString(rec.id)) errors.push("PerspectiveRecord id must not be empty.");
+  if (!isNonEmptyString(rec.caseId)) errors.push("PerspectiveRecord caseId must not be empty.");
+  if (!isNonEmptyString(rec.actorId)) errors.push("PerspectiveRecord actorId must not be empty.");
+
+  if (rec.status !== "draft" && rec.status !== "committed") {
+    errors.push(`PerspectiveRecord status must be "draft" or "committed", got "${rec.status}".`);
+  }
+
+  if (typeof rec.createdAt !== 'string') {
+    errors.push("PerspectiveRecord createdAt must be a string.");
+  } else {
+    push(guardIsoDateString(rec.createdAt, "PerspectiveRecord.createdAt"));
+  }
+
+  if (rec.status === "committed") {
+    if (!rec.committedAt) {
+      errors.push("PerspectiveRecord must have a committedAt date if status is committed.");
+    } else if (typeof rec.committedAt !== 'string') {
+      errors.push("PerspectiveRecord committedAt must be a string.");
+    } else {
+      push(guardIsoDateString(rec.committedAt, "PerspectiveRecord.committedAt"));
+    }
+  } else if (rec.status === "draft") {
+    if (rec.committedAt !== undefined) {
+      errors.push("PerspectiveRecord committedAt must be absent when status is draft.");
+    }
+  }
+
+  errors.push(...guardPerspectiveContent(rec.content));
+
+  return errors;
+}
+
 export function guardCase(
   caseData: {
     id: string;
@@ -510,6 +643,25 @@ export function guardCase(
     push(guardIsoDateString(rev.at, "Revision.at"));
     push(guardDriftType(rev.driftType));
     push(guardRevisionReason(rev.reason));
+  }
+
+  if (caseData.perspectives !== undefined && !Array.isArray(caseData.perspectives)) {
+    errors.push("perspectives must be an array when provided.");
+  } else if (Array.isArray(caseData.perspectives)) {
+    const seenActors = new Set<string>();
+    for (const p of caseData.perspectives) {
+      errors.push(...guardPerspectiveRecord(p));
+
+      if (p !== null && typeof p === 'object' && !Array.isArray(p)) {
+        const rec = p as Record<string, unknown>;
+        if (typeof rec.actorId === 'string') {
+        if (seenActors.has(rec.actorId)) {
+          errors.push(`Only one perspective per actor is allowed. Found multiple for actor: "${rec.actorId}".`);
+        }
+        seenActors.add(rec.actorId);
+        }
+      }
+    }
   }
 
   if (caseData.sources !== undefined && !Array.isArray(caseData.sources)) {

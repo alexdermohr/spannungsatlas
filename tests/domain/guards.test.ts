@@ -23,6 +23,8 @@ import {
   guardRevisionFromTo,
   guardReflectionSnapshot,
   guardCase,
+  guardPerspectiveRecord,
+  guardPerspectiveContent,
 } from "../../src/domain/guards.js";
 import type {
   Interpretation,
@@ -519,7 +521,84 @@ describe("guardRevisionFromTo", () => {
 // Composite: ReflectionSnapshot
 // ---------------------------------------------------------------------------
 
-describe("guardReflectionSnapshot", () => {
+
+// ---------------------------------------------------------------------------
+// guardPerspectiveRecord & guardPerspectiveContent
+// ---------------------------------------------------------------------------
+
+describe("guardPerspectiveRecord & guardPerspectiveContent", () => {
+  it("guardPerspectiveRecord rejects null or non-objects", () => {
+    expect(guardPerspectiveRecord(null).length).toBeGreaterThan(0);
+    expect(guardPerspectiveRecord("string").length).toBeGreaterThan(0);
+    expect(guardPerspectiveRecord([]).length).toBeGreaterThan(0);
+  });
+
+  it("guardPerspectiveContent rejects missing observation/interpretation objects", () => {
+    expect(guardPerspectiveContent({}).length).toBeGreaterThan(0);
+    expect(guardPerspectiveContent({ observation: "string" }).length).toBeGreaterThan(0);
+  });
+
+
+  it("guardPerspectiveContent rejects missing or non-boolean isCameraDescribable", () => {
+    const invalid1 = {
+      observation: { text: "obs" }, // missing isCameraDescribable
+      interpretation: { text: "int", evidenceType: "observational" },
+      counterInterpretations: [{ text: "c", evidenceType: "derived" }],
+      uncertainties: [{ level: 2, rationale: "unc" }]
+    };
+    const invalid2 = {
+      ...invalid1,
+      observation: { text: "obs", isCameraDescribable: "yes" } // not a boolean
+    };
+
+    expect(guardPerspectiveContent(invalid1).some(e => e.includes("isCameraDescribable must be a boolean"))).toBe(true);
+    expect(guardPerspectiveContent(invalid2).some(e => e.includes("isCameraDescribable must be a boolean"))).toBe(true);
+  });
+
+
+  it("guardPerspectiveRecord rejects draft status with committedAt", () => {
+    const invalidDraft: any = {
+      id: "p-draft",
+      caseId: "case-1",
+      actorId: "actor-1",
+      status: "draft",
+      createdAt: "2026-04-01T10:00:00Z",
+      committedAt: "2026-04-01T10:00:00Z",
+      content: {
+        observation: { text: "obs", isCameraDescribable: true },
+        interpretation: { text: "int", evidenceType: "observational" },
+        counterInterpretations: [{ text: "c", evidenceType: "derived" }],
+        uncertainties: [{ level: 2, rationale: "unc" }]
+      }
+    };
+    const errors = guardPerspectiveRecord(invalidDraft);
+    expect(errors.some(e => e.includes("committedAt must be absent when status is draft"))).toBe(true);
+  });
+
+  it("guardCase passes elements without casting and rejects invalid arrays", () => {
+    const invalidCase: any = {
+      id: "case-1",
+      context: "ctx",
+      participants: [{ id: "p1", role: "primary" }],
+      observation: { text: "obs", isCameraDescribable: true },
+      currentReflection: {
+        reflectedAt: "2026-04-01T10:00:00Z",
+        interpretation: { text: "int", evidenceType: "observational" },
+        counterInterpretations: [{ text: "c", evidenceType: "derived" }],
+        uncertainties: [{ level: 2, rationale: "unc" }],
+        tensions: []
+      },
+      revisions: [],
+      perspectives: [null, "string"] // Invalid perspectives
+    };
+    const errors = guardCase(invalidCase);
+    expect(errors.length).toBeGreaterThan(0);
+    expect(errors.some((e) => e.includes("PerspectiveRecord must be an object"))).toBe(true);
+  });
+});
+
+
+  describe("guardReflectionSnapshot", () => {
   it("returns no errors for a valid snapshot", () => {
     expect(guardReflectionSnapshot(validSnapshot())).toHaveLength(0);
   });
@@ -613,6 +692,59 @@ describe("guardReflectionSnapshot", () => {
 // ---------------------------------------------------------------------------
 
 describe("guardCase", () => {
+
+it("guardCase rejects multiple perspectives for the same actor", () => {
+    const invalidCase: any = {
+      id: "case-1",
+      context: "ctx",
+      participants: [{ id: "actor-1", role: "primary" }],
+      observation: { text: "obs", isCameraDescribable: true },
+      currentReflection: {
+        reflectedAt: "2026-04-01T10:00:00Z",
+        interpretation: { text: "int", evidenceType: "observational" },
+        counterInterpretations: [{ text: "c", evidenceType: "derived" }],
+        uncertainties: [{ level: 2, rationale: "unc" }],
+        tensions: []
+      },
+      revisions: [],
+      perspectives: [
+        {
+          id: "p1",
+          caseId: "case-1",
+          actorId: "actor-1",
+          status: "draft",
+          createdAt: "2026-04-01T10:00:00Z",
+          content: {
+            observation: { text: "obs", isCameraDescribable: true },
+            interpretation: { text: "int", evidenceType: "observational" },
+            counterInterpretations: [{ text: "c", evidenceType: "derived" }],
+            uncertainties: [{ level: 2, rationale: "unc" }]
+          }
+        },
+        {
+          id: "p2",
+          caseId: "case-1",
+          actorId: "actor-1",
+          status: "draft",
+          createdAt: "2026-04-01T10:00:00Z",
+          content: {
+            observation: { text: "obs", isCameraDescribable: false },
+            interpretation: { text: "int", evidenceType: "observational" },
+            counterInterpretations: [{ text: "c", evidenceType: "derived" }],
+            uncertainties: [{ level: 2, rationale: "unc" }]
+          }
+        }
+      ]
+    };
+    const errors = guardCase(invalidCase);
+
+    // Ensure the ONLY error is the cardinality error (ignoring distinctness errors for identical counters in the mock)
+    expect(errors.some(e => e.includes("Only one perspective per actor is allowed"))).toBe(true);
+    expect(errors.some(e => e.includes("isCameraDescribable"))).toBe(false);
+  });
+
+
+
   it("returns no errors for a valid case", () => {
     const errors = guardCase({
       id: "case-001",
