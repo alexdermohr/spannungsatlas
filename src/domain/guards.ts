@@ -516,33 +516,41 @@ export function guardPerspectiveContent(content: unknown): readonly string[] {
   return errors;
 }
 
-export function guardPerspectiveRecord(record: PerspectiveRecord): readonly string[] {
+export function guardPerspectiveRecord(record: unknown): readonly string[] {
   const errors: string[] = [];
   const push = (r: GuardResult) => { if (r) errors.push(r); };
 
-  if (typeof record !== 'object' || record === null) {
+  if (typeof record !== 'object' || record === null || Array.isArray(record)) {
     return ["PerspectiveRecord must be an object."];
   }
 
-  if (!isNonEmptyString(record.id)) errors.push("PerspectiveRecord id must not be empty.");
-  if (!isNonEmptyString(record.caseId)) errors.push("PerspectiveRecord caseId must not be empty.");
-  if (!isNonEmptyString(record.actorId)) errors.push("PerspectiveRecord actorId must not be empty.");
+  const rec = record as Record<string, unknown>;
 
-  if (record.status !== "draft" && record.status !== "committed") {
-    errors.push(`PerspectiveRecord status must be "draft" or "committed", got "${record.status}".`);
+  if (!isNonEmptyString(rec.id)) errors.push("PerspectiveRecord id must not be empty.");
+  if (!isNonEmptyString(rec.caseId)) errors.push("PerspectiveRecord caseId must not be empty.");
+  if (!isNonEmptyString(rec.actorId)) errors.push("PerspectiveRecord actorId must not be empty.");
+
+  if (rec.status !== "draft" && rec.status !== "committed") {
+    errors.push(`PerspectiveRecord status must be "draft" or "committed", got "${rec.status}".`);
   }
 
-  push(guardIsoDateString(record.createdAt, "PerspectiveRecord.createdAt"));
+  if (typeof rec.createdAt !== 'string') {
+    errors.push("PerspectiveRecord createdAt must be a string.");
+  } else {
+    push(guardIsoDateString(rec.createdAt, "PerspectiveRecord.createdAt"));
+  }
 
-  if (record.status === "committed") {
-    if (!record.committedAt) {
+  if (rec.status === "committed") {
+    if (!rec.committedAt) {
       errors.push("PerspectiveRecord must have a committedAt date if status is committed.");
+    } else if (typeof rec.committedAt !== 'string') {
+      errors.push("PerspectiveRecord committedAt must be a string.");
     } else {
-      push(guardIsoDateString(record.committedAt, "PerspectiveRecord.committedAt"));
+      push(guardIsoDateString(rec.committedAt, "PerspectiveRecord.committedAt"));
     }
   }
 
-  errors.push(...guardPerspectiveContent(record.content));
+  errors.push(...guardPerspectiveContent(rec.content));
 
   return errors;
 }

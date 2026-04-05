@@ -4,7 +4,7 @@
   import { onMount } from 'svelte';
   import { getCase, addDraftPerspective, commitPerspective, getDraftPerspectiveForActor } from '$lib/services/case-service.js';
   import { roleLabels, evidenceLabels, uncertaintyLabels } from '$lib/ui/labels.js';
-  import type { Case, EvidenceType, UncertaintyLevel, PerspectiveRecord } from '$domain/types.js';
+  import type { Case, EvidenceType, UncertaintyLevel } from '$domain/types.js';
 
   let caseId = $state('');
   let caseData: Case | null = $state(null);
@@ -227,7 +227,7 @@
       </section>
 
       <div class="form-actions">
-        <button type="submit" class="btn btn-primary">Perspektive Committen</button>
+        <button type="submit" class="btn btn-primary">Perspektive committen</button>
         <a href="/cases/{caseId}" class="btn">Abbrechen</a>
       </div>
     </form>

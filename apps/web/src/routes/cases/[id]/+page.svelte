@@ -104,7 +104,7 @@
         </label>
       </div>
 
-      <p>Committet: <strong>{committedCount}</strong> / {caseData.participants.length}</p>
+      <p>Committed: <strong>{committedCount}</strong> / {caseData.participants.length}</p>
       <div class="actions" style="margin-top: 1rem; margin-bottom: 0;">
         <a href="/cases/{caseData.id}/perspectives/new?actor={demoActorId}" class="btn btn-primary">Perspektive als {demoActorId} hinzufügen</a>
         {#if isComparable}

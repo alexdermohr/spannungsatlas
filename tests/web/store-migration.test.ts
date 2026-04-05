@@ -110,12 +110,12 @@ describe('store migration — normalizeCaseFromStorage', () => {
     ];
 
     const store = localStorageStore;
-    vi.spyOn(globalThis.localStorage, 'getItem').mockReturnValue(JSON.stringify(rawData));
+    const getItemSpy = vi.spyOn(globalThis.localStorage, 'getItem').mockReturnValue(JSON.stringify(rawData));
 
     const cases = store.loadAllCases();
     expect(cases).toHaveLength(0); // The invalid case is filtered out
 
-    vi.restoreAllMocks();
+    getItemSpy.mockRestore();
   });
 
 
