@@ -85,6 +85,17 @@ describe('case-service - perspective management', () => {
       expect(updatedCase.perspectives![0].content.observation.text).toBe('new obs');
     });
 
+
+    it('rejects draft creation if actor already has a committed perspective', () => {
+      addDraftPerspective('case-test', DUMMY_INPUT, 'actor-1');
+      commitPerspective('case-test', 'p-1', 'actor-1');
+
+      const newDraftInput = { ...DUMMY_INPUT, id: "p-2", observation: { text: "new obs", isCameraDescribable: true } };
+
+      expect(() => addDraftPerspective('case-test', newDraftInput, 'actor-1'))
+        .toThrow("Perspective already committed for this actor.");
+    });
+
     it('does not touch drafts of other actors', () => {
       addDraftPerspective('case-test', DUMMY_INPUT, 'actor-1');
 

@@ -73,9 +73,16 @@ export function addDraftPerspective(caseId: string, input: CreatePerspectiveReco
   const c = getCase(caseId);
   if (!c) throw new Error("Case not found");
 
+  const perspectives = [...(c.perspectives || [])];
+
+  // Enforce single perspective per actor logic
+  const hasCommitted = perspectives.some(p => p.actorId === input.actorId && p.status === 'committed');
+  if (hasCommitted) {
+    throw new Error("Perspective already committed for this actor.");
+  }
+
   const perspective = createPerspectiveRecord(input);
 
-  const perspectives = [...(c.perspectives || [])];
   const existingIndex = perspectives.findIndex(p => p.actorId === input.actorId && p.status === 'draft');
   if (existingIndex >= 0) {
     perspectives[existingIndex] = perspective;
@@ -99,6 +106,12 @@ export function commitPerspective(caseId: string, perspectiveId: string, request
   const p = perspectives[index];
   if (!canWritePerspective(p, requestingActorId)) {
     throw new Error("Access denied: Cannot commit this perspective.");
+  }
+
+  // Double-check no other committed perspective exists for this actor
+  const hasCommitted = perspectives.some(existing => existing.actorId === p.actorId && existing.status === 'committed' && existing.id !== p.id);
+  if (hasCommitted) {
+    throw new Error("Perspective already committed for this actor.");
   }
 
   const committed = commitPerspectiveRecord(p, new Date().toISOString());
