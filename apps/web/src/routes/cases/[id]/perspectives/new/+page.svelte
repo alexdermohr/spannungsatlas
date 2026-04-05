@@ -77,9 +77,13 @@
     }
   }
 
-  function saveDraft() {
+  function saveDraft(): { success: boolean; error?: string } {
     try {
       if (!draftId) draftId = crypto.randomUUID();
+
+      const counters = counterRows.filter(r => r.text.trim() !== '').map(r => ({ text: r.text, evidenceType: r.evidence }));
+      const uncerts = uncertaintyRows.filter(r => r.rationale.trim() !== '').map(r => ({ level: r.level, rationale: r.rationale }));
+
       addDraftPerspective(caseId, {
         id: draftId,
         caseId,
@@ -87,14 +91,16 @@
         createdAt: new Date().toISOString(),
         observation: { text: observationText, isCameraDescribable },
         interpretation: { text: interpretationText, evidenceType: interpretationEvidence },
-        counterInterpretations: counterRows.filter(r => r.text.trim() !== '').map(r => ({ text: r.text, evidenceType: r.evidence })),
-        uncertainties: uncertaintyRows.filter(r => r.rationale.trim() !== '').map(r => ({ level: r.level, rationale: r.rationale }))
+        counterInterpretations: counters,
+        uncertainties: uncerts
       }, currentActorId);
-      // Optional: errorMsg = '';  (We don't want to clear commit errors if the user is just typing again, or maybe we do? Let's clear it on success.)
-      errorMsg = '';
+
+      errorMsg = ''; // clear on success
+      return { success: true };
     } catch (e: any) {
-      // Silently catch structural incompleteness during drafting
-      // We don't want to spam the user with errors while they are just starting to type
+      // Return false for structural errors so we don't proceed to commit.
+      // We don't set errorMsg here to avoid spamming the user while they type.
+      return { success: false, error: e.message };
     }
   }
 
@@ -133,7 +139,7 @@
 
     <div class="card form-section simulated-auth">
       <h2>Wer sind Sie?</h2>
-      <p class="helper"><strong>Demo-Zugriffssimulation (später via Benutzerkonto).</strong> Ihr Draft ist nur für die gewählte Identität sichtbar, bis er committet wird.</p>
+      <p class="helper"><strong>Demo-Zugriffssimulation (später via Benutzerkonto).</strong> Ihr Draft ist nur für die gewählte Identität sichtbar, bis er committed wird.</p>
       <label class="field">
         <select value={currentActorId} onchange={handleActorChange}>
           {#each caseData.participants as p}

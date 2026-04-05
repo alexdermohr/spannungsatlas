@@ -46,7 +46,7 @@
     {#if perspectives.length < 2}
       <div class="card empty-state">
         <h2>Nicht genügend Daten</h2>
-        <p>Der Vergleichsmodus wird erst freigeschaltet, wenn Sie Ihre eigene Perspektive committet haben UND insgesamt mindestens 2 committete Perspektiven existieren.</p>
+        <p>Der Vergleichsmodus wird erst freigeschaltet, wenn Sie Ihre eigene Perspektive committed haben UND insgesamt mindestens 2 committed Perspektiven existieren.</p>
         <!-- Don't show misleading perspectives.length count -->
         <a href="/cases/{caseId}" class="btn">Zurück zum Fall</a>
       </div>
