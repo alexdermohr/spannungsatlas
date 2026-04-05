@@ -51,6 +51,13 @@
     } else {
       draftId = crypto.randomUUID();
       draftCreatedAt = null;
+      observationText = '';
+      isCameraDescribable = false;
+      interpretationText = '';
+      interpretationEvidence = 'observational';
+      counterRows = [{ text: '', evidence: 'observational' }];
+      uncertaintyRows = [{ level: 2, rationale: '' }];
+      errorMsg = '';
     }
   }
 
