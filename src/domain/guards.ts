@@ -466,39 +466,48 @@ export function guardReflectionSnapshot(
 // PerspectiveRecord Guards
 // ---------------------------------------------------------------------------
 
-export function guardPerspectiveContent(content: PerspectiveContent): readonly string[] {
+export function guardPerspectiveContent(content: unknown): readonly string[] {
   const errors: string[] = [];
   const push = (r: GuardResult) => { if (r) errors.push(r); };
 
-  if (typeof content !== 'object' || content === null) {
+  if (typeof content !== 'object' || content === null || Array.isArray(content)) {
     return ["PerspectiveContent must be an object."];
   }
 
-  push(guardObservationText(content.observation?.text));
-  if (content.interpretation) {
-    push(guardInterpretationText(content.interpretation.text));
-    push(guardEvidenceType(content.interpretation.evidenceType));
-    push(guardObservationInterpretationDistinct(content.observation, content.interpretation));
+  const c = content as PerspectiveContent;
+
+  if (typeof c.observation !== 'object' || c.observation === null || Array.isArray(c.observation)) {
+    errors.push("PerspectiveContent must have a valid observation object.");
   } else {
-    errors.push("PerspectiveContent must have an interpretation.");
+    push(guardObservationText(c.observation.text));
   }
 
-  if (!Array.isArray(content.counterInterpretations) || content.counterInterpretations.length === 0) {
+  if (typeof c.interpretation !== 'object' || c.interpretation === null || Array.isArray(c.interpretation)) {
+    errors.push("PerspectiveContent must have a valid interpretation object.");
+  } else {
+    push(guardInterpretationText(c.interpretation.text));
+    push(guardEvidenceType(c.interpretation.evidenceType));
+    if (typeof c.observation === 'object' && c.observation !== null && !Array.isArray(c.observation)) {
+      push(guardObservationInterpretationDistinct(c.observation, c.interpretation));
+    }
+  }
+
+  if (!Array.isArray(c.counterInterpretations) || c.counterInterpretations.length === 0) {
     errors.push("At least one counter-interpretation is required.");
   } else {
-    for (const counter of content.counterInterpretations) {
+    for (const counter of c.counterInterpretations) {
       push(guardCounterInterpretationText(counter?.text));
       push(guardEvidenceType(counter?.evidenceType));
-      if (content.interpretation) {
-        push(guardInterpretationsDistinct(content.interpretation, counter));
+      if (c.interpretation) {
+        push(guardInterpretationsDistinct(c.interpretation, counter));
       }
     }
   }
 
-  if (!Array.isArray(content.uncertainties) || content.uncertainties.length === 0) {
+  if (!Array.isArray(c.uncertainties) || c.uncertainties.length === 0) {
     errors.push("At least one uncertainty is required.");
   } else {
-    for (const u of content.uncertainties) {
+    for (const u of c.uncertainties) {
       push(guardUncertaintyLevel(u?.level));
       push(guardUncertaintyRationale(u?.rationale));
     }
@@ -593,7 +602,7 @@ export function guardCase(
     errors.push("perspectives must be an array when provided.");
   } else if (Array.isArray(caseData.perspectives)) {
     for (const p of caseData.perspectives) {
-      errors.push(...guardPerspectiveRecord(p as PerspectiveRecord));
+      errors.push(...guardPerspectiveRecord(p));
     }
   }
 

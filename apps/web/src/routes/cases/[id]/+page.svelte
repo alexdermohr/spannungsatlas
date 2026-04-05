@@ -1,7 +1,7 @@
 <script lang="ts">
   import { page } from '$app/state';
   import { onMount } from 'svelte';
-  import { getCase, getVisiblePerspectivesForCase, getComparablePerspectivesForCase } from '$lib/services/case-service.js';
+  import { getCase, getCommittedPerspectiveCount, getComparablePerspectivesForCase } from '$lib/services/case-service.js';
   import { roleLabels, evidenceLabels } from '$lib/ui/labels.js';
   import { renderCaseAsMarkdown } from '$lib/services/case-report.js';
   import type { Case, EvidenceType } from '$domain/types.js';
@@ -10,6 +10,7 @@
   let loaded = $state(false);
   let copyFeedback = $state('');
   let committedCount: number = $state(0);
+  let demoActorId: string = $state('');
   let isComparable: boolean = $state(false);
 
   function evidenceBadgeClass(t: EvidenceType): string {
@@ -48,10 +49,11 @@
   onMount(() => {
     const id = page.params.id ?? '';
     caseData = getCase(id);
-    // Anyone can read committed perspectives
-    const visible = getVisiblePerspectivesForCase(id, 'external-viewer');
-    committedCount = visible.filter(p => p.status === 'committed').length;
-    isComparable = getComparablePerspectivesForCase(id).length > 0;
+    committedCount = getCommittedPerspectiveCount(id);
+    if (caseData?.participants.length) {
+      demoActorId = caseData.participants[0].id;
+      isComparable = getComparablePerspectivesForCase(id, demoActorId).length > 0;
+    }
     loaded = true;
   });
 </script>
@@ -86,17 +88,35 @@
     </section>
 
 
+
     <!-- Perspektiven Status -->
     <section class="card section">
       <h2>Perspektiven (Isolation Phase)</h2>
+      <div class="demo-notice" style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 1rem; border-left: 2px solid var(--color-accent); padding-left: 0.5rem;">
+        <em>Demo-/Prototyp-Mechanik: Im produktiven Betrieb wird die Identität (Actor) über das Benutzerkonto bestimmt. Für Testzwecke wählen Sie hier, wer Sie sein möchten, um die Sichtbarkeiten zu testen.</em>
+        <label style="display: block; margin-top: 0.5rem; font-weight: bold;">
+          Wer sind Sie jetzt?
+          <select bind:value={demoActorId} onchange={() => isComparable = getComparablePerspectivesForCase(caseData.id, demoActorId).length > 0} style="display: block; width: 100%; margin-top: 0.25rem;">
+            {#each caseData.participants as p}
+              <option value={p.id}>{p.id} ({p.role ? roleLabels[p.role] ?? p.role : 'unbekannt'})</option>
+            {/each}
+          </select>
+        </label>
+      </div>
+
       <p>Committet: <strong>{committedCount}</strong> / {caseData.participants.length}</p>
       <div class="actions" style="margin-top: 1rem; margin-bottom: 0;">
-        <a href="/cases/{caseData.id}/perspectives/new" class="btn btn-primary">Meine Perspektive hinzufügen</a>
+        <a href="/cases/{caseData.id}/perspectives/new?actor={demoActorId}" class="btn btn-primary">Perspektive als {demoActorId} hinzufügen</a>
         {#if isComparable}
-          <a href="/cases/{caseData.id}/compare" class="btn">Zum Vergleichsmodus</a>
+          <a href="/cases/{caseData.id}/compare?actor={demoActorId}" class="btn">Zum Vergleichsmodus</a>
+        {:else}
+          <span style="font-size: 0.85rem; color: var(--color-text-muted); display: inline-block; margin-left: 1rem;">
+            Vergleich nicht verfügbar (Sie haben noch nicht committet oder < 2 Commits gesamt)
+          </span>
         {/if}
       </div>
     </section>
+
 
     <!-- Beobachtung -->
     <section class="card section">

@@ -70,12 +70,34 @@ export function canWritePerspective(
  * This enforces: no partial comparison leaks. Either you see >= 2 committed
  * perspectives or you see none.
  */
+/**
+ * @deprecated Use canComparePerspectives instead for strict actor-based access control.
+ * Filters a list of perspectives to only those that are committed and
+ * returns them only if there are at least `minRequired` (default 2).
+ */
 export function getComparablePerspectives(
   perspectives: readonly PerspectiveRecord[],
   minRequired: number = 2,
 ): readonly PerspectiveRecord[] {
   const committed = perspectives.filter((p) => p.status === "committed");
   return committed.length >= minRequired ? committed : [];
+}
+
+/**
+ * Enforces the strict rule: An actor may only compare perspectives if
+ * their OWN perspective is committed AND there are at least `minRequired`
+ * total committed perspectives.
+ */
+export function canComparePerspectives(
+  perspectives: readonly PerspectiveRecord[],
+  requestingActorId: string,
+  minRequired: number = 2,
+): boolean {
+  const committed = perspectives.filter((p) => p.status === "committed");
+  if (committed.length < minRequired) return false;
+
+  const actorHasCommitted = committed.some((p) => p.actorId === requestingActorId);
+  return actorHasCommitted;
 }
 
 // ---------------------------------------------------------------------------

@@ -13,7 +13,8 @@
   onMount(() => {
     caseId = page.params.id ?? '';
     caseData = getCase(caseId);
-    perspectives = getComparablePerspectivesForCase(caseId) as PerspectiveRecord[];
+    const actor = page.url.searchParams.get('actor') || '';
+    perspectives = getComparablePerspectivesForCase(caseId, actor) as PerspectiveRecord[];
     loaded = true;
   });
 
@@ -43,7 +44,7 @@
     {#if perspectives.length < 2}
       <div class="card empty-state">
         <h2>Nicht genügend Daten</h2>
-        <p>Der Vergleichsmodus wird erst ab 2 committeten Perspektiven freigeschaltet.</p>
+        <p>Der Vergleichsmodus wird erst freigeschaltet, wenn Sie Ihre eigene Perspektive committet haben UND insgesamt mindestens 2 committete Perspektiven existieren.</p>
         <p>Aktuell committet: {perspectives.length}</p>
         <a href="/cases/{caseId}" class="btn">Zurück zum Fall</a>
       </div>

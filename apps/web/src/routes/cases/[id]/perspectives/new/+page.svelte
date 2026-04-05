@@ -30,9 +30,7 @@
     caseData = getCase(caseId);
 
     // We auto-select the first participant as the actor for demo purposes, if none is set
-    if (caseData && caseData.participants.length > 0) {
-       currentActorId = caseData.participants[0].id;
-    }
+    currentActorId = page.url.searchParams.get('actor') || (caseData && caseData.participants.length > 0 ? caseData.participants[0].id : 'User-1');
 
     loadDraft();
     loaded = true;
@@ -133,7 +131,7 @@
 
     <div class="card form-section simulated-auth">
       <h2>Wer sind Sie?</h2>
-      <p class="helper">Wählen Sie Ihre Rolle aus. Dieser Draft ist nur für Sie sichtbar, bis er committet wird.</p>
+      <p class="helper"><strong>Demo-/Prototyp-Mechanik:</strong> Im produktiven Betrieb wird dies automatisch über das Konto geregelt. Für Testzwecke wählen Sie hier, wer Sie sein möchten. Ihr Draft ist nur für diese Identität sichtbar, bis er committet wird.</p>
       <label class="field">
         <select value={currentActorId} onchange={handleActorChange}>
           {#each caseData.participants as p}

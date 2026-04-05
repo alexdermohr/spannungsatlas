@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   canReadPerspective,
   canWritePerspective,
+  canComparePerspectives,
   getComparablePerspectives,
   filterVisiblePerspectives,
 } from "../../src/domain/perspective-access.js";
@@ -88,6 +89,35 @@ describe("canWritePerspective", () => {
 // ---------------------------------------------------------------------------
 // getComparablePerspectives
 // ---------------------------------------------------------------------------
+
+
+// ---------------------------------------------------------------------------
+// canComparePerspectives
+// ---------------------------------------------------------------------------
+
+describe("canComparePerspectives", () => {
+  it("denies if total committed is less than 2, even if actor has committed", () => {
+    const perspectives = [committedPerspective("actor-1")];
+    expect(canComparePerspectives(perspectives, "actor-1")).toBe(false);
+  });
+
+  it("denies if actor has not committed, even if total >= 2", () => {
+    const perspectives = [
+      committedPerspective("actor-2", "p-2"),
+      committedPerspective("actor-3", "p-3"),
+      draftPerspective("actor-1", "p-1"), // actor-1 only has draft
+    ];
+    expect(canComparePerspectives(perspectives, "actor-1")).toBe(false);
+  });
+
+  it("allows if actor has committed and total >= 2", () => {
+    const perspectives = [
+      committedPerspective("actor-1", "p-1"),
+      committedPerspective("actor-2", "p-2"),
+    ];
+    expect(canComparePerspectives(perspectives, "actor-1")).toBe(true);
+  });
+});
 
 describe("getComparablePerspectives", () => {
   it("returns empty when no perspectives exist", () => {
