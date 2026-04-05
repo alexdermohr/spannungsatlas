@@ -131,7 +131,7 @@
 
     <div class="card form-section simulated-auth">
       <h2>Wer sind Sie?</h2>
-      <p class="helper"><strong>Demo-/Prototyp-Mechanik:</strong> Nur Demo-Zugriffssimulation, keine echte Sicherheitsgrenze. Im produktiven Betrieb wird die Identität über ein echtes Benutzerkonto bestimmt. Ihr Draft ist nur für diese Identität sichtbar, bis er committed wird.</p>
+      <p class="helper"><strong>Demo-Zugriffssimulation (später via Benutzerkonto).</strong> Ihr Draft ist nur für die gewählte Identität sichtbar, bis er committed wird.</p>
       <label class="field">
         <select value={currentActorId} onchange={handleActorChange}>
           {#each caseData.participants as p}
