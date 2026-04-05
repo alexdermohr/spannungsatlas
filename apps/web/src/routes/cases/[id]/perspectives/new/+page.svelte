@@ -10,7 +10,7 @@
   let caseData: Case | null = $state(null);
   let loaded = $state(false);
 
-  // Simulated actor for access control. Demo access simulation only — not a security boundary.
+  // Simulated actor for access control. Nur Demo-Zugriffssimulation, keine echte Sicherheitsgrenze.
   let currentActorId = $state('User-1');
 
   // Form State
@@ -131,7 +131,7 @@
 
     <div class="card form-section simulated-auth">
       <h2>Wer sind Sie?</h2>
-      <p class="helper"><strong>Demo-/Prototyp-Mechanik:</strong> Im produktiven Betrieb wird dies automatisch über das Konto geregelt. Für Testzwecke wählen Sie hier, wer Sie sein möchten. Ihr Draft ist nur für diese Identität sichtbar, bis er committet wird.</p>
+      <p class="helper"><strong>Demo-/Prototyp-Mechanik:</strong> Nur Demo-Zugriffssimulation, keine echte Sicherheitsgrenze. Im produktiven Betrieb wird die Identität über ein echtes Benutzerkonto bestimmt. Ihr Draft ist nur für diese Identität sichtbar, bis er committed wird.</p>
       <label class="field">
         <select value={currentActorId} onchange={handleActorChange}>
           {#each caseData.participants as p}

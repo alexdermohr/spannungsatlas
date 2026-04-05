@@ -2,7 +2,7 @@
   import { page } from '$app/state';
   import { onMount } from 'svelte';
   import { getCase, getComparablePerspectivesForCase } from '$lib/services/case-service.js';
-  import { roleLabels, evidenceLabels, uncertaintyLabels } from '$lib/ui/labels.js';
+  import { roleLabels, evidenceLabels } from '$lib/ui/labels.js';
   import type { Case, PerspectiveRecord } from '$domain/types.js';
 
   let caseId = $state('');

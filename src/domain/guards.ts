@@ -474,32 +474,39 @@ export function guardPerspectiveContent(content: unknown): readonly string[] {
     return ["PerspectiveContent must be an object."];
   }
 
-  const c = content as PerspectiveContent;
+  const c = content as Record<string, any>;
 
-  if (typeof c.observation !== 'object' || c.observation === null || Array.isArray(c.observation)) {
+  const hasValidObservation = typeof c.observation === 'object' && c.observation !== null && !Array.isArray(c.observation);
+  if (!hasValidObservation) {
     errors.push("PerspectiveContent must have a valid observation object.");
   } else {
     push(guardObservationText(c.observation.text));
   }
 
-  if (typeof c.interpretation !== 'object' || c.interpretation === null || Array.isArray(c.interpretation)) {
+  const hasValidInterpretation = typeof c.interpretation === 'object' && c.interpretation !== null && !Array.isArray(c.interpretation);
+  if (!hasValidInterpretation) {
     errors.push("PerspectiveContent must have a valid interpretation object.");
   } else {
     push(guardInterpretationText(c.interpretation.text));
     push(guardEvidenceType(c.interpretation.evidenceType));
-    if (typeof c.observation === 'object' && c.observation !== null && !Array.isArray(c.observation)) {
-      push(guardObservationInterpretationDistinct(c.observation, c.interpretation));
-    }
+  }
+
+  if (hasValidObservation && hasValidInterpretation) {
+    push(guardObservationInterpretationDistinct(c.observation as Observation, c.interpretation as Interpretation));
   }
 
   if (!Array.isArray(c.counterInterpretations) || c.counterInterpretations.length === 0) {
     errors.push("At least one counter-interpretation is required.");
   } else {
     for (const counter of c.counterInterpretations) {
-      push(guardCounterInterpretationText(counter?.text));
-      push(guardEvidenceType(counter?.evidenceType));
-      if (c.interpretation) {
-        push(guardInterpretationsDistinct(c.interpretation, counter));
+      if (typeof counter !== 'object' || counter === null || Array.isArray(counter)) {
+        errors.push("counterInterpretations array elements must be valid objects.");
+      } else {
+        push(guardCounterInterpretationText(counter.text));
+        push(guardEvidenceType(counter.evidenceType));
+        if (hasValidInterpretation) {
+          push(guardInterpretationsDistinct(c.interpretation as Interpretation, counter as Interpretation));
+        }
       }
     }
   }
@@ -508,8 +515,12 @@ export function guardPerspectiveContent(content: unknown): readonly string[] {
     errors.push("At least one uncertainty is required.");
   } else {
     for (const u of c.uncertainties) {
-      push(guardUncertaintyLevel(u?.level));
-      push(guardUncertaintyRationale(u?.rationale));
+      if (typeof u !== 'object' || u === null || Array.isArray(u)) {
+         errors.push("uncertainties array elements must be valid objects.");
+      } else {
+        push(guardUncertaintyLevel(u.level));
+        push(guardUncertaintyRationale(u.rationale));
+      }
     }
   }
 
