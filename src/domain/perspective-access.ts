@@ -70,10 +70,6 @@ export function canWritePerspective(
  * This enforces: no partial comparison leaks. Either you see >= 2 committed
  * perspectives or you see none.
  */
-/**
- * Filters a list of perspectives to only those that are committed and
- * returns them only if there are at least `minRequired` (default 2).
- */
 export function getComparablePerspectives(
   perspectives: readonly PerspectiveRecord[],
   minRequired: number = 2,

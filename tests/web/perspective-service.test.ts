@@ -102,6 +102,23 @@ describe('case-service - perspective management', () => {
         .toThrow("Perspective already committed for this actor.");
     });
 
+
+    it('CURRENT SEMANTICS: rejects draft creation if the input structure is incomplete (e.g., missing uncertainty)', () => {
+      const incompleteInput = {
+        id: "p-incomplete",
+        caseId: "case-test",
+        actorId: "actor-1",
+        createdAt: "2026-04-01T10:00:00Z",
+        observation: { text: "obs", isCameraDescribable: true },
+        interpretation: { text: "int", evidenceType: "observational" },
+        counterInterpretations: [{ text: "c", evidenceType: "derived" }],
+        uncertainties: [] // Intentionally omitted to test structural strictness
+      };
+
+      expect(() => addDraftPerspective('case-test', incompleteInput as any, 'actor-1'))
+        .toThrow(/uncertainty/i);
+    });
+
     it('does not touch drafts of other actors', () => {
       addDraftPerspective('case-test', DUMMY_INPUT, 'actor-1');
 

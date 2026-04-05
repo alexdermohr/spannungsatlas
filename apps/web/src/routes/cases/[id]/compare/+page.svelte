@@ -188,7 +188,7 @@
     margin-top: 1.5rem;
   }
 
-  @media (max-width: 768px) {
+  @media (max-width: 640px) {
     .comparison-grid {
       display: flex;
       flex-direction: column;
