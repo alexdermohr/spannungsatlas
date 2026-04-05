@@ -90,9 +90,11 @@
         counterInterpretations: counterRows.filter(r => r.text.trim() !== '').map(r => ({ text: r.text, evidenceType: r.evidence })),
         uncertainties: uncertaintyRows.filter(r => r.rationale.trim() !== '').map(r => ({ level: r.level, rationale: r.rationale }))
       }, currentActorId);
+      // Optional: errorMsg = '';  (We don't want to clear commit errors if the user is just typing again, or maybe we do? Let's clear it on success.)
       errorMsg = '';
     } catch (e: any) {
-      errorMsg = e.message;
+      // Silently catch structural incompleteness during drafting
+      // We don't want to spam the user with errors while they are just starting to type
     }
   }
 
