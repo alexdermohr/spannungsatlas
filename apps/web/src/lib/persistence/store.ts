@@ -1,5 +1,5 @@
 import type { Case } from '$domain/types.js';
-import type { CaseParticipant, Observation, ReflectionSnapshot, Revision, PerspectiveRecord } from '$domain/types.js';
+import type { CaseParticipant, Observation, ReflectionSnapshot, Revision } from '$domain/types.js';
 import { guardCase } from '$domain/guards.js';
 
 /** Abstraction over case persistence — swap localStorage for IndexedDB or API. */

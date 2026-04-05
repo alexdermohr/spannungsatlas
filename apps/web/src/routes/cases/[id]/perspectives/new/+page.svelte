@@ -10,7 +10,7 @@
   let caseData: Case | null = $state(null);
   let loaded = $state(false);
 
-  // Simulated actor for access control. In a real app, this comes from auth.
+  // Simulated actor for access control. Demo access simulation only — not a security boundary.
   let currentActorId = $state('User-1');
 
   // Form State

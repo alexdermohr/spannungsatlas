@@ -1,13 +1,14 @@
 <script lang="ts">
   import { page } from '$app/state';
   import { onMount } from 'svelte';
-  import { getCase, getComparablePerspectivesForCase } from '$lib/services/case-service.js';
+  import { getCase, getComparablePerspectivesForCase, getCommittedPerspectiveCount } from '$lib/services/case-service.js';
   import { roleLabels, evidenceLabels, uncertaintyLabels } from '$lib/ui/labels.js';
   import type { Case, PerspectiveRecord } from '$domain/types.js';
 
   let caseId = $state('');
   let caseData: Case | null = $state(null);
   let perspectives: PerspectiveRecord[] = $state([]);
+  let committedCount = $state(0);
   let loaded = $state(false);
 
   onMount(() => {
@@ -15,6 +16,7 @@
     caseData = getCase(caseId);
     const actor = page.url.searchParams.get('actor') || '';
     perspectives = getComparablePerspectivesForCase(caseId, actor) as PerspectiveRecord[];
+    committedCount = getCommittedPerspectiveCount(caseId);
     loaded = true;
   });
 
@@ -45,7 +47,7 @@
       <div class="card empty-state">
         <h2>Nicht genügend Daten</h2>
         <p>Der Vergleichsmodus wird erst freigeschaltet, wenn Sie Ihre eigene Perspektive committet haben UND insgesamt mindestens 2 committete Perspektiven existieren.</p>
-        <p>Aktuell committet: {perspectives.length}</p>
+        <!-- Don't show misleading perspectives.length count -->
         <a href="/cases/{caseId}" class="btn">Zurück zum Fall</a>
       </div>
     {:else}

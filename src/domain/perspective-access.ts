@@ -71,7 +71,6 @@ export function canWritePerspective(
  * perspectives or you see none.
  */
 /**
- * @deprecated Use canComparePerspectives instead for strict actor-based access control.
  * Filters a list of perspectives to only those that are committed and
  * returns them only if there are at least `minRequired` (default 2).
  */

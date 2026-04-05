@@ -93,7 +93,7 @@
     <section class="card section">
       <h2>Perspektiven (Isolation Phase)</h2>
       <div class="demo-notice" style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 1rem; border-left: 2px solid var(--color-accent); padding-left: 0.5rem;">
-        <em>Demo-/Prototyp-Mechanik: Im produktiven Betrieb wird die Identität (Actor) über das Benutzerkonto bestimmt. Für Testzwecke wählen Sie hier, wer Sie sein möchten, um die Sichtbarkeiten zu testen.</em>
+        <em>Demo access simulation only — not a security boundary. Im produktiven Betrieb wird die Identität (Actor) über das echte Benutzerkonto bestimmt.</em>
         <label style="display: block; margin-top: 0.5rem; font-weight: bold;">
           Wer sind Sie jetzt?
           <select bind:value={demoActorId} onchange={() => isComparable = getComparablePerspectivesForCase(caseData.id, demoActorId).length > 0} style="display: block; width: 100%; margin-top: 0.25rem;">
