@@ -98,17 +98,30 @@
       errorMsg = ''; // clear on success
       return { success: true };
     } catch (e: any) {
-      // Return false for structural errors so we don't proceed to commit.
-      // We don't set errorMsg here to avoid spamming the user while they type.
+      // Log unexpected errors but don't show to user while typing
       return { success: false, error: e.message };
     }
   }
 
   function onCommit() {
-    try {
-      saveDraft(); // ensure latest is saved
-      if (errorMsg) return; // Wait if there are structural errors
+    const result = saveDraft();
+    if (!result.success) {
+      // Translate common validation errors
+      let msg = result.error || 'Bitte füllen Sie alle Felder aus.';
+      if (msg.includes('counter-interpretation') || msg.includes('Gegen-Deutung')) {
+        msg = 'Für das Commit wird mindestens eine Gegen-Deutung benötigt.';
+      } else if (msg.includes('uncertainty')) {
+        msg = 'Für das Commit wird mindestens eine Unsicherheitsbegründung benötigt.';
+      } else if (msg.includes('observation')) {
+        msg = 'Für das Commit wird eine Beobachtung benötigt.';
+      } else if (msg.includes('interpretation')) {
+        msg = 'Für das Commit wird eine Deutung benötigt.';
+      }
+      errorMsg = 'Die Perspektive ist noch unvollständig: ' + msg;
+      return;
+    }
 
+    try {
       commitPerspective(caseId, draftId!, currentActorId);
       goto(`/cases/${caseId}`);
     } catch (e: any) {
