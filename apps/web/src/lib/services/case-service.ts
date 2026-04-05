@@ -67,6 +67,9 @@ export function replaceAllCases(cases: readonly Case[]): void {
 
 
 export function addDraftPerspective(caseId: string, input: CreatePerspectiveRecordInput, requestingActorId: string): Case {
+  if (input.caseId !== caseId) {
+    throw new Error("Perspective caseId does not match target case.");
+  }
   if (input.actorId !== requestingActorId) {
     throw new Error("Access denied: You can only create drafts for yourself.");
   }

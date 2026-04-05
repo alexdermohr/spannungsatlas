@@ -482,6 +482,9 @@ export function guardPerspectiveContent(content: unknown): readonly string[] {
     errors.push("PerspectiveContent must have a valid observation object.");
   } else {
     push(guardObservationText(obs.text as string));
+    if (typeof obs.isCameraDescribable !== 'boolean') {
+      errors.push("PerspectiveContent.observation.isCameraDescribable must be a boolean.");
+    }
   }
 
   const interp = c.interpretation as Record<string, unknown> | undefined;
@@ -579,6 +582,10 @@ export function guardPerspectiveRecord(record: unknown): readonly string[] {
       errors.push("PerspectiveRecord committedAt must be a string.");
     } else {
       push(guardIsoDateString(rec.committedAt, "PerspectiveRecord.committedAt"));
+    }
+  } else if (rec.status === "draft") {
+    if (rec.committedAt !== undefined) {
+      errors.push("PerspectiveRecord committedAt must be absent when status is draft.");
     }
   }
 

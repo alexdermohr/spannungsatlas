@@ -222,7 +222,7 @@
                 </select>
               </label>
               {#if counterRows.length > 1}
-                <button type="button" class="btn-remove" onclick={() => { removeCounterRow(i); saveDraft(); }}>×</button>
+                <button type="button" class="btn-remove" onclick={() => { removeCounterRow(i); saveDraft(); }} aria-label="Gegen-Deutung {i + 1} entfernen">×</button>
               {/if}
             </div>
           </div>
@@ -250,7 +250,7 @@
             </label>
             <div class="uncertainty-block-footer">
                {#if uncertaintyRows.length > 1}
-                <button type="button" class="btn-remove" onclick={() => { removeUncertaintyRow(i); saveDraft(); }}>×</button>
+                <button type="button" class="btn-remove" onclick={() => { removeUncertaintyRow(i); saveDraft(); }} aria-label="Unsicherheit {i + 1} entfernen">×</button>
               {/if}
             </div>
           </div>

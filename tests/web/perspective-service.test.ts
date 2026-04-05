@@ -86,6 +86,12 @@ describe('case-service - perspective management', () => {
     });
 
 
+    it('rejects draft creation if input.caseId does not match caseId parameter', () => {
+      const badInput = { ...DUMMY_INPUT, caseId: 'wrong-case' };
+      expect(() => addDraftPerspective('case-test', badInput, 'actor-1'))
+        .toThrow("Perspective caseId does not match target case.");
+    });
+
     it('rejects draft creation if actor already has a committed perspective', () => {
       addDraftPerspective('case-test', DUMMY_INPUT, 'actor-1');
       commitPerspective('case-test', 'p-1', 'actor-1');

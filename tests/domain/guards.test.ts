@@ -538,6 +538,43 @@ describe("guardPerspectiveRecord & guardPerspectiveContent", () => {
     expect(guardPerspectiveContent({ observation: "string" }).length).toBeGreaterThan(0);
   });
 
+
+  it("guardPerspectiveContent rejects missing or non-boolean isCameraDescribable", () => {
+    const invalid1 = {
+      observation: { text: "obs" }, // missing isCameraDescribable
+      interpretation: { text: "int", evidenceType: "observational" },
+      counterInterpretations: [{ text: "c", evidenceType: "derived" }],
+      uncertainties: [{ level: 2, rationale: "unc" }]
+    };
+    const invalid2 = {
+      ...invalid1,
+      observation: { text: "obs", isCameraDescribable: "yes" } // not a boolean
+    };
+
+    expect(guardPerspectiveContent(invalid1).some(e => e.includes("isCameraDescribable must be a boolean"))).toBe(true);
+    expect(guardPerspectiveContent(invalid2).some(e => e.includes("isCameraDescribable must be a boolean"))).toBe(true);
+  });
+
+
+  it("guardPerspectiveRecord rejects draft status with committedAt", () => {
+    const invalidDraft: any = {
+      id: "p-draft",
+      caseId: "case-1",
+      actorId: "actor-1",
+      status: "draft",
+      createdAt: "2026-04-01T10:00:00Z",
+      committedAt: "2026-04-01T10:00:00Z",
+      content: {
+        observation: { text: "obs", isCameraDescribable: true },
+        interpretation: { text: "int", evidenceType: "observational" },
+        counterInterpretations: [{ text: "c", evidenceType: "derived" }],
+        uncertainties: [{ level: 2, rationale: "unc" }]
+      }
+    };
+    const errors = guardPerspectiveRecord(invalidDraft);
+    expect(errors.some(e => e.includes("committedAt must be absent when status is draft"))).toBe(true);
+  });
+
   it("guardCase passes elements without casting and rejects invalid arrays", () => {
     const invalidCase: any = {
       id: "case-1",
