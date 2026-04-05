@@ -1,3 +1,4 @@
+import { vi } from "vitest";
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { localStorageStore } from '../../apps/web/src/lib/persistence/store.js';
 
@@ -83,6 +84,40 @@ describe('store migration — normalizeCaseFromStorage', () => {
     expect(cases[0].currentReflection.uncertainties).toHaveLength(1);
     expect(cases[0].currentReflection.uncertainties[0].rationale).toBe('Quite uncertain about this.');
   });
+
+
+  it('isValidCase rejects cases with invalid perspective elements', () => {
+    // This goes directly to the internal isValidCase by passing through the array mapping if we were doing readCases,
+    // but the easiest way is to push a bad case and see if loadAllCases rejects it.
+
+    // We mock localStorage for a quick test
+    const rawData = [
+      {
+        id: "case-1",
+        context: "ctx",
+        participants: [{ id: "p1", role: "primary" }],
+        observation: { text: "obs", isCameraDescribable: true },
+        currentReflection: {
+          reflectedAt: "2026-04-01T10:00:00Z",
+          interpretation: { text: "int", evidenceType: "observational" },
+          counterInterpretations: [{ text: "c", evidenceType: "derived" }],
+          uncertainties: [{ level: 2, rationale: "unc" }],
+          tensions: []
+        },
+        revisions: [],
+        perspectives: [null] // Should fail isValidCase
+      }
+    ];
+
+    const store = localStorageStore;
+    const getItemSpy = vi.spyOn(globalThis.localStorage, 'getItem').mockReturnValue(JSON.stringify(rawData));
+
+    const cases = store.loadAllCases();
+    expect(cases).toHaveLength(0); // The invalid case is filtered out
+
+    getItemSpy.mockRestore();
+  });
+
 
   it('does not wrap a legacy counterInterpretation that is already an array — case is skipped as invalid', () => {
     // An array value in the legacy singular field must not be double-wrapped.

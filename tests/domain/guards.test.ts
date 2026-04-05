@@ -23,6 +23,8 @@ import {
   guardRevisionFromTo,
   guardReflectionSnapshot,
   guardCase,
+  guardPerspectiveRecord,
+  guardPerspectiveContent,
 } from "../../src/domain/guards.js";
 import type {
   Interpretation,
@@ -518,6 +520,45 @@ describe("guardRevisionFromTo", () => {
 // ---------------------------------------------------------------------------
 // Composite: ReflectionSnapshot
 // ---------------------------------------------------------------------------
+
+
+// ---------------------------------------------------------------------------
+// guardPerspectiveRecord & guardPerspectiveContent
+// ---------------------------------------------------------------------------
+
+describe("guardPerspectiveRecord & guardPerspectiveContent", () => {
+  it("guardPerspectiveRecord rejects null or non-objects", () => {
+    expect(guardPerspectiveRecord(null).length).toBeGreaterThan(0);
+    expect(guardPerspectiveRecord("string").length).toBeGreaterThan(0);
+    expect(guardPerspectiveRecord([]).length).toBeGreaterThan(0);
+  });
+
+  it("guardPerspectiveContent rejects missing observation/interpretation objects", () => {
+    expect(guardPerspectiveContent({}).length).toBeGreaterThan(0);
+    expect(guardPerspectiveContent({ observation: "string" }).length).toBeGreaterThan(0);
+  });
+
+  it("guardCase passes elements without casting and rejects invalid arrays", () => {
+    const invalidCase: any = {
+      id: "case-1",
+      context: "ctx",
+      participants: [{ id: "p1", role: "primary" }],
+      observation: { text: "obs", isCameraDescribable: true },
+      currentReflection: {
+        reflectedAt: "2026-04-01T10:00:00Z",
+        interpretation: { text: "int", evidenceType: "observational" },
+        counterInterpretations: [{ text: "c", evidenceType: "derived" }],
+        uncertainties: [{ level: 2, rationale: "unc" }],
+        tensions: []
+      },
+      revisions: [],
+      perspectives: [null, "string"] // Invalid perspectives
+    };
+    const errors = guardCase(invalidCase);
+    expect(errors.length).toBeGreaterThan(0);
+    expect(errors.some((e) => e.includes("PerspectiveRecord must be an object"))).toBe(true);
+  });
+});
 
 describe("guardReflectionSnapshot", () => {
   it("returns no errors for a valid snapshot", () => {

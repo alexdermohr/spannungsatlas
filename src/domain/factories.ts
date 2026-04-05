@@ -26,6 +26,8 @@ import type {
   UncertaintyLevel,
   DriftType,
   CaseSource,
+  PerspectiveRecord,
+  PerspectiveContent
 } from "./types.js";
 
 import {
@@ -50,6 +52,7 @@ import {
   guardRevisionFromTo,
   guardReflectionSnapshot,
   guardCase,
+  guardPerspectiveRecord,
 } from "./guards.js";
 
 // ---------------------------------------------------------------------------
@@ -244,6 +247,93 @@ export function createRevision(input: CreateRevisionInput): Revision {
   };
 }
 
+
+// ---------------------------------------------------------------------------
+// PerspectiveRecord
+// ---------------------------------------------------------------------------
+
+export interface CreatePerspectiveRecordInput {
+  id: string;
+  caseId: string;
+  actorId: string;
+  observation: CreateObservationInput;
+  interpretation: CreateInterpretationInput;
+  counterInterpretations: CreateInterpretationInput[];
+  uncertainties: CreateUncertaintyInput[];
+  createdAt: string;
+}
+
+export function createPerspectiveRecord(
+  input: CreatePerspectiveRecordInput,
+): PerspectiveRecord {
+  throwIfError(guardIsoDateString(input.createdAt, "createdAt"));
+
+  const observation = createObservation(input.observation);
+  const interpretation = createInterpretation(input.interpretation);
+
+  throwIfError(guardObservationInterpretationDistinct(observation, interpretation));
+
+  if (input.counterInterpretations.length === 0) {
+    throw new Error("At least one counter-interpretation is required.");
+  }
+  const counterInterpretations = input.counterInterpretations.map(createInterpretation);
+  for (const counter of counterInterpretations) {
+    throwIfError(guardInterpretationsDistinct(interpretation, counter));
+  }
+  for (let i = 0; i < counterInterpretations.length; i++) {
+    for (let j = i + 1; j < counterInterpretations.length; j++) {
+      throwIfError(guardDistinctTexts(
+        counterInterpretations[i],
+        counterInterpretations[j],
+        "Two counter-interpretation texts must not be textually identical.",
+      ));
+    }
+  }
+
+  if (input.uncertainties.length === 0) {
+    throw new Error("At least one uncertainty is required.");
+  }
+  const uncertainties = input.uncertainties.map(createUncertainty);
+
+  const content: PerspectiveContent = {
+    observation,
+    interpretation,
+    counterInterpretations,
+    uncertainties,
+  };
+
+  const record: PerspectiveRecord = {
+    id: input.id,
+    caseId: input.caseId,
+    actorId: input.actorId,
+    status: "draft",
+    content,
+    createdAt: input.createdAt,
+  };
+
+  throwIfErrors(guardPerspectiveRecord(record));
+
+  return record;
+}
+
+export function commitPerspectiveRecord(record: PerspectiveRecord, committedAt: string): PerspectiveRecord {
+  if (record.status === "committed") {
+    throw new Error("PerspectiveRecord is already committed.");
+  }
+
+  throwIfError(guardIsoDateString(committedAt, "committedAt"));
+
+  const committedRecord: PerspectiveRecord = {
+    ...record,
+    status: "committed",
+    committedAt,
+  };
+
+  throwIfErrors(guardPerspectiveRecord(committedRecord));
+
+  return committedRecord;
+}
+
 // ---------------------------------------------------------------------------
 // Case
 // ---------------------------------------------------------------------------
@@ -257,6 +347,7 @@ export interface CreateCaseInput {
   currentReflection: CreateReflectionSnapshotInput;
   revisions?: CreateRevisionInput[];
   sources?: CaseSource[];
+  perspectives?: PerspectiveRecord[];
 }
 
 export function createCase(input: CreateCaseInput): Case {
@@ -293,6 +384,7 @@ export function createCase(input: CreateCaseInput): Case {
     currentReflection,
     revisions,
     ...(input.sources ? { sources: [...input.sources] } : {}),
+    ...(input.perspectives ? { perspectives: [...input.perspectives] } : {}),
   };
 
   // Run composite guard as final sanity check
