@@ -129,6 +129,26 @@ describe('case-service - perspective management', () => {
     });
   });
 
+    describe('partial safe reload', () => {
+    it('returns the partial draft safely without losing original empty fields context', () => {
+      const incompleteInput = { ...DUMMY_INPUT };
+      delete (incompleteInput as any).counterInterpretations;
+      delete (incompleteInput as any).uncertainties;
+
+      const caseId = 'case-test';
+      const actorId = 'actor-1';
+
+      addDraftPerspective(caseId, incompleteInput as any, actorId);
+
+      const draft = getDraftPerspectiveForActor(caseId, actorId);
+
+      expect(draft).toBeDefined();
+      expect(draft!.content.counterInterpretations).toBeUndefined();
+      expect(draft!.content.uncertainties).toBeUndefined();
+      expect(draft!.content.observation?.text).toBe(incompleteInput.observation?.text);
+    });
+  });
+
   describe('commitPerspective', () => {
     it('successfully commits own draft', () => {
       addDraftPerspective('case-test', DUMMY_INPUT, 'actor-1');

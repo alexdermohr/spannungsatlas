@@ -309,7 +309,7 @@ export function commitPerspectiveRecord(record: PerspectiveRecord, committedAt: 
     throw new Error("Für den Commit ist eine gültige Beobachtung (Text) zwingend erforderlich.");
   }
   if (typeof c.observation.isCameraDescribable !== 'boolean') {
-    throw new Error("Für den Commit muss angegeben werden, ob die Beobachtung kamera-beschreibbar ist.");
+    throw new Error("Für den Commit muss der Kamera-Test (isCameraDescribable) als boolescher Wert vorliegen.");
   }
 
   if (!c.interpretation || typeof c.interpretation.text !== 'string' || c.interpretation.text.trim() === '' || !c.interpretation.evidenceType) {
