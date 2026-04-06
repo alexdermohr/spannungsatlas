@@ -177,3 +177,100 @@ describe('store migration — normalizeCaseFromStorage', () => {
     expect(rev.to.uncertainties[0].rationale).toBe('Revised uncertainty rationale.');
   });
 });
+
+describe("store migration — draft handling", () => {
+  it("accepts cases containing a valid partial draft perspective", () => {
+    const rawData = [
+      {
+        id: "case-with-draft",
+        context: "Schulhof",
+        participants: [{ id: "Kind A" }],
+        observation: { text: "Das Kind läuft.", isCameraDescribable: true },
+        currentReflection: {
+          reflectedAt: "2025-01-01T10:00:00Z",
+          interpretation: { text: "Freude", evidenceType: "observational" },
+          counterInterpretations: [{ text: "Flucht", evidenceType: "speculative" }],
+          uncertainties: [{ level: 3, rationale: "Keine Mimik sichtbar" }],
+          tensions: []
+        },
+        revisions: [],
+        perspectives: [
+          {
+            id: "draft-1",
+            caseId: "case-with-draft",
+            actorId: "Kind A",
+            status: "draft",
+            createdAt: "2025-01-01T11:00:00Z",
+            content: {
+              observation: { text: "Ein partial Draft", isCameraDescribable: false }
+            }
+          }
+        ]
+      }
+    ];
+
+
+    const mockStorage = (() => {
+      let store: Record<string, string> = {};
+      return {
+        getItem: (key: string) => store[key] || null,
+        setItem: (key: string, value: string) => { store[key] = value.toString(); },
+        clear: () => { store = {}; }
+      };
+    })();
+    vi.stubGlobal('localStorage', mockStorage);
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(rawData));
+    const loaded = localStorageStore.loadAllCases();
+    expect(loaded).toHaveLength(1);
+    expect(loaded[0].perspectives?.[0].status).toBe("draft");
+    expect(loaded[0].perspectives?.[0].content.observation?.text).toBe("Ein partial Draft");
+    expect(loaded[0].perspectives?.[0].content.interpretation).toBeUndefined();
+  });
+
+  it("rejects cases containing an invalid draft perspective (e.g. text is a number)", () => {
+    const rawData = [
+      {
+        id: "case-with-invalid-draft",
+        context: "Schulhof",
+        participants: [{ id: "Kind A" }],
+        observation: { text: "Das Kind läuft.", isCameraDescribable: true },
+        currentReflection: {
+          reflectedAt: "2025-01-01T10:00:00Z",
+          interpretation: { text: "Freude", evidenceType: "observational" },
+          counterInterpretations: [{ text: "Flucht", evidenceType: "speculative" }],
+          uncertainties: [{ level: 3, rationale: "Keine Mimik sichtbar" }],
+          tensions: []
+        },
+        revisions: [],
+        perspectives: [
+          {
+            id: "draft-1",
+            caseId: "case-with-invalid-draft",
+            actorId: "Kind A",
+            status: "draft",
+            createdAt: "2025-01-01T11:00:00Z",
+            content: {
+              observation: { text: 12345 } // Invalid text type
+            }
+          }
+        ]
+      }
+    ];
+
+
+    const mockStorage = (() => {
+      let store: Record<string, string> = {};
+      return {
+        getItem: (key: string) => store[key] || null,
+        setItem: (key: string, value: string) => { store[key] = value.toString(); },
+        clear: () => { store = {}; }
+      };
+    })();
+    vi.stubGlobal('localStorage', mockStorage);
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(rawData));
+    const loaded = localStorageStore.loadAllCases();
+    expect(loaded).toHaveLength(0);
+  });
+});

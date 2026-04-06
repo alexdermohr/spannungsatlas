@@ -23,6 +23,7 @@ import {
   guardRevisionFromTo,
   guardReflectionSnapshot,
   guardCase,
+  guardPerspectiveDraftContent,
   guardPerspectiveRecord, guardPerspectiveCommittedContent,
 } from "../../src/domain/guards.js";
 import type {

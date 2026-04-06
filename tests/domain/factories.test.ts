@@ -7,6 +7,8 @@ import {
   createReflectionSnapshot,
   createRevision,
   createCase,
+  createPerspectiveDraftRecord,
+  commitPerspectiveRecord,
 } from "../../src/domain/factories.js";
 import type { EvidenceType, ReflectionSnapshot } from "../../src/domain/types.js";
 
@@ -577,5 +579,66 @@ describe("createCase", () => {
         ],
       }),
     ).toThrow(/Anna/i);
+  });
+});
+
+describe("Perspective Draft Commit Boundaries", () => {
+  const validDraftInput = () => ({
+    id: "p-001",
+    caseId: "case-001",
+    actorId: "actor-001",
+    createdAt: "2026-03-28T10:00:00Z",
+  });
+
+  it("throws specific errors when committing incomplete draft details", () => {
+
+
+    const draftNoText = createPerspectiveDraftRecord({
+      ...validDraftInput(),
+      observation: { isCameraDescribable: true }
+    });
+    expect(() => commitPerspectiveRecord(draftNoText, "2026-03-28T10:30:00Z")).toThrow("Für den Commit ist eine gültige Beobachtung (Text) zwingend erforderlich.");
+
+    const draftNoInterp = createPerspectiveDraftRecord({
+      ...validDraftInput(),
+      observation: { text: "Beobachtung", isCameraDescribable: true },
+      counterInterpretations: [{ text: "Gegendeutung", evidenceType: "derived" }],
+      uncertainties: [{ level: 3, rationale: "Unklar" }]
+    });
+    expect(() => commitPerspectiveRecord(draftNoInterp, "2026-03-28T10:30:00Z")).toThrow("Für den Commit ist eine gültige Deutung mit zugehörigem Evidenztyp zwingend erforderlich.");
+
+    const draftNoCounters = createPerspectiveDraftRecord({
+      ...validDraftInput(),
+      observation: { text: "Beobachtung", isCameraDescribable: true },
+      interpretation: { text: "Deutung", evidenceType: "observational" },
+      uncertainties: [{ level: 3, rationale: "Unklar" }]
+    });
+    expect(() => commitPerspectiveRecord(draftNoCounters, "2026-03-28T10:30:00Z")).toThrow("Für den Commit wird mindestens eine Gegen-Deutung benötigt.");
+
+    const draftCountersNoEvidence = createPerspectiveDraftRecord({
+      ...validDraftInput(),
+      observation: { text: "Beobachtung", isCameraDescribable: true },
+      interpretation: { text: "Deutung", evidenceType: "observational" },
+      counterInterpretations: [{ text: "Gegendeutung" }],
+      uncertainties: [{ level: 3, rationale: "Unklar" }]
+    });
+    expect(() => commitPerspectiveRecord(draftCountersNoEvidence, "2026-03-28T10:30:00Z")).toThrow("Gegen-Deutung 1 ist unvollständig (Text und Evidenztyp benötigt).");
+
+    const draftNoUncerts = createPerspectiveDraftRecord({
+      ...validDraftInput(),
+      observation: { text: "Beobachtung", isCameraDescribable: true },
+      interpretation: { text: "Deutung", evidenceType: "observational" },
+      counterInterpretations: [{ text: "Gegendeutung", evidenceType: "derived" }],
+    });
+    expect(() => commitPerspectiveRecord(draftNoUncerts, "2026-03-28T10:30:00Z")).toThrow("Für den Commit wird mindestens eine Unsicherheitsbegründung benötigt.");
+
+    const draftUncertsNoRationale = createPerspectiveDraftRecord({
+      ...validDraftInput(),
+      observation: { text: "Beobachtung", isCameraDescribable: true },
+      interpretation: { text: "Deutung", evidenceType: "observational" },
+      counterInterpretations: [{ text: "Gegendeutung", evidenceType: "derived" }],
+      uncertainties: [{ level: 3 }]
+    });
+    expect(() => commitPerspectiveRecord(draftUncertsNoRationale, "2026-03-28T10:30:00Z")).toThrow("Unsicherheit 1 ist unvollständig (Stufe und Begründung benötigt).");
   });
 });
