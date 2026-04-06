@@ -22,6 +22,9 @@ import type {
   Interpretation,
   Observation,
   PerspectiveDraftContent,
+  PerspectiveDraftObservation,
+  PerspectiveDraftInterpretation,
+  PerspectiveDraftUncertainty,
   PerspectiveCommittedContent,
   PerspectiveDraftRecord,
   PerspectiveCommittedRecord,
@@ -259,10 +262,10 @@ export interface CreatePerspectiveDraftInput {
   id: string;
   caseId: string;
   actorId: string;
-  observation?: Partial<CreateObservationInput>;
-  interpretation?: Partial<CreateInterpretationInput>;
-  counterInterpretations?: Partial<CreateInterpretationInput>[];
-  uncertainties?: Partial<CreateUncertaintyInput>[];
+  observation?: PerspectiveDraftObservation;
+  interpretation?: PerspectiveDraftInterpretation;
+  counterInterpretations?: readonly PerspectiveDraftInterpretation[];
+  uncertainties?: readonly PerspectiveDraftUncertainty[];
   createdAt: string;
 }
 
@@ -301,15 +304,24 @@ export function commitPerspectiveRecord(record: PerspectiveRecord, committedAt: 
 
   // Ensure Draft has everything needed for Committed state
   const c = record.content;
-  if (!c.observation || !c.observation.text) {
+  if (!c.observation || typeof c.observation.text !== 'string' || c.observation.text.trim() === '') {
     throw new Error("PerspectiveCommittedContent must have a valid observation object with text.");
   }
-  if (!c.interpretation || !c.interpretation.text || !c.interpretation.evidenceType) {
+  if (!c.interpretation || typeof c.interpretation.text !== 'string' || c.interpretation.text.trim() === '' || !c.interpretation.evidenceType) {
     throw new Error("PerspectiveCommittedContent must have a valid interpretation object with text and evidenceType.");
   }
 
-  const observation = createObservation(c.observation as CreateObservationInput);
-  const interpretation = createInterpretation(c.interpretation as CreateInterpretationInput);
+  const observation = createObservation({
+    text: c.observation.text,
+    isCameraDescribable: c.observation.isCameraDescribable,
+    recurringAspects: c.observation.recurringAspects ? [...c.observation.recurringAspects] : undefined
+  });
+
+  const interpretation = createInterpretation({
+    text: c.interpretation.text,
+    evidenceType: c.interpretation.evidenceType,
+    rationale: c.interpretation.rationale
+  });
 
   throwIfError(guardObservationInterpretationDistinct(observation, interpretation));
 
@@ -318,8 +330,12 @@ export function commitPerspectiveRecord(record: PerspectiveRecord, committedAt: 
   }
 
   const counterInterpretations = c.counterInterpretations.map(ci => {
-      if (!ci.text || !ci.evidenceType) throw new Error("counterInterpretations array elements must be valid objects with text and evidenceType.");
-      return createInterpretation(ci as CreateInterpretationInput)
+      if (typeof ci.text !== 'string' || ci.text.trim() === '' || !ci.evidenceType) throw new Error("counterInterpretations array elements must be valid objects with text and evidenceType.");
+      return createInterpretation({
+        text: ci.text,
+        evidenceType: ci.evidenceType,
+        rationale: ci.rationale
+      });
   });
 
   for (const counter of counterInterpretations) {
@@ -340,8 +356,11 @@ export function commitPerspectiveRecord(record: PerspectiveRecord, committedAt: 
   }
 
   const uncertainties = c.uncertainties.map(u => {
-      if (u.level === undefined || !u.rationale) throw new Error("uncertainties array elements must be valid objects with level and rationale.");
-      return createUncertainty(u as CreateUncertaintyInput);
+      if (typeof u.level !== 'number' || typeof u.rationale !== 'string' || u.rationale.trim() === '') throw new Error("uncertainties array elements must be valid objects with level and rationale.");
+      return createUncertainty({
+        level: u.level,
+        rationale: u.rationale
+      });
   });
 
   const committedContent: PerspectiveCommittedContent = {

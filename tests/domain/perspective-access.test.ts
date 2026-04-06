@@ -1,3 +1,4 @@
+import type { PerspectiveCommittedContent } from '../../src/domain/types.js';
 import { describe, it, expect } from "vitest";
 import {
   canReadPerspective,
@@ -12,7 +13,7 @@ import type { PerspectiveRecord } from "../../src/domain/types.js";
 // Helpers
 // ---------------------------------------------------------------------------
 
-const dummyContent: any = {
+const dummyContent: PerspectiveCommittedContent = {
   observation: { text: "obs", isCameraDescribable: true },
   interpretation: { text: "interp", evidenceType: "observational" },
   counterInterpretations: [{ text: "counter", evidenceType: "derived" }],

@@ -480,6 +480,13 @@ export function guardPerspectiveDraftContent(content: unknown): readonly string[
     const obs = c.observation as Record<string, unknown>;
     if (typeof obs !== 'object' || obs === null || Array.isArray(obs)) {
       errors.push("PerspectiveDraftContent.observation must be an object if present.");
+    } else {
+      if (obs.text !== undefined && typeof obs.text !== 'string') {
+        errors.push("PerspectiveDraftContent.observation.text must be a string if present.");
+      }
+      if (obs.isCameraDescribable !== undefined && typeof obs.isCameraDescribable !== 'boolean') {
+        errors.push("PerspectiveDraftContent.observation.isCameraDescribable must be a boolean if present.");
+      }
     }
   }
 
@@ -487,6 +494,14 @@ export function guardPerspectiveDraftContent(content: unknown): readonly string[
     const interp = c.interpretation as Record<string, unknown>;
     if (typeof interp !== 'object' || interp === null || Array.isArray(interp)) {
       errors.push("PerspectiveDraftContent.interpretation must be an object if present.");
+    } else {
+      if (interp.text !== undefined && typeof interp.text !== 'string') {
+        errors.push("PerspectiveDraftContent.interpretation.text must be a string if present.");
+      }
+      if (interp.evidenceType !== undefined) {
+        const evErr = guardEvidenceType(interp.evidenceType as string);
+        if (evErr) errors.push(evErr);
+      }
     }
   }
 
@@ -497,6 +512,15 @@ export function guardPerspectiveDraftContent(content: unknown): readonly string[
       for (const counter of c.counterInterpretations) {
         if (typeof counter !== 'object' || counter === null || Array.isArray(counter)) {
           errors.push("counterInterpretations array elements must be objects.");
+        } else {
+          const ct = counter as Record<string, unknown>;
+          if (ct.text !== undefined && typeof ct.text !== 'string') {
+            errors.push("counterInterpretations text must be a string if present.");
+          }
+          if (ct.evidenceType !== undefined) {
+            const evErr = guardEvidenceType(ct.evidenceType as string);
+            if (evErr) errors.push(evErr);
+          }
         }
       }
     }
@@ -509,6 +533,15 @@ export function guardPerspectiveDraftContent(content: unknown): readonly string[
       for (const u of c.uncertainties) {
         if (typeof u !== 'object' || u === null || Array.isArray(u)) {
           errors.push("uncertainties array elements must be objects.");
+        } else {
+          const un = u as Record<string, unknown>;
+          if (un.level !== undefined) {
+            const lvlErr = guardUncertaintyLevel(un.level as number);
+            if (lvlErr) errors.push(lvlErr);
+          }
+          if (un.rationale !== undefined && typeof un.rationale !== 'string') {
+            errors.push("uncertainties rationale must be a string if present.");
+          }
         }
       }
     }

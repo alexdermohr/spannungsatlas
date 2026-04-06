@@ -42,12 +42,29 @@
     if (draft) {
       draftId = draft.id;
       draftCreatedAt = draft.createdAt;
-      observationText = draft.content.observation.text;
-      isCameraDescribable = draft.content.observation.isCameraDescribable;
-      interpretationText = draft.content.interpretation.text;
-      interpretationEvidence = draft.content.interpretation.evidenceType;
-      counterRows = draft.content.counterInterpretations.map(c => ({ text: c.text, evidence: c.evidenceType }));
-      uncertaintyRows = draft.content.uncertainties.map(u => ({ level: u.level, rationale: u.rationale }));
+
+      const obs = draft.content.observation;
+      observationText = obs?.text ?? '';
+      isCameraDescribable = obs?.isCameraDescribable ?? false;
+
+      const interp = draft.content.interpretation;
+      interpretationText = interp?.text ?? '';
+      interpretationEvidence = interp?.evidenceType ?? 'observational';
+
+      const counters = draft.content.counterInterpretations;
+      if (counters && counters.length > 0) {
+        counterRows = counters.map(c => ({ text: c.text ?? '', evidence: c.evidenceType ?? 'observational' }));
+      } else {
+        counterRows = [{ text: '', evidence: 'observational' }];
+      }
+
+      const uncerts = draft.content.uncertainties;
+      if (uncerts && uncerts.length > 0) {
+        uncertaintyRows = uncerts.map(u => ({ level: u.level ?? 2, rationale: u.rationale ?? '' }));
+      } else {
+        uncertaintyRows = [{ level: 2, rationale: '' }];
+      }
+      errorMsg = '';
     } else {
       draftId = crypto.randomUUID();
       draftCreatedAt = null;

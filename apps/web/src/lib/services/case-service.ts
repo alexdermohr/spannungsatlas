@@ -69,11 +69,9 @@ export function replaceAllCases(cases: readonly Case[]): void {
 /**
  * Adds or updates a draft perspective for the requesting actor.
  *
- * CURRENT DRAFT SEMANTICS:
- * The provided input must be a structurally complete perspective record
- * (e.g., must contain valid observations, counter-interpretations, and uncertainties).
- * Partial or incomplete drafts are currently rejected by the domain factory.
- * This autosaves fully structured data, but defers the "committed" state transition.
+ * NEW DRAFT SEMANTICS:
+ * Drafts can be partial and do not enforce strict completeness checks.
+ * Validation happens upon committing the draft.
  */
 export function addDraftPerspective(caseId: string, input: CreatePerspectiveDraftInput, requestingActorId: string): Case {
   if (input.caseId !== caseId) {

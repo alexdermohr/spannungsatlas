@@ -137,11 +137,28 @@ export interface Revision {
 
 export type PerspectiveStatus = "draft" | "committed";
 
+export interface PerspectiveDraftObservation {
+  readonly text?: string;
+  readonly isCameraDescribable?: boolean;
+  readonly recurringAspects?: readonly string[];
+}
+
+export interface PerspectiveDraftInterpretation {
+  readonly text?: string;
+  readonly evidenceType?: EvidenceType;
+  readonly rationale?: string;
+}
+
+export interface PerspectiveDraftUncertainty {
+  readonly level?: UncertaintyLevel;
+  readonly rationale?: string;
+}
+
 export interface PerspectiveDraftContent {
-  readonly observation?: Partial<Observation>;
-  readonly interpretation?: Partial<Interpretation>;
-  readonly counterInterpretations?: readonly Partial<Interpretation>[];
-  readonly uncertainties?: readonly Partial<Uncertainty>[];
+  readonly observation?: PerspectiveDraftObservation;
+  readonly interpretation?: PerspectiveDraftInterpretation;
+  readonly counterInterpretations?: readonly PerspectiveDraftInterpretation[];
+  readonly uncertainties?: readonly PerspectiveDraftUncertainty[];
 }
 
 export interface PerspectiveCommittedContent {

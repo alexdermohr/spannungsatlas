@@ -1,3 +1,4 @@
+import type { CreatePerspectiveDraftInput } from '../../src/domain/factories.js';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   addDraftPerspective,
@@ -26,7 +27,7 @@ const DUMMY_CASE: Case = {
   observation: { text: "obs", isCameraDescribable: true },
   currentReflection: {
     reflectedAt: "2026-04-01T10:00:00Z",
-    interpretation: { text: "int", evidenceType: "observational" as any },
+    interpretation: { text: "int", evidenceType: "observational" },
     counterInterpretations: [{ text: "c", evidenceType: "derived" as any }],
     uncertainties: [{ level: 2, rationale: "unc" }],
     tensions: []
@@ -35,13 +36,13 @@ const DUMMY_CASE: Case = {
   perspectives: []
 };
 
-const DUMMY_INPUT: any = {
+const DUMMY_INPUT: CreatePerspectiveDraftInput = {
   id: "p-1",
   caseId: "case-test",
   actorId: "actor-1",
   createdAt: "2026-04-01T10:00:00Z",
   observation: { text: "obs", isCameraDescribable: true },
-  interpretation: { text: "int", evidenceType: "observational" as any },
+  interpretation: { text: "int", evidenceType: "observational" },
   counterInterpretations: [{ text: "c", evidenceType: "derived" as any }],
   uncertainties: [{ level: 2, rationale: "unc" }]
 };
@@ -105,9 +106,9 @@ describe('case-service - perspective management', () => {
 
     it("NEW SEMANTICS: allows draft creation if the input structure is incomplete (e.g., missing uncertainty)", () => {
       const incompleteInput = { ...DUMMY_INPUT };
-      delete (incompleteInput as any).uncertainties;
+      delete (incompleteInput).uncertainties;
 
-      const updatedCase = addDraftPerspective('case-test', incompleteInput as any, incompleteInput.actorId);
+      const updatedCase = addDraftPerspective('case-test', incompleteInput, incompleteInput.actorId);
       expect(updatedCase.perspectives?.[0].content.uncertainties).toBeUndefined();
     });
 
