@@ -137,22 +137,41 @@ export interface Revision {
 
 export type PerspectiveStatus = "draft" | "committed";
 
-export interface PerspectiveContent {
+export interface PerspectiveDraftContent {
+  readonly observation?: Partial<Observation>;
+  readonly interpretation?: Partial<Interpretation>;
+  readonly counterInterpretations?: readonly Partial<Interpretation>[];
+  readonly uncertainties?: readonly Partial<Uncertainty>[];
+}
+
+export interface PerspectiveCommittedContent {
   readonly observation: Observation;
   readonly interpretation: Interpretation;
   readonly counterInterpretations: readonly Interpretation[];
   readonly uncertainties: readonly Uncertainty[];
 }
 
-export interface PerspectiveRecord {
+export interface PerspectiveDraftRecord {
   readonly id: string;
   readonly caseId: string;
   readonly actorId: string;
-  readonly status: PerspectiveStatus;
-  readonly content: PerspectiveContent;
+  readonly status: "draft";
+  readonly content: PerspectiveDraftContent;
   readonly createdAt: string;
-  readonly committedAt?: string;
+  readonly committedAt?: undefined;
 }
+
+export interface PerspectiveCommittedRecord {
+  readonly id: string;
+  readonly caseId: string;
+  readonly actorId: string;
+  readonly status: "committed";
+  readonly content: PerspectiveCommittedContent;
+  readonly createdAt: string;
+  readonly committedAt: string;
+}
+
+export type PerspectiveRecord = PerspectiveDraftRecord | PerspectiveCommittedRecord;
 
 export interface CaseSource {
   readonly type: string;

@@ -6,13 +6,13 @@ import {
   getComparablePerspectives,
   filterVisiblePerspectives,
 } from "../../src/domain/perspective-access.js";
-import type { PerspectiveRecord, PerspectiveContent } from "../../src/domain/types.js";
+import type { PerspectiveRecord } from "../../src/domain/types.js";
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-const dummyContent: PerspectiveContent = {
+const dummyContent: any = {
   observation: { text: "obs", isCameraDescribable: true },
   interpretation: { text: "interp", evidenceType: "observational" },
   counterInterpretations: [{ text: "counter", evidenceType: "derived" }],

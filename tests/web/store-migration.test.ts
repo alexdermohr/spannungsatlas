@@ -20,8 +20,8 @@ const originalLocalStorage = globalThis.localStorage;
 function makeSnap(overrides: Record<string, unknown> = {}): Record<string, unknown> {
   return {
     reflectedAt: '2024-01-01T00:00:00.000Z',
-    interpretation: { text: 'My interpretation.', evidenceType: 'derived' },
-    counterInterpretations: [{ text: 'Counter interpretation.', evidenceType: 'speculative' }],
+    interpretation: { text: 'My interpretation.', evidenceType: 'derived' as any },
+    counterInterpretations: [{ text: 'Counter interpretation.', evidenceType: 'speculative' as any }],
     uncertainties: [{ level: 3, rationale: 'Not sure about this.' }],
     tensions: [],
     ...overrides,
@@ -61,7 +61,7 @@ describe('store migration — normalizeCaseFromStorage', () => {
     const raw = makeBaseCase({
       currentReflection: makeSnap({
         counterInterpretations: undefined,
-        counterInterpretation: { text: 'Counter interpretation.', evidenceType: 'speculative' },
+        counterInterpretation: { text: 'Counter interpretation.', evidenceType: 'speculative' as any },
       }),
     });
     localStorage.setItem(STORAGE_KEY, JSON.stringify([raw]));
@@ -127,7 +127,7 @@ describe('store migration — normalizeCaseFromStorage', () => {
       currentReflection: makeSnap({
         counterInterpretations: undefined,
         // Malformed legacy data: already an array stored in the singular field
-        counterInterpretation: [{ text: 'Already an array.', evidenceType: 'speculative' }],
+        counterInterpretation: [{ text: 'Already an array.', evidenceType: 'speculative' as any }],
       }),
     });
     localStorage.setItem(STORAGE_KEY, JSON.stringify([raw]));
@@ -139,16 +139,16 @@ describe('store migration — normalizeCaseFromStorage', () => {
   it('migrates singular counterInterpretation and uncertainty in revision.from and revision.to', () => {
     const oldSnap = makeSnap({
       reflectedAt: '2023-12-01T00:00:00.000Z',
-      interpretation: { text: 'Old interpretation.', evidenceType: 'derived' },
+      interpretation: { text: 'Old interpretation.', evidenceType: 'derived' as any },
       counterInterpretations: undefined,
-      counterInterpretation: { text: 'Old counter interpretation.', evidenceType: 'speculative' },
+      counterInterpretation: { text: 'Old counter interpretation.', evidenceType: 'speculative' as any },
       uncertainties: undefined,
       uncertainty: { level: 1, rationale: 'Old uncertainty rationale.' },
     });
     const newSnap = makeSnap({
-      interpretation: { text: 'Revised interpretation.', evidenceType: 'observational' },
+      interpretation: { text: 'Revised interpretation.', evidenceType: 'observational' as any },
       counterInterpretations: undefined,
-      counterInterpretation: { text: 'Revised counter interpretation.', evidenceType: 'speculative' },
+      counterInterpretation: { text: 'Revised counter interpretation.', evidenceType: 'speculative' as any },
       uncertainties: undefined,
       uncertainty: { level: 3, rationale: 'Revised uncertainty rationale.' },
     });

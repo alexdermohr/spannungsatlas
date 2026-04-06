@@ -26,8 +26,8 @@ const DUMMY_CASE: Case = {
   observation: { text: "obs", isCameraDescribable: true },
   currentReflection: {
     reflectedAt: "2026-04-01T10:00:00Z",
-    interpretation: { text: "int", evidenceType: "observational" },
-    counterInterpretations: [{ text: "c", evidenceType: "derived" }],
+    interpretation: { text: "int", evidenceType: "observational" as any },
+    counterInterpretations: [{ text: "c", evidenceType: "derived" as any }],
     uncertainties: [{ level: 2, rationale: "unc" }],
     tensions: []
   },
@@ -35,14 +35,14 @@ const DUMMY_CASE: Case = {
   perspectives: []
 };
 
-const DUMMY_INPUT = {
+const DUMMY_INPUT: any = {
   id: "p-1",
   caseId: "case-test",
   actorId: "actor-1",
   createdAt: "2026-04-01T10:00:00Z",
   observation: { text: "obs", isCameraDescribable: true },
-  interpretation: { text: "int", evidenceType: "observational" },
-  counterInterpretations: [{ text: "c", evidenceType: "derived" }],
+  interpretation: { text: "int", evidenceType: "observational" as any },
+  counterInterpretations: [{ text: "c", evidenceType: "derived" as any }],
   uncertainties: [{ level: 2, rationale: "unc" }]
 };
 
@@ -82,7 +82,7 @@ describe('case-service - perspective management', () => {
 
       expect(updatedCase.perspectives).toHaveLength(1);
       expect(updatedCase.perspectives![0].id).toBe('p-2');
-      expect(updatedCase.perspectives![0].content.observation.text).toBe('new obs');
+      expect(updatedCase.perspectives![0].content.observation?.text).toBe('new obs');
     });
 
 
@@ -103,20 +103,12 @@ describe('case-service - perspective management', () => {
     });
 
 
-    it('CURRENT SEMANTICS: rejects draft creation if the input structure is incomplete (e.g., missing uncertainty)', () => {
-      const incompleteInput = {
-        id: "p-incomplete",
-        caseId: "case-test",
-        actorId: "actor-1",
-        createdAt: "2026-04-01T10:00:00Z",
-        observation: { text: "obs", isCameraDescribable: true },
-        interpretation: { text: "int", evidenceType: "observational" },
-        counterInterpretations: [{ text: "c", evidenceType: "derived" }],
-        uncertainties: [] // Intentionally omitted to test structural strictness
-      };
+    it("NEW SEMANTICS: allows draft creation if the input structure is incomplete (e.g., missing uncertainty)", () => {
+      const incompleteInput = { ...DUMMY_INPUT };
+      delete (incompleteInput as any).uncertainties;
 
-      expect(() => addDraftPerspective('case-test', incompleteInput as any, 'actor-1'))
-        .toThrow(/uncertainty/i);
+      const updatedCase = addDraftPerspective('case-test', incompleteInput as any, incompleteInput.actorId);
+      expect(updatedCase.perspectives?.[0].content.uncertainties).toBeUndefined();
     });
 
     it('does not touch drafts of other actors', () => {

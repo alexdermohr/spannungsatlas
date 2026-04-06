@@ -1,6 +1,6 @@
 import type { Case, CaseParticipant, EvidenceType, UncertaintyLevel, PerspectiveRecord } from '$domain/types.js';
 import type { CreateCaseInput } from '$domain/factories.js';
-import { createCase, createPerspectiveRecord, commitPerspectiveRecord, type CreatePerspectiveRecordInput } from '$domain/factories.js';
+import { createCase, createPerspectiveDraftRecord, commitPerspectiveRecord, type CreatePerspectiveDraftInput } from '$domain/factories.js';
 import { canReadPerspective, canWritePerspective, canComparePerspectives, getComparablePerspectives, filterVisiblePerspectives } from '$domain/perspective-access.js';
 import { localStorageStore, type PersistenceStore } from '$lib/persistence/store.js';
 
@@ -75,7 +75,7 @@ export function replaceAllCases(cases: readonly Case[]): void {
  * Partial or incomplete drafts are currently rejected by the domain factory.
  * This autosaves fully structured data, but defers the "committed" state transition.
  */
-export function addDraftPerspective(caseId: string, input: CreatePerspectiveRecordInput, requestingActorId: string): Case {
+export function addDraftPerspective(caseId: string, input: CreatePerspectiveDraftInput, requestingActorId: string): Case {
   if (input.caseId !== caseId) {
     throw new Error("Perspective caseId does not match target case.");
   }
@@ -93,7 +93,7 @@ export function addDraftPerspective(caseId: string, input: CreatePerspectiveReco
     throw new Error("Perspective already committed for this actor.");
   }
 
-  const perspective = createPerspectiveRecord(input);
+  const perspective = createPerspectiveDraftRecord(input);
 
   const existingIndex = perspectives.findIndex(p => p.actorId === input.actorId && p.status === 'draft');
   if (existingIndex >= 0) {

@@ -100,10 +100,10 @@
         caseId,
         actorId: currentActorId,
         createdAt: draftCreatedAt,
-        observation: { text: observationText, isCameraDescribable },
-        interpretation: { text: interpretationText, evidenceType: interpretationEvidence },
-        counterInterpretations: counters,
-        uncertainties: uncerts
+        observation: observationText.trim() ? { text: observationText, isCameraDescribable } : undefined,
+        interpretation: interpretationText.trim() ? { text: interpretationText, evidenceType: interpretationEvidence } : undefined,
+        counterInterpretations: counters.length > 0 ? counters : undefined,
+        uncertainties: uncerts.length > 0 ? uncerts : undefined
       }, currentActorId);
 
       errorMsg = ''; // clear on success

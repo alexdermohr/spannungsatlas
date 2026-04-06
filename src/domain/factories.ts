@@ -16,18 +16,21 @@
 import type {
   Case,
   CaseParticipant,
+  CaseSource,
+  DriftType,
   EvidenceType,
   Interpretation,
   Observation,
+  PerspectiveDraftContent,
+  PerspectiveCommittedContent,
+  PerspectiveDraftRecord,
+  PerspectiveCommittedRecord,
+  PerspectiveRecord,
   ReflectionSnapshot,
   Revision,
   TensionEdge,
   Uncertainty,
   UncertaintyLevel,
-  DriftType,
-  CaseSource,
-  PerspectiveRecord,
-  PerspectiveContent
 } from "./types.js";
 
 import {
@@ -252,57 +255,30 @@ export function createRevision(input: CreateRevisionInput): Revision {
 // PerspectiveRecord
 // ---------------------------------------------------------------------------
 
-export interface CreatePerspectiveRecordInput {
+export interface CreatePerspectiveDraftInput {
   id: string;
   caseId: string;
   actorId: string;
-  observation: CreateObservationInput;
-  interpretation: CreateInterpretationInput;
-  counterInterpretations: CreateInterpretationInput[];
-  uncertainties: CreateUncertaintyInput[];
+  observation?: Partial<CreateObservationInput>;
+  interpretation?: Partial<CreateInterpretationInput>;
+  counterInterpretations?: Partial<CreateInterpretationInput>[];
+  uncertainties?: Partial<CreateUncertaintyInput>[];
   createdAt: string;
 }
 
-export function createPerspectiveRecord(
-  input: CreatePerspectiveRecordInput,
-): PerspectiveRecord {
+export function createPerspectiveDraftRecord(
+  input: CreatePerspectiveDraftInput,
+): PerspectiveDraftRecord {
   throwIfError(guardIsoDateString(input.createdAt, "createdAt"));
 
-  const observation = createObservation(input.observation);
-  const interpretation = createInterpretation(input.interpretation);
-
-  throwIfError(guardObservationInterpretationDistinct(observation, interpretation));
-
-  if (input.counterInterpretations.length === 0) {
-    throw new Error("At least one counter-interpretation is required.");
-  }
-  const counterInterpretations = input.counterInterpretations.map(createInterpretation);
-  for (const counter of counterInterpretations) {
-    throwIfError(guardInterpretationsDistinct(interpretation, counter));
-  }
-  for (let i = 0; i < counterInterpretations.length; i++) {
-    for (let j = i + 1; j < counterInterpretations.length; j++) {
-      throwIfError(guardDistinctTexts(
-        counterInterpretations[i],
-        counterInterpretations[j],
-        "Two counter-interpretation texts must not be textually identical.",
-      ));
-    }
-  }
-
-  if (input.uncertainties.length === 0) {
-    throw new Error("At least one uncertainty is required.");
-  }
-  const uncertainties = input.uncertainties.map(createUncertainty);
-
-  const content: PerspectiveContent = {
-    observation,
-    interpretation,
-    counterInterpretations,
-    uncertainties,
+  const content: PerspectiveDraftContent = {
+    observation: input.observation,
+    interpretation: input.interpretation,
+    counterInterpretations: input.counterInterpretations,
+    uncertainties: input.uncertainties,
   };
 
-  const record: PerspectiveRecord = {
+  const record: PerspectiveDraftRecord = {
     id: input.id,
     caseId: input.caseId,
     actorId: input.actorId,
@@ -316,16 +292,72 @@ export function createPerspectiveRecord(
   return record;
 }
 
-export function commitPerspectiveRecord(record: PerspectiveRecord, committedAt: string): PerspectiveRecord {
+export function commitPerspectiveRecord(record: PerspectiveRecord, committedAt: string): PerspectiveCommittedRecord {
   if (record.status === "committed") {
     throw new Error("PerspectiveRecord is already committed.");
   }
 
   throwIfError(guardIsoDateString(committedAt, "committedAt"));
 
-  const committedRecord: PerspectiveRecord = {
-    ...record,
+  // Ensure Draft has everything needed for Committed state
+  const c = record.content;
+  if (!c.observation || !c.observation.text) {
+    throw new Error("PerspectiveCommittedContent must have a valid observation object with text.");
+  }
+  if (!c.interpretation || !c.interpretation.text || !c.interpretation.evidenceType) {
+    throw new Error("PerspectiveCommittedContent must have a valid interpretation object with text and evidenceType.");
+  }
+
+  const observation = createObservation(c.observation as CreateObservationInput);
+  const interpretation = createInterpretation(c.interpretation as CreateInterpretationInput);
+
+  throwIfError(guardObservationInterpretationDistinct(observation, interpretation));
+
+  if (!c.counterInterpretations || c.counterInterpretations.length === 0) {
+    throw new Error("At least one counter-interpretation is required.");
+  }
+
+  const counterInterpretations = c.counterInterpretations.map(ci => {
+      if (!ci.text || !ci.evidenceType) throw new Error("counterInterpretations array elements must be valid objects with text and evidenceType.");
+      return createInterpretation(ci as CreateInterpretationInput)
+  });
+
+  for (const counter of counterInterpretations) {
+    throwIfError(guardInterpretationsDistinct(interpretation, counter));
+  }
+  for (let i = 0; i < counterInterpretations.length; i++) {
+    for (let j = i + 1; j < counterInterpretations.length; j++) {
+      throwIfError(guardDistinctTexts(
+        counterInterpretations[i],
+        counterInterpretations[j],
+        "Two counter-interpretation texts must not be textually identical.",
+      ));
+    }
+  }
+
+  if (!c.uncertainties || c.uncertainties.length === 0) {
+    throw new Error("At least one uncertainty is required.");
+  }
+
+  const uncertainties = c.uncertainties.map(u => {
+      if (u.level === undefined || !u.rationale) throw new Error("uncertainties array elements must be valid objects with level and rationale.");
+      return createUncertainty(u as CreateUncertaintyInput);
+  });
+
+  const committedContent: PerspectiveCommittedContent = {
+    observation,
+    interpretation,
+    counterInterpretations,
+    uncertainties,
+  };
+
+  const committedRecord: PerspectiveCommittedRecord = {
+    id: record.id,
+    caseId: record.caseId,
+    actorId: record.actorId,
     status: "committed",
+    content: committedContent,
+    createdAt: record.createdAt,
     committedAt,
   };
 

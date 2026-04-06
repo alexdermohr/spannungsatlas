@@ -23,8 +23,7 @@ import {
   guardRevisionFromTo,
   guardReflectionSnapshot,
   guardCase,
-  guardPerspectiveRecord,
-  guardPerspectiveContent,
+  guardPerspectiveRecord, guardPerspectiveCommittedContent,
 } from "../../src/domain/guards.js";
 import type {
   Interpretation,
@@ -523,23 +522,23 @@ describe("guardRevisionFromTo", () => {
 
 
 // ---------------------------------------------------------------------------
-// guardPerspectiveRecord & guardPerspectiveContent
+// guardPerspectiveRecord & guardPerspectiveCommittedContent
 // ---------------------------------------------------------------------------
 
-describe("guardPerspectiveRecord & guardPerspectiveContent", () => {
+describe("guardPerspectiveRecord & guardPerspectiveCommittedContent", () => {
   it("guardPerspectiveRecord rejects null or non-objects", () => {
     expect(guardPerspectiveRecord(null).length).toBeGreaterThan(0);
     expect(guardPerspectiveRecord("string").length).toBeGreaterThan(0);
     expect(guardPerspectiveRecord([]).length).toBeGreaterThan(0);
   });
 
-  it("guardPerspectiveContent rejects missing observation/interpretation objects", () => {
-    expect(guardPerspectiveContent({}).length).toBeGreaterThan(0);
-    expect(guardPerspectiveContent({ observation: "string" }).length).toBeGreaterThan(0);
+  it("guardPerspectiveCommittedContent rejects missing observation/interpretation objects", () => {
+    expect(guardPerspectiveCommittedContent({}).length).toBeGreaterThan(0);
+    expect(guardPerspectiveCommittedContent({ observation: "string" }).length).toBeGreaterThan(0);
   });
 
 
-  it("guardPerspectiveContent rejects missing or non-boolean isCameraDescribable", () => {
+  it("guardPerspectiveCommittedContent rejects missing or non-boolean isCameraDescribable", () => {
     const invalid1 = {
       observation: { text: "obs" }, // missing isCameraDescribable
       interpretation: { text: "int", evidenceType: "observational" },
@@ -551,8 +550,8 @@ describe("guardPerspectiveRecord & guardPerspectiveContent", () => {
       observation: { text: "obs", isCameraDescribable: "yes" } // not a boolean
     };
 
-    expect(guardPerspectiveContent(invalid1).some(e => e.includes("isCameraDescribable must be a boolean"))).toBe(true);
-    expect(guardPerspectiveContent(invalid2).some(e => e.includes("isCameraDescribable must be a boolean"))).toBe(true);
+    expect(guardPerspectiveCommittedContent(invalid1).some(e => e.includes("isCameraDescribable must be a boolean"))).toBe(true);
+    expect(guardPerspectiveCommittedContent(invalid2).some(e => e.includes("isCameraDescribable must be a boolean"))).toBe(true);
   });
 
 
