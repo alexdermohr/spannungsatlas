@@ -295,10 +295,8 @@ export function createPerspectiveDraftRecord(
   return record;
 }
 
-export function commitPerspectiveRecord(record: PerspectiveRecord, committedAt: string): PerspectiveCommittedRecord {
-  if (record.status === "committed") {
-    throw new Error("PerspectiveRecord is already committed.");
-  }
+export function commitPerspectiveRecord(record: PerspectiveDraftRecord, committedAt: string): PerspectiveCommittedRecord {
+
 
   throwIfError(guardIsoDateString(committedAt, "committedAt"));
 

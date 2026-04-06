@@ -67,6 +67,50 @@ describe('case-service - perspective management', () => {
     vi.restoreAllMocks();
   });
 
+    describe('partial draft storage coverage', () => {
+    it('allows draft creation with only interpretation', () => {
+      const input: any = {
+        id: "p-test-1",
+        caseId: "case-test",
+        actorId: "actor-1",
+        createdAt: "2026-03-28T10:00:00Z",
+        interpretation: { text: "Nur Interpretation", evidenceType: "observational" }
+      };
+
+      const updatedCase = addDraftPerspective('case-test', input, 'actor-1');
+      expect(updatedCase.perspectives?.[0].content.interpretation?.text).toBe("Nur Interpretation");
+      expect(updatedCase.perspectives?.[0].content.observation).toBeUndefined();
+    });
+
+    it('allows draft creation with only uncertainties', () => {
+      const input: any = {
+        id: "p-test-2",
+        caseId: "case-test",
+        actorId: "actor-1",
+        createdAt: "2026-03-28T10:00:00Z",
+        uncertainties: [{ level: 5, rationale: "Draft Uncertain" }]
+      };
+
+      const updatedCase = addDraftPerspective('case-test', input, 'actor-1');
+      expect(updatedCase.perspectives?.[0].content.uncertainties?.[0].level).toBe(5);
+      expect(updatedCase.perspectives?.[0].content.observation).toBeUndefined();
+    });
+
+    it('allows draft creation with only counter interpretations', () => {
+      const input: any = {
+        id: "p-test-3",
+        caseId: "case-test",
+        actorId: "actor-1",
+        createdAt: "2026-03-28T10:00:00Z",
+        counterInterpretations: [{ text: "Draft Counter", evidenceType: "speculative" }]
+      };
+
+      const updatedCase = addDraftPerspective('case-test', input, 'actor-1');
+      expect(updatedCase.perspectives?.[0].content.counterInterpretations?.[0].text).toBe("Draft Counter");
+      expect(updatedCase.perspectives?.[0].content.observation).toBeUndefined();
+    });
+  });
+
   describe('addDraftPerspective', () => {
     it('creates a draft for the requesting actor', () => {
       const updatedCase = addDraftPerspective('case-test', DUMMY_INPUT, 'actor-1');

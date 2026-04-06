@@ -15,7 +15,7 @@
 
   // Form State
   let observationText = $state('');
-  let isCameraDescribable = $state(false);
+  let isCameraDescribable = $state<boolean | null>(null);
   let interpretationText = $state('');
   let interpretationEvidence = $state<EvidenceType>('observational');
 
@@ -45,7 +45,7 @@
 
       const obs = draft.content.observation;
       observationText = obs?.text ?? '';
-      isCameraDescribable = obs?.isCameraDescribable ?? false;
+      isCameraDescribable = obs?.isCameraDescribable ?? null;
 
       const interp = draft.content.interpretation;
       interpretationText = interp?.text ?? '';
@@ -117,7 +117,7 @@
         caseId,
         actorId: currentActorId,
         createdAt: draftCreatedAt,
-        observation: (observationText.trim() || isCameraDescribable !== undefined) ? { text: observationText, isCameraDescribable } : undefined,
+        observation: (observationText.trim() || isCameraDescribable !== null) ? { text: observationText, isCameraDescribable: isCameraDescribable ?? false } : undefined,
         interpretation: interpretationText.trim() ? { text: interpretationText, evidenceType: interpretationEvidence } : undefined,
         counterInterpretations: counters.length > 0 ? counters : undefined,
         uncertainties: uncerts.length > 0 ? uncerts : undefined

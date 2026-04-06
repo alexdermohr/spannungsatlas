@@ -1,4 +1,4 @@
-import type { Case, CaseParticipant, EvidenceType, UncertaintyLevel, PerspectiveRecord, PerspectiveCommittedRecord } from '$domain/types.js';
+import type { Case, CaseParticipant, EvidenceType, UncertaintyLevel, PerspectiveRecord, PerspectiveDraftRecord, PerspectiveCommittedRecord } from '$domain/types.js';
 import type { CreateCaseInput } from '$domain/factories.js';
 import { createCase, createPerspectiveDraftRecord, commitPerspectiveRecord, type CreatePerspectiveDraftInput } from '$domain/factories.js';
 import { canReadPerspective, canWritePerspective, canComparePerspectives, getComparablePerspectives, filterVisiblePerspectives } from '$domain/perspective-access.js';
@@ -124,7 +124,8 @@ export function commitPerspective(caseId: string, perspectiveId: string, request
     throw new Error("Perspective already committed for this actor.");
   }
 
-  const committed = commitPerspectiveRecord(p, new Date().toISOString());
+  if (p.status !== 'draft') { throw new Error("Perspective is already committed."); }
+  const committed = commitPerspectiveRecord(p as PerspectiveDraftRecord, new Date().toISOString());
   perspectives[index] = committed;
 
   const updatedCase = { ...c, perspectives };
