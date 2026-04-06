@@ -301,6 +301,44 @@ describe("store migration — draft handling", () => {
     expect(loaded[0].perspectives?.[0].content.observation).toBeUndefined();
   });
 
+  it("accepts cases containing a valid partial draft perspective with only counter interpretations", () => {
+    const rawData = [
+      {
+        id: "case-with-draft-counters",
+        context: "Schulhof",
+        participants: [{ id: "Kind A" }],
+        observation: { text: "Das Kind läuft.", isCameraDescribable: true },
+        currentReflection: {
+          reflectedAt: "2025-01-01T10:00:00Z",
+          interpretation: { text: "Freude", evidenceType: "observational" },
+          counterInterpretations: [{ text: "Flucht", evidenceType: "speculative" }],
+          uncertainties: [{ level: 3, rationale: "Keine Mimik sichtbar" }],
+          tensions: []
+        },
+        revisions: [],
+        perspectives: [
+          {
+            id: "draft-1",
+            caseId: "case-with-draft-counters",
+            actorId: "Kind A",
+            status: "draft",
+            createdAt: "2025-01-01T11:00:00Z",
+            content: {
+              counterInterpretations: [{ text: "Draft Counter", evidenceType: "speculative" }]
+            }
+          }
+        ]
+      }
+    ];
+
+    globalThis.localStorage.setItem(STORAGE_KEY, JSON.stringify(rawData));
+    const loaded = localStorageStore.loadAllCases();
+    expect(loaded).toHaveLength(1);
+    expect(loaded[0].perspectives?.[0].status).toBe("draft");
+    expect(loaded[0].perspectives?.[0].content.counterInterpretations?.[0].text).toBe("Draft Counter");
+    expect(loaded[0].perspectives?.[0].content.observation).toBeUndefined();
+  });
+
   it("rejects cases containing an invalid draft perspective (e.g. text is a number)", () => {
     const rawData = [
       {

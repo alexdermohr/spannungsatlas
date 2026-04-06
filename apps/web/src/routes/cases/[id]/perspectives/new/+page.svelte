@@ -15,7 +15,7 @@
 
   // Form State
   let observationText = $state('');
-  let isCameraDescribable = $state<boolean | null>(null);
+  let isCameraDescribableStr = $state<"null" | "true" | "false">("null");
   let interpretationText = $state('');
   let interpretationEvidence = $state<EvidenceType>('observational');
 
@@ -45,7 +45,7 @@
 
       const obs = draft.content.observation;
       observationText = obs?.text ?? '';
-      isCameraDescribable = obs?.isCameraDescribable ?? null;
+      isCameraDescribableStr = obs?.isCameraDescribable === undefined ? 'null' : (obs.isCameraDescribable ? 'true' : 'false');
 
       const interp = draft.content.interpretation;
       interpretationText = interp?.text ?? '';
@@ -69,7 +69,7 @@
       draftId = crypto.randomUUID();
       draftCreatedAt = null;
       observationText = '';
-      isCameraDescribable = false;
+      isCameraDescribableStr = 'null';
       interpretationText = '';
       interpretationEvidence = 'observational';
       counterRows = [{ text: '', evidence: 'observational' }];
@@ -117,7 +117,10 @@
         caseId,
         actorId: currentActorId,
         createdAt: draftCreatedAt,
-        observation: (observationText.trim() || isCameraDescribable !== null) ? { text: observationText, isCameraDescribable: isCameraDescribable ?? false } : undefined,
+                observation: (observationText.trim() !== '' || isCameraDescribableStr !== 'null') ? {
+          text: observationText,
+          ...(isCameraDescribableStr !== 'null' ? { isCameraDescribable: isCameraDescribableStr === 'true' } : {})
+        } : undefined,
         interpretation: interpretationText.trim() ? { text: interpretationText, evidenceType: interpretationEvidence } : undefined,
         counterInterpretations: counters.length > 0 ? counters : undefined,
         uncertainties: uncerts.length > 0 ? uncerts : undefined
@@ -199,9 +202,13 @@
         <label class="field">
           <textarea bind:value={observationText} oninput={saveDraft} rows="4" placeholder="z.B. Kind A wirft das Spielzeug..."></textarea>
         </label>
-        <label class="checkbox-field">
-          <input type="checkbox" bind:checked={isCameraDescribable} onchange={saveDraft} />
-          <span>Ist diese Beschreibung rein beobachtbar (Kamera-Test)?</span>
+        <label class="field">
+          <span class="field-label">Ist diese Beschreibung rein beobachtbar (Kamera-Test)?</span>
+          <select bind:value={isCameraDescribableStr} onchange={saveDraft}>
+            <option value="null">Bitte wählen...</option>
+            <option value="true">Ja, rein beobachtbar</option>
+            <option value="false">Nein, enthält Wertungen/Deutungen</option>
+          </select>
         </label>
       </section>
 

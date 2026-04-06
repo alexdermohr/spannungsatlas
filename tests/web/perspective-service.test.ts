@@ -68,6 +68,34 @@ describe('case-service - perspective management', () => {
   });
 
     describe('partial draft storage coverage', () => {
+    it('allows draft creation with explicit observation false even if text empty', () => {
+      const input: any = {
+        id: "p-test-0",
+        caseId: "case-test",
+        actorId: "actor-1",
+        createdAt: "2026-03-28T10:00:00Z",
+        observation: { isCameraDescribable: false }
+      };
+
+      const updatedCase = addDraftPerspective('case-test', input, 'actor-1');
+      expect(updatedCase.perspectives?.[0].content.observation?.isCameraDescribable).toBe(false);
+      expect(updatedCase.perspectives?.[0].content.interpretation).toBeUndefined();
+    });
+
+    it('allows draft creation with explicit observation true even if text empty', () => {
+      const input: any = {
+        id: "p-test-01",
+        caseId: "case-test",
+        actorId: "actor-1",
+        createdAt: "2026-03-28T10:00:00Z",
+        observation: { isCameraDescribable: true }
+      };
+
+      const updatedCase = addDraftPerspective('case-test', input, 'actor-1');
+      expect(updatedCase.perspectives?.[0].content.observation?.isCameraDescribable).toBe(true);
+      expect(updatedCase.perspectives?.[0].content.interpretation).toBeUndefined();
+    });
+
     it('allows draft creation with only interpretation', () => {
       const input: any = {
         id: "p-test-1",

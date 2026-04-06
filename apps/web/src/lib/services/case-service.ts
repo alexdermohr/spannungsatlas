@@ -114,6 +114,11 @@ export function commitPerspective(caseId: string, perspectiveId: string, request
   if (index === -1) throw new Error("Perspective not found");
 
   const p = perspectives[index];
+
+  if (p.status !== 'draft') {
+    throw new Error("Perspective is already committed.");
+  }
+
   if (!canWritePerspective(p, requestingActorId)) {
     throw new Error("Access denied: Cannot commit this perspective.");
   }
@@ -124,8 +129,8 @@ export function commitPerspective(caseId: string, perspectiveId: string, request
     throw new Error("Perspective already committed for this actor.");
   }
 
-  if (p.status !== 'draft') { throw new Error("Perspective is already committed."); }
-  const committed = commitPerspectiveRecord(p as PerspectiveDraftRecord, new Date().toISOString());
+  const draft = p;
+  const committed = commitPerspectiveRecord(draft, new Date().toISOString());
   perspectives[index] = committed;
 
   const updatedCase = { ...c, perspectives };
