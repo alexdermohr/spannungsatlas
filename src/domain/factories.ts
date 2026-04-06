@@ -304,11 +304,16 @@ export function commitPerspectiveRecord(record: PerspectiveRecord, committedAt: 
 
   // Ensure Draft has everything needed for Committed state
   const c = record.content;
+
   if (!c.observation || typeof c.observation.text !== 'string' || c.observation.text.trim() === '') {
-    throw new Error("PerspectiveCommittedContent must have a valid observation object with text.");
+    throw new Error("Für den Commit ist eine gültige Beobachtung (Text) zwingend erforderlich.");
   }
+  if (typeof c.observation.isCameraDescribable !== 'boolean') {
+    throw new Error("Für den Commit muss angegeben werden, ob die Beobachtung kamera-beschreibbar ist.");
+  }
+
   if (!c.interpretation || typeof c.interpretation.text !== 'string' || c.interpretation.text.trim() === '' || !c.interpretation.evidenceType) {
-    throw new Error("PerspectiveCommittedContent must have a valid interpretation object with text and evidenceType.");
+    throw new Error("Für den Commit ist eine gültige Deutung mit zugehörigem Evidenztyp zwingend erforderlich.");
   }
 
   const observation = createObservation({
@@ -326,11 +331,13 @@ export function commitPerspectiveRecord(record: PerspectiveRecord, committedAt: 
   throwIfError(guardObservationInterpretationDistinct(observation, interpretation));
 
   if (!c.counterInterpretations || c.counterInterpretations.length === 0) {
-    throw new Error("At least one counter-interpretation is required.");
+    throw new Error("Für den Commit wird mindestens eine Gegen-Deutung benötigt.");
   }
 
-  const counterInterpretations = c.counterInterpretations.map(ci => {
-      if (typeof ci.text !== 'string' || ci.text.trim() === '' || !ci.evidenceType) throw new Error("counterInterpretations array elements must be valid objects with text and evidenceType.");
+  const counterInterpretations = c.counterInterpretations.map((ci, idx) => {
+      if (typeof ci.text !== 'string' || ci.text.trim() === '' || !ci.evidenceType) {
+        throw new Error(`Gegen-Deutung ${idx + 1} ist unvollständig (Text und Evidenztyp benötigt).`);
+      }
       return createInterpretation({
         text: ci.text,
         evidenceType: ci.evidenceType,
@@ -346,17 +353,19 @@ export function commitPerspectiveRecord(record: PerspectiveRecord, committedAt: 
       throwIfError(guardDistinctTexts(
         counterInterpretations[i],
         counterInterpretations[j],
-        "Two counter-interpretation texts must not be textually identical.",
+        "Zwei Gegen-Deutungen dürfen nicht textuell identisch sein.",
       ));
     }
   }
 
   if (!c.uncertainties || c.uncertainties.length === 0) {
-    throw new Error("At least one uncertainty is required.");
+    throw new Error("Für den Commit wird mindestens eine Unsicherheitsbegründung benötigt.");
   }
 
-  const uncertainties = c.uncertainties.map(u => {
-      if (typeof u.level !== 'number' || typeof u.rationale !== 'string' || u.rationale.trim() === '') throw new Error("uncertainties array elements must be valid objects with level and rationale.");
+  const uncertainties = c.uncertainties.map((u, idx) => {
+      if (typeof u.level !== 'number' || typeof u.rationale !== 'string' || u.rationale.trim() === '') {
+        throw new Error(`Unsicherheit ${idx + 1} ist unvollständig (Stufe und Begründung benötigt).`);
+      }
       return createUncertainty({
         level: u.level,
         rationale: u.rationale

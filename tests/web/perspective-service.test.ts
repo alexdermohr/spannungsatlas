@@ -28,7 +28,7 @@ const DUMMY_CASE: Case = {
   currentReflection: {
     reflectedAt: "2026-04-01T10:00:00Z",
     interpretation: { text: "int", evidenceType: "observational" },
-    counterInterpretations: [{ text: "c", evidenceType: "derived" as any }],
+    counterInterpretations: [{ text: "c", evidenceType: "derived" as const }],
     uncertainties: [{ level: 2, rationale: "unc" }],
     tensions: []
   },
@@ -43,7 +43,7 @@ const DUMMY_INPUT: CreatePerspectiveDraftInput = {
   createdAt: "2026-04-01T10:00:00Z",
   observation: { text: "obs", isCameraDescribable: true },
   interpretation: { text: "int", evidenceType: "observational" },
-  counterInterpretations: [{ text: "c", evidenceType: "derived" as any }],
+  counterInterpretations: [{ text: "c", evidenceType: "derived" as const }],
   uncertainties: [{ level: 2, rationale: "unc" }]
 };
 

@@ -487,6 +487,17 @@ export function guardPerspectiveDraftContent(content: unknown): readonly string[
       if (obs.isCameraDescribable !== undefined && typeof obs.isCameraDescribable !== 'boolean') {
         errors.push("PerspectiveDraftContent.observation.isCameraDescribable must be a boolean if present.");
       }
+      if (obs.recurringAspects !== undefined) {
+        if (!Array.isArray(obs.recurringAspects)) {
+          errors.push("PerspectiveDraftContent.observation.recurringAspects must be an array if present.");
+        } else {
+          for (const asp of obs.recurringAspects) {
+            if (typeof asp !== 'string') {
+              errors.push("PerspectiveDraftContent.observation.recurringAspects elements must be strings.");
+            }
+          }
+        }
+      }
     }
   }
 
@@ -501,6 +512,9 @@ export function guardPerspectiveDraftContent(content: unknown): readonly string[
       if (interp.evidenceType !== undefined) {
         const evErr = guardEvidenceType(interp.evidenceType as string);
         if (evErr) errors.push(evErr);
+      }
+      if (interp.rationale !== undefined && typeof interp.rationale !== 'string') {
+        errors.push("PerspectiveDraftContent.interpretation.rationale must be a string if present.");
       }
     }
   }
@@ -520,6 +534,9 @@ export function guardPerspectiveDraftContent(content: unknown): readonly string[
           if (ct.evidenceType !== undefined) {
             const evErr = guardEvidenceType(ct.evidenceType as string);
             if (evErr) errors.push(evErr);
+          }
+          if (ct.rationale !== undefined && typeof ct.rationale !== 'string') {
+            errors.push("counterInterpretations rationale must be a string if present.");
           }
         }
       }
