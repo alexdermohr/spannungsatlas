@@ -13,7 +13,7 @@
  *     at least 2 committed perspectives on the same case.
  */
 
-import type { PerspectiveRecord } from "./types.js";
+import type { PerspectiveRecord, PerspectiveCommittedRecord } from "./types.js";
 
 // ---------------------------------------------------------------------------
 // Read access
@@ -73,8 +73,10 @@ export function canWritePerspective(
 export function getComparablePerspectives(
   perspectives: readonly PerspectiveRecord[],
   minRequired: number = 2,
-): readonly PerspectiveRecord[] {
-  const committed = perspectives.filter((p) => p.status === "committed");
+): readonly PerspectiveCommittedRecord[] {
+  const committed = perspectives.filter(
+    (p): p is PerspectiveCommittedRecord => p.status === "committed"
+  );
   return committed.length >= minRequired ? committed : [];
 }
 

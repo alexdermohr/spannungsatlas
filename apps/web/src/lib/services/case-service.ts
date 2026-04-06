@@ -1,4 +1,4 @@
-import type { Case, CaseParticipant, EvidenceType, UncertaintyLevel, PerspectiveRecord } from '$domain/types.js';
+import type { Case, CaseParticipant, EvidenceType, UncertaintyLevel, PerspectiveRecord, PerspectiveCommittedRecord } from '$domain/types.js';
 import type { CreateCaseInput } from '$domain/factories.js';
 import { createCase, createPerspectiveDraftRecord, commitPerspectiveRecord, type CreatePerspectiveDraftInput } from '$domain/factories.js';
 import { canReadPerspective, canWritePerspective, canComparePerspectives, getComparablePerspectives, filterVisiblePerspectives } from '$domain/perspective-access.js';
@@ -152,7 +152,7 @@ export function getVisiblePerspectivesForCase(caseId: string, requestingActorId:
   return Array.from(filterVisiblePerspectives(c.perspectives || [], requestingActorId));
 }
 
-export function getComparablePerspectivesForCase(caseId: string, requestingActorId: string): readonly PerspectiveRecord[] {
+export function getComparablePerspectivesForCase(caseId: string, requestingActorId: string): readonly PerspectiveCommittedRecord[] {
   const c = getCase(caseId);
   if (!c) return [];
 

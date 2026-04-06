@@ -16,6 +16,14 @@ class MemoryStorage implements Storage {
 
 const originalLocalStorage = globalThis.localStorage;
 
+beforeEach(() => {
+  globalThis.localStorage = new MemoryStorage();
+});
+
+afterEach(() => {
+  globalThis.localStorage = originalLocalStorage;
+});
+
 /** Minimal valid snapshot — add singular or override fields as needed. */
 function makeSnap(overrides: Record<string, unknown> = {}): Record<string, unknown> {
   return {

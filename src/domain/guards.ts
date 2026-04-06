@@ -705,7 +705,7 @@ export function guardCase(
     revisions: readonly Revision[];
     observedAt?: string;
     sources?: unknown;
-    perspectives?: readonly any[];
+    perspectives?: readonly unknown[];
   },
 ): readonly string[] {
   const errors: string[] = [];

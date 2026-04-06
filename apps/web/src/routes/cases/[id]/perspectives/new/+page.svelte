@@ -117,7 +117,7 @@
         caseId,
         actorId: currentActorId,
         createdAt: draftCreatedAt,
-        observation: observationText.trim() ? { text: observationText, isCameraDescribable } : undefined,
+        observation: (observationText.trim() || isCameraDescribable !== undefined) ? { text: observationText, isCameraDescribable } : undefined,
         interpretation: interpretationText.trim() ? { text: interpretationText, evidenceType: interpretationEvidence } : undefined,
         counterInterpretations: counters.length > 0 ? counters : undefined,
         uncertainties: uncerts.length > 0 ? uncerts : undefined
