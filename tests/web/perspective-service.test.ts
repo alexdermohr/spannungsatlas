@@ -239,6 +239,42 @@ describe('case-service - perspective management', () => {
       expect(draft!.content.observation?.text).toBe(incompleteInput.observation?.text);
       expect(draft!.content.observation?.isCameraDescribable).toBeUndefined(); // Proves unset falls to undefined
     });
+
+    it('tri-state reload UI logic properly distinguishes explicit false, true, and unset/undefined', () => {
+       const caseId = 'case-test';
+       const actorId = 'actor-1';
+
+       // 1. Explicit True
+       addDraftPerspective(caseId, {
+         id: 'p-state-1', caseId, actorId, createdAt: '2026-03-28T10:00:00Z',
+         observation: { isCameraDescribable: true }
+       }, actorId);
+
+       let draft = getDraftPerspectiveForActor(caseId, actorId)!;
+       // Mock UI mapping logic from +page.svelte:
+       let isCameraDescribableStr = draft.content.observation?.isCameraDescribable === undefined ? 'null' : (draft.content.observation.isCameraDescribable ? 'true' : 'false');
+       expect(isCameraDescribableStr).toBe('true');
+
+       // 2. Explicit False
+       addDraftPerspective(caseId, {
+         id: 'p-state-1', caseId, actorId, createdAt: '2026-03-28T10:00:00Z',
+         observation: { isCameraDescribable: false }
+       }, actorId);
+
+       draft = getDraftPerspectiveForActor(caseId, actorId)!;
+       isCameraDescribableStr = draft.content.observation?.isCameraDescribable === undefined ? 'null' : (draft.content.observation.isCameraDescribable ? 'true' : 'false');
+       expect(isCameraDescribableStr).toBe('false');
+
+       // 3. Unset / Undefined
+       addDraftPerspective(caseId, {
+         id: 'p-state-1', caseId, actorId, createdAt: '2026-03-28T10:00:00Z',
+         observation: { text: "Nur Text" } // No camera describable
+       }, actorId);
+
+       draft = getDraftPerspectiveForActor(caseId, actorId)!;
+       isCameraDescribableStr = draft.content.observation?.isCameraDescribable === undefined ? 'null' : (draft.content.observation.isCameraDescribable ? 'true' : 'false');
+       expect(isCameraDescribableStr).toBe('null');
+    });
   });
 
   describe('commitPerspective', () => {
