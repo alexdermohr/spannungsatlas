@@ -215,16 +215,21 @@ describe('case-service - perspective management', () => {
     });
   });
 
-    describe('partial safe reload', () => {
+
+  describe('partial safe reload', () => {
     it('returns the partial draft safely without losing original empty fields context', () => {
-      const incompleteInput = { ...DUMMY_INPUT };
-      delete (incompleteInput as any).counterInterpretations;
-      delete (incompleteInput as any).uncertainties;
+      const incompleteInput: CreatePerspectiveDraftInput = {
+        id: 'p-1',
+        caseId: 'case-test',
+        actorId: 'actor-1',
+        createdAt: '2026-03-28T10:00:00Z',
+        observation: { text: "Kind weint." },
+      };
 
       const caseId = 'case-test';
       const actorId = 'actor-1';
 
-      addDraftPerspective(caseId, incompleteInput as any, actorId);
+      addDraftPerspective(caseId, incompleteInput, actorId);
 
       const draft = getDraftPerspectiveForActor(caseId, actorId);
 
@@ -232,6 +237,7 @@ describe('case-service - perspective management', () => {
       expect(draft!.content.counterInterpretations).toBeUndefined();
       expect(draft!.content.uncertainties).toBeUndefined();
       expect(draft!.content.observation?.text).toBe(incompleteInput.observation?.text);
+      expect(draft!.content.observation?.isCameraDescribable).toBeUndefined(); // Proves unset falls to undefined
     });
   });
 

@@ -117,7 +117,7 @@
         caseId,
         actorId: currentActorId,
         createdAt: draftCreatedAt,
-                observation: (observationText.trim() !== '' || isCameraDescribableStr !== 'null') ? {
+        observation: (observationText.trim() !== '' || isCameraDescribableStr !== 'null') ? {
           text: observationText,
           ...(isCameraDescribableStr !== 'null' ? { isCameraDescribable: isCameraDescribableStr === 'true' } : {})
         } : undefined,
