@@ -67,9 +67,10 @@ describe('case-service - perspective management', () => {
     vi.restoreAllMocks();
   });
 
-    describe('partial draft storage coverage', () => {
+
+  describe('partial draft storage coverage', () => {
     it('allows draft creation with explicit observation false even if text empty', () => {
-      const input: any = {
+      const input: CreatePerspectiveDraftInput = {
         id: "p-test-0",
         caseId: "case-test",
         actorId: "actor-1",
@@ -83,7 +84,7 @@ describe('case-service - perspective management', () => {
     });
 
     it('allows draft creation with explicit observation true even if text empty', () => {
-      const input: any = {
+      const input: CreatePerspectiveDraftInput = {
         id: "p-test-01",
         caseId: "case-test",
         actorId: "actor-1",
@@ -96,8 +97,21 @@ describe('case-service - perspective management', () => {
       expect(updatedCase.perspectives?.[0].content.interpretation).toBeUndefined();
     });
 
+    it('allows draft creation with observation text but missing camera describable (undefined/null)', () => {
+      const input: CreatePerspectiveDraftInput = {
+        id: "p-test-02",
+        caseId: "case-test",
+        actorId: "actor-1",
+        createdAt: "2026-03-28T10:00:00Z",
+        observation: { text: "Nur Text, kein Kamera-Test" }
+      };
+
+      const updatedCase = addDraftPerspective('case-test', input, 'actor-1');
+      expect(updatedCase.perspectives?.[0].content.observation?.text).toBe("Nur Text, kein Kamera-Test");
+      expect(updatedCase.perspectives?.[0].content.observation?.isCameraDescribable).toBeUndefined();
+    });
     it('allows draft creation with only interpretation', () => {
-      const input: any = {
+      const input: CreatePerspectiveDraftInput = {
         id: "p-test-1",
         caseId: "case-test",
         actorId: "actor-1",
@@ -111,7 +125,7 @@ describe('case-service - perspective management', () => {
     });
 
     it('allows draft creation with only uncertainties', () => {
-      const input: any = {
+      const input: CreatePerspectiveDraftInput = {
         id: "p-test-2",
         caseId: "case-test",
         actorId: "actor-1",
@@ -125,7 +139,7 @@ describe('case-service - perspective management', () => {
     });
 
     it('allows draft creation with only counter interpretations', () => {
-      const input: any = {
+      const input: CreatePerspectiveDraftInput = {
         id: "p-test-3",
         caseId: "case-test",
         actorId: "actor-1",

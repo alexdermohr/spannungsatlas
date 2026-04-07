@@ -591,7 +591,11 @@ describe("Perspective Draft Commit Boundaries", () => {
   });
 
   it("throws specific errors when committing incomplete draft details", () => {
-
+    const draftTextNoCamera = createPerspectiveDraftRecord({
+      ...validDraftInput(),
+      observation: { text: "Beobachtung" } // missing isCameraDescribable
+    });
+    expect(() => commitPerspectiveRecord(draftTextNoCamera, "2026-03-28T10:30:00Z")).toThrow("Für den Commit muss der Kamera-Test (isCameraDescribable) als boolescher Wert vorliegen.");
 
     const draftNoText = createPerspectiveDraftRecord({
       ...validDraftInput(),
