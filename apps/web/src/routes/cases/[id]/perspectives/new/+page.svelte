@@ -3,6 +3,7 @@
   import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
   import { getCase, addDraftPerspective, commitPerspective, getDraftPerspectiveForActor } from '$lib/services/case-service.js';
+  import { mapCameraStateToFormValue } from '$domain/form-mappers.js';
   import { roleLabels, evidenceLabels, uncertaintyLabels } from '$lib/ui/labels.js';
   import type { Case, EvidenceType, UncertaintyLevel } from '$domain/types.js';
 
@@ -45,7 +46,7 @@
 
       const obs = draft.content.observation;
       observationText = obs?.text ?? '';
-      isCameraDescribableStr = obs?.isCameraDescribable === undefined ? 'null' : (obs.isCameraDescribable ? 'true' : 'false');
+      isCameraDescribableStr = mapCameraStateToFormValue(obs?.isCameraDescribable);
 
       const interp = draft.content.interpretation;
       interpretationText = interp?.text ?? '';

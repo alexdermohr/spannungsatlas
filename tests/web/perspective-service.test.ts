@@ -1,4 +1,5 @@
 import type { CreatePerspectiveDraftInput } from '../../src/domain/factories.js';
+import { mapCameraStateToFormValue } from '../../src/domain/form-mappers.js';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   addDraftPerspective,
@@ -252,7 +253,7 @@ describe('case-service - perspective management', () => {
 
        let draft = getDraftPerspectiveForActor(caseId, actorId)!;
        // Mock UI mapping logic from +page.svelte:
-       let isCameraDescribableStr = draft.content.observation?.isCameraDescribable === undefined ? 'null' : (draft.content.observation.isCameraDescribable ? 'true' : 'false');
+       let isCameraDescribableStr = mapCameraStateToFormValue(draft.content.observation?.isCameraDescribable);
        expect(isCameraDescribableStr).toBe('true');
 
        // 2. Explicit False
@@ -262,7 +263,7 @@ describe('case-service - perspective management', () => {
        }, actorId);
 
        draft = getDraftPerspectiveForActor(caseId, actorId)!;
-       isCameraDescribableStr = draft.content.observation?.isCameraDescribable === undefined ? 'null' : (draft.content.observation.isCameraDescribable ? 'true' : 'false');
+       isCameraDescribableStr = mapCameraStateToFormValue(draft.content.observation?.isCameraDescribable);
        expect(isCameraDescribableStr).toBe('false');
 
        // 3. Unset / Undefined
@@ -272,7 +273,7 @@ describe('case-service - perspective management', () => {
        }, actorId);
 
        draft = getDraftPerspectiveForActor(caseId, actorId)!;
-       isCameraDescribableStr = draft.content.observation?.isCameraDescribable === undefined ? 'null' : (draft.content.observation.isCameraDescribable ? 'true' : 'false');
+       isCameraDescribableStr = mapCameraStateToFormValue(draft.content.observation?.isCameraDescribable);
        expect(isCameraDescribableStr).toBe('null');
     });
   });
