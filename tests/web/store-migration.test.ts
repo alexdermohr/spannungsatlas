@@ -16,12 +16,20 @@ class MemoryStorage implements Storage {
 
 const originalLocalStorage = globalThis.localStorage;
 
+beforeEach(() => {
+  globalThis.localStorage = new MemoryStorage();
+});
+
+afterEach(() => {
+  globalThis.localStorage = originalLocalStorage;
+});
+
 /** Minimal valid snapshot — add singular or override fields as needed. */
 function makeSnap(overrides: Record<string, unknown> = {}): Record<string, unknown> {
   return {
     reflectedAt: '2024-01-01T00:00:00.000Z',
-    interpretation: { text: 'My interpretation.', evidenceType: 'derived' },
-    counterInterpretations: [{ text: 'Counter interpretation.', evidenceType: 'speculative' }],
+    interpretation: { text: 'My interpretation.', evidenceType: 'derived' as const },
+    counterInterpretations: [{ text: 'Counter interpretation.', evidenceType: 'speculative' as const }],
     uncertainties: [{ level: 3, rationale: 'Not sure about this.' }],
     tensions: [],
     ...overrides,
@@ -61,7 +69,7 @@ describe('store migration — normalizeCaseFromStorage', () => {
     const raw = makeBaseCase({
       currentReflection: makeSnap({
         counterInterpretations: undefined,
-        counterInterpretation: { text: 'Counter interpretation.', evidenceType: 'speculative' },
+        counterInterpretation: { text: 'Counter interpretation.', evidenceType: 'speculative' as const },
       }),
     });
     localStorage.setItem(STORAGE_KEY, JSON.stringify([raw]));
@@ -127,7 +135,7 @@ describe('store migration — normalizeCaseFromStorage', () => {
       currentReflection: makeSnap({
         counterInterpretations: undefined,
         // Malformed legacy data: already an array stored in the singular field
-        counterInterpretation: [{ text: 'Already an array.', evidenceType: 'speculative' }],
+        counterInterpretation: [{ text: 'Already an array.', evidenceType: 'speculative' as const }],
       }),
     });
     localStorage.setItem(STORAGE_KEY, JSON.stringify([raw]));
@@ -139,16 +147,16 @@ describe('store migration — normalizeCaseFromStorage', () => {
   it('migrates singular counterInterpretation and uncertainty in revision.from and revision.to', () => {
     const oldSnap = makeSnap({
       reflectedAt: '2023-12-01T00:00:00.000Z',
-      interpretation: { text: 'Old interpretation.', evidenceType: 'derived' },
+      interpretation: { text: 'Old interpretation.', evidenceType: 'derived' as const },
       counterInterpretations: undefined,
-      counterInterpretation: { text: 'Old counter interpretation.', evidenceType: 'speculative' },
+      counterInterpretation: { text: 'Old counter interpretation.', evidenceType: 'speculative' as const },
       uncertainties: undefined,
       uncertainty: { level: 1, rationale: 'Old uncertainty rationale.' },
     });
     const newSnap = makeSnap({
-      interpretation: { text: 'Revised interpretation.', evidenceType: 'observational' },
+      interpretation: { text: 'Revised interpretation.', evidenceType: 'observational' as const },
       counterInterpretations: undefined,
-      counterInterpretation: { text: 'Revised counter interpretation.', evidenceType: 'speculative' },
+      counterInterpretation: { text: 'Revised counter interpretation.', evidenceType: 'speculative' as const },
       uncertainties: undefined,
       uncertainty: { level: 3, rationale: 'Revised uncertainty rationale.' },
     });
@@ -175,5 +183,194 @@ describe('store migration — normalizeCaseFromStorage', () => {
     expect(rev.to.counterInterpretations[0].text).toBe('Revised counter interpretation.');
     expect(rev.to.uncertainties).toHaveLength(1);
     expect(rev.to.uncertainties[0].rationale).toBe('Revised uncertainty rationale.');
+  });
+});
+
+describe("store migration — draft handling", () => {
+  it("accepts cases containing a valid partial draft perspective", () => {
+    const rawData = [
+      {
+        id: "case-with-draft",
+        context: "Schulhof",
+        participants: [{ id: "Kind A" }],
+        observation: { text: "Das Kind läuft.", isCameraDescribable: true },
+        currentReflection: {
+          reflectedAt: "2025-01-01T10:00:00Z",
+          interpretation: { text: "Freude", evidenceType: "observational" },
+          counterInterpretations: [{ text: "Flucht", evidenceType: "speculative" }],
+          uncertainties: [{ level: 3, rationale: "Keine Mimik sichtbar" }],
+          tensions: []
+        },
+        revisions: [],
+        perspectives: [
+          {
+            id: "draft-1",
+            caseId: "case-with-draft",
+            actorId: "Kind A",
+            status: "draft",
+            createdAt: "2025-01-01T11:00:00Z",
+            content: {
+              observation: { text: "Ein partial Draft", isCameraDescribable: false }
+            }
+          }
+        ]
+      }
+    ];
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(rawData));
+    const loaded = localStorageStore.loadAllCases();
+    expect(loaded).toHaveLength(1);
+    expect(loaded[0].perspectives?.[0].status).toBe("draft");
+    expect(loaded[0].perspectives?.[0].content.observation?.text).toBe("Ein partial Draft");
+    expect(loaded[0].perspectives?.[0].content.interpretation).toBeUndefined();
+  });
+
+    it("accepts cases containing a valid partial draft perspective with only interpretation", () => {
+    const rawData = [
+      {
+        id: "case-with-draft",
+        context: "Schulhof",
+        participants: [{ id: "Kind A" }],
+        observation: { text: "Das Kind läuft.", isCameraDescribable: true },
+        currentReflection: {
+          reflectedAt: "2025-01-01T10:00:00Z",
+          interpretation: { text: "Freude", evidenceType: "observational" },
+          counterInterpretations: [{ text: "Flucht", evidenceType: "speculative" }],
+          uncertainties: [{ level: 3, rationale: "Keine Mimik sichtbar" }],
+          tensions: []
+        },
+        revisions: [],
+        perspectives: [
+          {
+            id: "draft-1",
+            caseId: "case-with-draft",
+            actorId: "Kind A",
+            status: "draft",
+            createdAt: "2025-01-01T11:00:00Z",
+            content: {
+              interpretation: { text: "Nur Interpretation", evidenceType: "derived" }
+            }
+          }
+        ]
+      }
+    ];
+
+    globalThis.localStorage.setItem(STORAGE_KEY, JSON.stringify(rawData));
+    const loaded = localStorageStore.loadAllCases();
+    expect(loaded).toHaveLength(1);
+    expect(loaded[0].perspectives?.[0].status).toBe("draft");
+    expect(loaded[0].perspectives?.[0].content.interpretation?.text).toBe("Nur Interpretation");
+    expect(loaded[0].perspectives?.[0].content.observation).toBeUndefined();
+  });
+
+  it("accepts cases containing a valid partial draft perspective with only uncertainties", () => {
+    const rawData = [
+      {
+        id: "case-with-draft-uncerts",
+        context: "Schulhof",
+        participants: [{ id: "Kind A" }],
+        observation: { text: "Das Kind läuft.", isCameraDescribable: true },
+        currentReflection: {
+          reflectedAt: "2025-01-01T10:00:00Z",
+          interpretation: { text: "Freude", evidenceType: "observational" },
+          counterInterpretations: [{ text: "Flucht", evidenceType: "speculative" }],
+          uncertainties: [{ level: 3, rationale: "Keine Mimik sichtbar" }],
+          tensions: []
+        },
+        revisions: [],
+        perspectives: [
+          {
+            id: "draft-1",
+            caseId: "case-with-draft-uncerts",
+            actorId: "Kind A",
+            status: "draft",
+            createdAt: "2025-01-01T11:00:00Z",
+            content: {
+              uncertainties: [{ level: 1, rationale: "Ein Draft Level" }]
+            }
+          }
+        ]
+      }
+    ];
+
+    globalThis.localStorage.setItem(STORAGE_KEY, JSON.stringify(rawData));
+    const loaded = localStorageStore.loadAllCases();
+    expect(loaded).toHaveLength(1);
+    expect(loaded[0].perspectives?.[0].status).toBe("draft");
+    expect(loaded[0].perspectives?.[0].content.uncertainties?.[0].rationale).toBe("Ein Draft Level");
+    expect(loaded[0].perspectives?.[0].content.observation).toBeUndefined();
+  });
+
+  it("accepts cases containing a valid partial draft perspective with only counter interpretations", () => {
+    const rawData = [
+      {
+        id: "case-with-draft-counters",
+        context: "Schulhof",
+        participants: [{ id: "Kind A" }],
+        observation: { text: "Das Kind läuft.", isCameraDescribable: true },
+        currentReflection: {
+          reflectedAt: "2025-01-01T10:00:00Z",
+          interpretation: { text: "Freude", evidenceType: "observational" },
+          counterInterpretations: [{ text: "Flucht", evidenceType: "speculative" }],
+          uncertainties: [{ level: 3, rationale: "Keine Mimik sichtbar" }],
+          tensions: []
+        },
+        revisions: [],
+        perspectives: [
+          {
+            id: "draft-1",
+            caseId: "case-with-draft-counters",
+            actorId: "Kind A",
+            status: "draft",
+            createdAt: "2025-01-01T11:00:00Z",
+            content: {
+              counterInterpretations: [{ text: "Draft Counter", evidenceType: "speculative" }]
+            }
+          }
+        ]
+      }
+    ];
+
+    globalThis.localStorage.setItem(STORAGE_KEY, JSON.stringify(rawData));
+    const loaded = localStorageStore.loadAllCases();
+    expect(loaded).toHaveLength(1);
+    expect(loaded[0].perspectives?.[0].status).toBe("draft");
+    expect(loaded[0].perspectives?.[0].content.counterInterpretations?.[0].text).toBe("Draft Counter");
+    expect(loaded[0].perspectives?.[0].content.observation).toBeUndefined();
+  });
+
+  it("rejects cases containing an invalid draft perspective (e.g. text is a number)", () => {
+    const rawData = [
+      {
+        id: "case-with-invalid-draft",
+        context: "Schulhof",
+        participants: [{ id: "Kind A" }],
+        observation: { text: "Das Kind läuft.", isCameraDescribable: true },
+        currentReflection: {
+          reflectedAt: "2025-01-01T10:00:00Z",
+          interpretation: { text: "Freude", evidenceType: "observational" },
+          counterInterpretations: [{ text: "Flucht", evidenceType: "speculative" }],
+          uncertainties: [{ level: 3, rationale: "Keine Mimik sichtbar" }],
+          tensions: []
+        },
+        revisions: [],
+        perspectives: [
+          {
+            id: "draft-1",
+            caseId: "case-with-invalid-draft",
+            actorId: "Kind A",
+            status: "draft",
+            createdAt: "2025-01-01T11:00:00Z",
+            content: {
+              observation: { text: 12345 } // Invalid text type
+            }
+          }
+        ]
+      }
+    ];
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(rawData));
+    const loaded = localStorageStore.loadAllCases();
+    expect(loaded).toHaveLength(0);
   });
 });

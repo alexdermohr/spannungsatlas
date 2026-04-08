@@ -23,8 +23,8 @@ import {
   guardRevisionFromTo,
   guardReflectionSnapshot,
   guardCase,
-  guardPerspectiveRecord,
-  guardPerspectiveContent,
+  guardPerspectiveDraftContent,
+  guardPerspectiveRecord, guardPerspectiveCommittedContent,
 } from "../../src/domain/guards.js";
 import type {
   Interpretation,
@@ -523,23 +523,23 @@ describe("guardRevisionFromTo", () => {
 
 
 // ---------------------------------------------------------------------------
-// guardPerspectiveRecord & guardPerspectiveContent
+// guardPerspectiveRecord & guardPerspectiveCommittedContent
 // ---------------------------------------------------------------------------
 
-describe("guardPerspectiveRecord & guardPerspectiveContent", () => {
+describe("guardPerspectiveRecord & guardPerspectiveCommittedContent", () => {
   it("guardPerspectiveRecord rejects null or non-objects", () => {
     expect(guardPerspectiveRecord(null).length).toBeGreaterThan(0);
     expect(guardPerspectiveRecord("string").length).toBeGreaterThan(0);
     expect(guardPerspectiveRecord([]).length).toBeGreaterThan(0);
   });
 
-  it("guardPerspectiveContent rejects missing observation/interpretation objects", () => {
-    expect(guardPerspectiveContent({}).length).toBeGreaterThan(0);
-    expect(guardPerspectiveContent({ observation: "string" }).length).toBeGreaterThan(0);
+  it("guardPerspectiveCommittedContent rejects missing observation/interpretation objects", () => {
+    expect(guardPerspectiveCommittedContent({}).length).toBeGreaterThan(0);
+    expect(guardPerspectiveCommittedContent({ observation: "string" }).length).toBeGreaterThan(0);
   });
 
 
-  it("guardPerspectiveContent rejects missing or non-boolean isCameraDescribable", () => {
+  it("guardPerspectiveCommittedContent rejects missing or non-boolean isCameraDescribable", () => {
     const invalid1 = {
       observation: { text: "obs" }, // missing isCameraDescribable
       interpretation: { text: "int", evidenceType: "observational" },
@@ -551,8 +551,8 @@ describe("guardPerspectiveRecord & guardPerspectiveContent", () => {
       observation: { text: "obs", isCameraDescribable: "yes" } // not a boolean
     };
 
-    expect(guardPerspectiveContent(invalid1).some(e => e.includes("isCameraDescribable must be a boolean"))).toBe(true);
-    expect(guardPerspectiveContent(invalid2).some(e => e.includes("isCameraDescribable must be a boolean"))).toBe(true);
+    expect(guardPerspectiveCommittedContent(invalid1).some(e => e.includes("isCameraDescribable must be a boolean"))).toBe(true);
+    expect(guardPerspectiveCommittedContent(invalid2).some(e => e.includes("isCameraDescribable must be a boolean"))).toBe(true);
   });
 
 
@@ -921,5 +921,44 @@ describe("formal guarantee boundary — interpretations non-identity", () => {
       evidenceType: "derived",
     };
     expect(guardInterpretationsDistinct(interp, counter)).toBeUndefined();
+  });
+});
+
+describe("guardPerspectiveDraftContent Explicit Isolated Testing", () => {
+  it("accepts explicitly correct isolated partials", () => {
+    expect(guardPerspectiveDraftContent({ observation: { text: "Nur Text" } })).toHaveLength(0);
+    expect(guardPerspectiveDraftContent({ observation: { isCameraDescribable: true } })).toHaveLength(0);
+    expect(guardPerspectiveDraftContent({ interpretation: { text: "Nur Interp" } })).toHaveLength(0);
+    expect(guardPerspectiveDraftContent({ interpretation: { evidenceType: "derived" } })).toHaveLength(0);
+    expect(guardPerspectiveDraftContent({ uncertainties: [{ level: 1 }] })).toHaveLength(0);
+    expect(guardPerspectiveDraftContent({ counterInterpretations: [{ text: "Gegendeutung" }] })).toHaveLength(0);
+  });
+});
+
+describe("guardPerspectiveDraftContent Explicit Negative Testing", () => {
+  it("rejects invalid partial forms of observation", () => {
+    expect(guardPerspectiveDraftContent({ observation: { text: 123 } })).toContain("PerspectiveDraftContent.observation.text must be a string if present.");
+    expect(guardPerspectiveDraftContent({ observation: { isCameraDescribable: "yes" } })).toContain("PerspectiveDraftContent.observation.isCameraDescribable must be a boolean if present.");
+    expect(guardPerspectiveDraftContent({ observation: { recurringAspects: [1, 2] } })).toContain("PerspectiveDraftContent.observation.recurringAspects elements must be strings.");
+    expect(guardPerspectiveDraftContent({ observation: { recurringAspects: "not-array" } })).toContain("PerspectiveDraftContent.observation.recurringAspects must be an array if present.");
+  });
+
+  it("rejects invalid partial forms of interpretation", () => {
+    expect(guardPerspectiveDraftContent({ interpretation: { text: 123 } })).toContain("PerspectiveDraftContent.interpretation.text must be a string if present.");
+    expect(guardPerspectiveDraftContent({ interpretation: { evidenceType: "wrong" } })).toContain('EvidenceType must be "observational", "derived", or "speculative", got "wrong".');
+    expect(guardPerspectiveDraftContent({ interpretation: { rationale: 123 } })).toContain("PerspectiveDraftContent.interpretation.rationale must be a string if present.");
+  });
+
+  it("rejects invalid partial forms of counterInterpretations", () => {
+    expect(guardPerspectiveDraftContent({ counterInterpretations: "not-array" })).toContain("PerspectiveDraftContent.counterInterpretations must be an array if present.");
+    expect(guardPerspectiveDraftContent({ counterInterpretations: [{ text: 123 }] })).toContain("counterInterpretations text must be a string if present.");
+    expect(guardPerspectiveDraftContent({ counterInterpretations: [{ rationale: 123 }] })).toContain("counterInterpretations rationale must be a string if present.");
+    expect(guardPerspectiveDraftContent({ counterInterpretations: [{ evidenceType: "wrong" }] })).toContain('EvidenceType must be "observational", "derived", or "speculative", got "wrong".');
+  });
+
+  it("rejects invalid partial forms of uncertainties", () => {
+    expect(guardPerspectiveDraftContent({ uncertainties: "not-array" })).toContain("PerspectiveDraftContent.uncertainties must be an array if present.");
+    expect(guardPerspectiveDraftContent({ uncertainties: [{ level: "hoch" }] }).length).toBeGreaterThan(0);
+    expect(guardPerspectiveDraftContent({ uncertainties: [{ rationale: 123 }] })).toContain("uncertainties rationale must be a string if present.");
   });
 });

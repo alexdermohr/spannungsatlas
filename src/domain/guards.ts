@@ -37,6 +37,7 @@
  */
 
 import type {
+  EvidenceType,
   CaseParticipant,
   Interpretation,
   Observation,
@@ -466,12 +467,112 @@ export function guardReflectionSnapshot(
 // PerspectiveRecord Guards
 // ---------------------------------------------------------------------------
 
-export function guardPerspectiveContent(content: unknown): readonly string[] {
+export function guardPerspectiveDraftContent(content: unknown): readonly string[] {
+  const errors: string[] = [];
+
+  if (typeof content !== 'object' || content === null || Array.isArray(content)) {
+    return ["PerspectiveDraftContent must be an object."];
+  }
+
+  const c = content as Record<string, unknown>;
+
+  if (c.observation !== undefined) {
+    const obs = c.observation as Record<string, unknown>;
+    if (typeof obs !== 'object' || obs === null || Array.isArray(obs)) {
+      errors.push("PerspectiveDraftContent.observation must be an object if present.");
+    } else {
+      if (obs.text !== undefined && typeof obs.text !== 'string') {
+        errors.push("PerspectiveDraftContent.observation.text must be a string if present.");
+      }
+      if (obs.isCameraDescribable !== undefined && typeof obs.isCameraDescribable !== 'boolean') {
+        errors.push("PerspectiveDraftContent.observation.isCameraDescribable must be a boolean if present.");
+      }
+      if (obs.recurringAspects !== undefined) {
+        if (!Array.isArray(obs.recurringAspects)) {
+          errors.push("PerspectiveDraftContent.observation.recurringAspects must be an array if present.");
+        } else {
+          for (const asp of obs.recurringAspects) {
+            if (typeof asp !== 'string') {
+              errors.push("PerspectiveDraftContent.observation.recurringAspects elements must be strings.");
+            }
+          }
+        }
+      }
+    }
+  }
+
+  if (c.interpretation !== undefined) {
+    const interp = c.interpretation as Record<string, unknown>;
+    if (typeof interp !== 'object' || interp === null || Array.isArray(interp)) {
+      errors.push("PerspectiveDraftContent.interpretation must be an object if present.");
+    } else {
+      if (interp.text !== undefined && typeof interp.text !== 'string') {
+        errors.push("PerspectiveDraftContent.interpretation.text must be a string if present.");
+      }
+      if (interp.evidenceType !== undefined) {
+        const evErr = guardEvidenceType(interp.evidenceType as string);
+        if (evErr) errors.push(evErr);
+      }
+      if (interp.rationale !== undefined && typeof interp.rationale !== 'string') {
+        errors.push("PerspectiveDraftContent.interpretation.rationale must be a string if present.");
+      }
+    }
+  }
+
+  if (c.counterInterpretations !== undefined) {
+    if (!Array.isArray(c.counterInterpretations)) {
+      errors.push("PerspectiveDraftContent.counterInterpretations must be an array if present.");
+    } else {
+      for (const counter of c.counterInterpretations) {
+        if (typeof counter !== 'object' || counter === null || Array.isArray(counter)) {
+          errors.push("counterInterpretations array elements must be objects.");
+        } else {
+          const ct = counter as Record<string, unknown>;
+          if (ct.text !== undefined && typeof ct.text !== 'string') {
+            errors.push("counterInterpretations text must be a string if present.");
+          }
+          if (ct.evidenceType !== undefined) {
+            const evErr = guardEvidenceType(ct.evidenceType as string);
+            if (evErr) errors.push(evErr);
+          }
+          if (ct.rationale !== undefined && typeof ct.rationale !== 'string') {
+            errors.push("counterInterpretations rationale must be a string if present.");
+          }
+        }
+      }
+    }
+  }
+
+  if (c.uncertainties !== undefined) {
+    if (!Array.isArray(c.uncertainties)) {
+      errors.push("PerspectiveDraftContent.uncertainties must be an array if present.");
+    } else {
+      for (const u of c.uncertainties) {
+        if (typeof u !== 'object' || u === null || Array.isArray(u)) {
+          errors.push("uncertainties array elements must be objects.");
+        } else {
+          const un = u as Record<string, unknown>;
+          if (un.level !== undefined) {
+            const lvlErr = guardUncertaintyLevel(un.level as number);
+            if (lvlErr) errors.push(lvlErr);
+          }
+          if (un.rationale !== undefined && typeof un.rationale !== 'string') {
+            errors.push("uncertainties rationale must be a string if present.");
+          }
+        }
+      }
+    }
+  }
+
+  return errors;
+}
+
+export function guardPerspectiveCommittedContent(content: unknown): readonly string[] {
   const errors: string[] = [];
   const push = (r: GuardResult) => { if (r) errors.push(r); };
 
   if (typeof content !== 'object' || content === null || Array.isArray(content)) {
-    return ["PerspectiveContent must be an object."];
+    return ["PerspectiveCommittedContent must be an object."];
   }
 
   const c = content as Record<string, unknown>;
@@ -479,18 +580,18 @@ export function guardPerspectiveContent(content: unknown): readonly string[] {
   const obs = c.observation as Record<string, unknown> | undefined;
   const hasValidObservation = typeof obs === 'object' && obs !== null && !Array.isArray(obs);
   if (!hasValidObservation) {
-    errors.push("PerspectiveContent must have a valid observation object.");
+    errors.push("PerspectiveCommittedContent must have a valid observation object.");
   } else {
     push(guardObservationText(obs.text as string));
     if (typeof obs.isCameraDescribable !== 'boolean') {
-      errors.push("PerspectiveContent.observation.isCameraDescribable must be a boolean.");
+      errors.push("PerspectiveCommittedContent.observation.isCameraDescribable must be a boolean.");
     }
   }
 
   const interp = c.interpretation as Record<string, unknown> | undefined;
   const hasValidInterpretation = typeof interp === 'object' && interp !== null && !Array.isArray(interp);
   if (!hasValidInterpretation) {
-    errors.push("PerspectiveContent must have a valid interpretation object.");
+    errors.push("PerspectiveCommittedContent must have a valid interpretation object.");
   } else {
     push(guardInterpretationText(interp.text as string));
     push(guardEvidenceType(interp.evidenceType as EvidenceType));
@@ -583,13 +684,13 @@ export function guardPerspectiveRecord(record: unknown): readonly string[] {
     } else {
       push(guardIsoDateString(rec.committedAt, "PerspectiveRecord.committedAt"));
     }
+    errors.push(...guardPerspectiveCommittedContent(rec.content));
   } else if (rec.status === "draft") {
     if (rec.committedAt !== undefined) {
       errors.push("PerspectiveRecord committedAt must be absent when status is draft.");
     }
+    errors.push(...guardPerspectiveDraftContent(rec.content));
   }
-
-  errors.push(...guardPerspectiveContent(rec.content));
 
   return errors;
 }
@@ -604,6 +705,7 @@ export function guardCase(
     revisions: readonly Revision[];
     observedAt?: string;
     sources?: unknown;
+    perspectives?: readonly unknown[];
   },
 ): readonly string[] {
   const errors: string[] = [];

@@ -1,3 +1,5 @@
+import type { CreatePerspectiveDraftInput } from '../../src/domain/factories.js';
+import { mapCameraStateToFormValue } from '../../src/domain/form-mappers.js';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   addDraftPerspective,
@@ -27,7 +29,7 @@ const DUMMY_CASE: Case = {
   currentReflection: {
     reflectedAt: "2026-04-01T10:00:00Z",
     interpretation: { text: "int", evidenceType: "observational" },
-    counterInterpretations: [{ text: "c", evidenceType: "derived" }],
+    counterInterpretations: [{ text: "c", evidenceType: "derived" as const }],
     uncertainties: [{ level: 2, rationale: "unc" }],
     tensions: []
   },
@@ -35,14 +37,14 @@ const DUMMY_CASE: Case = {
   perspectives: []
 };
 
-const DUMMY_INPUT = {
+const DUMMY_INPUT: CreatePerspectiveDraftInput = {
   id: "p-1",
   caseId: "case-test",
   actorId: "actor-1",
   createdAt: "2026-04-01T10:00:00Z",
   observation: { text: "obs", isCameraDescribable: true },
   interpretation: { text: "int", evidenceType: "observational" },
-  counterInterpretations: [{ text: "c", evidenceType: "derived" }],
+  counterInterpretations: [{ text: "c", evidenceType: "derived" as const }],
   uncertainties: [{ level: 2, rationale: "unc" }]
 };
 
@@ -66,6 +68,92 @@ describe('case-service - perspective management', () => {
     vi.restoreAllMocks();
   });
 
+
+  describe('partial draft storage coverage', () => {
+    it('allows draft creation with explicit observation false even if text empty', () => {
+      const input: CreatePerspectiveDraftInput = {
+        id: "p-test-0",
+        caseId: "case-test",
+        actorId: "actor-1",
+        createdAt: "2026-03-28T10:00:00Z",
+        observation: { isCameraDescribable: false }
+      };
+
+      const updatedCase = addDraftPerspective('case-test', input, 'actor-1');
+      expect(updatedCase.perspectives?.[0].content.observation?.isCameraDescribable).toBe(false);
+      expect(updatedCase.perspectives?.[0].content.interpretation).toBeUndefined();
+    });
+
+    it('allows draft creation with explicit observation true even if text empty', () => {
+      const input: CreatePerspectiveDraftInput = {
+        id: "p-test-01",
+        caseId: "case-test",
+        actorId: "actor-1",
+        createdAt: "2026-03-28T10:00:00Z",
+        observation: { isCameraDescribable: true }
+      };
+
+      const updatedCase = addDraftPerspective('case-test', input, 'actor-1');
+      expect(updatedCase.perspectives?.[0].content.observation?.isCameraDescribable).toBe(true);
+      expect(updatedCase.perspectives?.[0].content.interpretation).toBeUndefined();
+    });
+
+    it('allows draft creation with observation text but missing camera describable (undefined/null)', () => {
+      const input: CreatePerspectiveDraftInput = {
+        id: "p-test-02",
+        caseId: "case-test",
+        actorId: "actor-1",
+        createdAt: "2026-03-28T10:00:00Z",
+        observation: { text: "Nur Text, kein Kamera-Test" }
+      };
+
+      const updatedCase = addDraftPerspective('case-test', input, 'actor-1');
+      expect(updatedCase.perspectives?.[0].content.observation?.text).toBe("Nur Text, kein Kamera-Test");
+      expect(updatedCase.perspectives?.[0].content.observation?.isCameraDescribable).toBeUndefined();
+    });
+    it('allows draft creation with only interpretation', () => {
+      const input: CreatePerspectiveDraftInput = {
+        id: "p-test-1",
+        caseId: "case-test",
+        actorId: "actor-1",
+        createdAt: "2026-03-28T10:00:00Z",
+        interpretation: { text: "Nur Interpretation", evidenceType: "observational" }
+      };
+
+      const updatedCase = addDraftPerspective('case-test', input, 'actor-1');
+      expect(updatedCase.perspectives?.[0].content.interpretation?.text).toBe("Nur Interpretation");
+      expect(updatedCase.perspectives?.[0].content.observation).toBeUndefined();
+    });
+
+    it('allows draft creation with only uncertainties', () => {
+      const input: CreatePerspectiveDraftInput = {
+        id: "p-test-2",
+        caseId: "case-test",
+        actorId: "actor-1",
+        createdAt: "2026-03-28T10:00:00Z",
+        uncertainties: [{ level: 5, rationale: "Draft Uncertain" }]
+      };
+
+      const updatedCase = addDraftPerspective('case-test', input, 'actor-1');
+      expect(updatedCase.perspectives?.[0].content.uncertainties?.[0].level).toBe(5);
+      expect(updatedCase.perspectives?.[0].content.observation).toBeUndefined();
+    });
+
+    it('allows draft creation with only counter interpretations', () => {
+      const input: CreatePerspectiveDraftInput = {
+        id: "p-test-3",
+        caseId: "case-test",
+        actorId: "actor-1",
+        createdAt: "2026-03-28T10:00:00Z",
+        counterInterpretations: [{ text: "Draft Counter", evidenceType: "speculative" }]
+      };
+
+      const updatedCase = addDraftPerspective('case-test', input, 'actor-1');
+      expect(updatedCase.perspectives?.[0].content.counterInterpretations?.[0].text).toBe("Draft Counter");
+      expect(updatedCase.perspectives?.[0].content.observation).toBeUndefined();
+    });
+  });
+
   describe('addDraftPerspective', () => {
     it('creates a draft for the requesting actor', () => {
       const updatedCase = addDraftPerspective('case-test', DUMMY_INPUT, 'actor-1');
@@ -82,7 +170,7 @@ describe('case-service - perspective management', () => {
 
       expect(updatedCase.perspectives).toHaveLength(1);
       expect(updatedCase.perspectives![0].id).toBe('p-2');
-      expect(updatedCase.perspectives![0].content.observation.text).toBe('new obs');
+      expect(updatedCase.perspectives![0].content.observation?.text).toBe('new obs');
     });
 
 
@@ -103,20 +191,12 @@ describe('case-service - perspective management', () => {
     });
 
 
-    it('CURRENT SEMANTICS: rejects draft creation if the input structure is incomplete (e.g., missing uncertainty)', () => {
-      const incompleteInput = {
-        id: "p-incomplete",
-        caseId: "case-test",
-        actorId: "actor-1",
-        createdAt: "2026-04-01T10:00:00Z",
-        observation: { text: "obs", isCameraDescribable: true },
-        interpretation: { text: "int", evidenceType: "observational" },
-        counterInterpretations: [{ text: "c", evidenceType: "derived" }],
-        uncertainties: [] // Intentionally omitted to test structural strictness
-      };
+    it("NEW SEMANTICS: allows draft creation if the input structure is incomplete (e.g., missing uncertainty)", () => {
+      const incompleteInput = { ...DUMMY_INPUT };
+      delete (incompleteInput).uncertainties;
 
-      expect(() => addDraftPerspective('case-test', incompleteInput as any, 'actor-1'))
-        .toThrow(/uncertainty/i);
+      const updatedCase = addDraftPerspective('case-test', incompleteInput, incompleteInput.actorId);
+      expect(updatedCase.perspectives?.[0].content.uncertainties).toBeUndefined();
     });
 
     it('does not touch drafts of other actors', () => {
@@ -133,6 +213,68 @@ describe('case-service - perspective management', () => {
     it('rejects creation if input.actorId does not match requestingActorId', () => {
       expect(() => addDraftPerspective('case-test', DUMMY_INPUT, 'actor-2'))
         .toThrow("Access denied: You can only create drafts for yourself.");
+    });
+  });
+
+
+  describe('partial safe reload', () => {
+    it('returns the partial draft safely without losing original empty fields context', () => {
+      const incompleteInput: CreatePerspectiveDraftInput = {
+        id: 'p-1',
+        caseId: 'case-test',
+        actorId: 'actor-1',
+        createdAt: '2026-03-28T10:00:00Z',
+        observation: { text: "Kind weint." },
+      };
+
+      const caseId = 'case-test';
+      const actorId = 'actor-1';
+
+      addDraftPerspective(caseId, incompleteInput, actorId);
+
+      const draft = getDraftPerspectiveForActor(caseId, actorId);
+
+      expect(draft).toBeDefined();
+      expect(draft!.content.counterInterpretations).toBeUndefined();
+      expect(draft!.content.uncertainties).toBeUndefined();
+      expect(draft!.content.observation?.text).toBe(incompleteInput.observation?.text);
+      expect(draft!.content.observation?.isCameraDescribable).toBeUndefined(); // Proves unset falls to undefined
+    });
+
+    it('tri-state reload UI logic properly distinguishes explicit false, true, and unset/undefined', () => {
+       const caseId = 'case-test';
+       const actorId = 'actor-1';
+
+       // 1. Explicit True
+       addDraftPerspective(caseId, {
+         id: 'p-state-1', caseId, actorId, createdAt: '2026-03-28T10:00:00Z',
+         observation: { isCameraDescribable: true }
+       }, actorId);
+
+       let draft = getDraftPerspectiveForActor(caseId, actorId)!;
+       // Mock UI mapping logic from +page.svelte:
+       let isCameraDescribableStr = mapCameraStateToFormValue(draft.content.observation?.isCameraDescribable);
+       expect(isCameraDescribableStr).toBe('true');
+
+       // 2. Explicit False
+       addDraftPerspective(caseId, {
+         id: 'p-state-1', caseId, actorId, createdAt: '2026-03-28T10:00:00Z',
+         observation: { isCameraDescribable: false }
+       }, actorId);
+
+       draft = getDraftPerspectiveForActor(caseId, actorId)!;
+       isCameraDescribableStr = mapCameraStateToFormValue(draft.content.observation?.isCameraDescribable);
+       expect(isCameraDescribableStr).toBe('false');
+
+       // 3. Unset / Undefined
+       addDraftPerspective(caseId, {
+         id: 'p-state-1', caseId, actorId, createdAt: '2026-03-28T10:00:00Z',
+         observation: { text: "Nur Text" } // No camera describable
+       }, actorId);
+
+       draft = getDraftPerspectiveForActor(caseId, actorId)!;
+       isCameraDescribableStr = mapCameraStateToFormValue(draft.content.observation?.isCameraDescribable);
+       expect(isCameraDescribableStr).toBe('null');
     });
   });
 

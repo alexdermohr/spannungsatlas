@@ -3,6 +3,7 @@
   import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
   import { getCase, addDraftPerspective, commitPerspective, getDraftPerspectiveForActor } from '$lib/services/case-service.js';
+  import { mapCameraStateToFormValue } from '$domain/form-mappers.js';
   import { roleLabels, evidenceLabels, uncertaintyLabels } from '$lib/ui/labels.js';
   import type { Case, EvidenceType, UncertaintyLevel } from '$domain/types.js';
 
@@ -15,7 +16,7 @@
 
   // Form State
   let observationText = $state('');
-  let isCameraDescribable = $state(false);
+  let isCameraDescribableStr = $state<"null" | "true" | "false">("null");
   let interpretationText = $state('');
   let interpretationEvidence = $state<EvidenceType>('observational');
 
@@ -42,17 +43,34 @@
     if (draft) {
       draftId = draft.id;
       draftCreatedAt = draft.createdAt;
-      observationText = draft.content.observation.text;
-      isCameraDescribable = draft.content.observation.isCameraDescribable;
-      interpretationText = draft.content.interpretation.text;
-      interpretationEvidence = draft.content.interpretation.evidenceType;
-      counterRows = draft.content.counterInterpretations.map(c => ({ text: c.text, evidence: c.evidenceType }));
-      uncertaintyRows = draft.content.uncertainties.map(u => ({ level: u.level, rationale: u.rationale }));
+
+      const obs = draft.content.observation;
+      observationText = obs?.text ?? '';
+      isCameraDescribableStr = mapCameraStateToFormValue(obs?.isCameraDescribable);
+
+      const interp = draft.content.interpretation;
+      interpretationText = interp?.text ?? '';
+      interpretationEvidence = interp?.evidenceType ?? 'observational';
+
+      const counters = draft.content.counterInterpretations;
+      if (counters && counters.length > 0) {
+        counterRows = counters.map(c => ({ text: c.text ?? '', evidence: c.evidenceType ?? 'observational' }));
+      } else {
+        counterRows = [{ text: '', evidence: 'observational' }];
+      }
+
+      const uncerts = draft.content.uncertainties;
+      if (uncerts && uncerts.length > 0) {
+        uncertaintyRows = uncerts.map(u => ({ level: u.level ?? 2, rationale: u.rationale ?? '' }));
+      } else {
+        uncertaintyRows = [{ level: 2, rationale: '' }];
+      }
+      errorMsg = '';
     } else {
       draftId = crypto.randomUUID();
       draftCreatedAt = null;
       observationText = '';
-      isCameraDescribable = false;
+      isCameraDescribableStr = 'null';
       interpretationText = '';
       interpretationEvidence = 'observational';
       counterRows = [{ text: '', evidence: 'observational' }];
@@ -100,10 +118,13 @@
         caseId,
         actorId: currentActorId,
         createdAt: draftCreatedAt,
-        observation: { text: observationText, isCameraDescribable },
-        interpretation: { text: interpretationText, evidenceType: interpretationEvidence },
-        counterInterpretations: counters,
-        uncertainties: uncerts
+        observation: (observationText.trim() !== '' || isCameraDescribableStr !== 'null') ? {
+          text: observationText,
+          ...(isCameraDescribableStr !== 'null' ? { isCameraDescribable: isCameraDescribableStr === 'true' } : {})
+        } : undefined,
+        interpretation: interpretationText.trim() ? { text: interpretationText, evidenceType: interpretationEvidence } : undefined,
+        counterInterpretations: counters.length > 0 ? counters : undefined,
+        uncertainties: uncerts.length > 0 ? uncerts : undefined
       }, currentActorId);
 
       errorMsg = ''; // clear on success
@@ -182,9 +203,13 @@
         <label class="field">
           <textarea bind:value={observationText} oninput={saveDraft} rows="4" placeholder="z.B. Kind A wirft das Spielzeug..."></textarea>
         </label>
-        <label class="checkbox-field">
-          <input type="checkbox" bind:checked={isCameraDescribable} onchange={saveDraft} />
-          <span>Ist diese Beschreibung rein beobachtbar (Kamera-Test)?</span>
+        <label class="field">
+          <span class="field-label">Ist diese Beschreibung rein beobachtbar (Kamera-Test)?</span>
+          <select bind:value={isCameraDescribableStr} onchange={saveDraft}>
+            <option value="null">Bitte wählen...</option>
+            <option value="true">Ja, rein beobachtbar</option>
+            <option value="false">Nein, enthält Wertungen/Deutungen</option>
+          </select>
         </label>
       </section>
 
