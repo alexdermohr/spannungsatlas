@@ -106,12 +106,12 @@
 
       <p>Committed: <strong>{committedCount}</strong> / {caseData.participants.length}</p>
       <div class="actions" style="margin-top: 1rem; margin-bottom: 0;">
-        <a href="/cases/{caseData.id}/perspectives/new?actor={demoActorId}" class="btn btn-primary">Perspektive als {demoActorId} hinzufügen</a>
+        <a href="/cases/{caseData.id}/perspectives/new?actor={demoActorId}" class="btn btn-primary">{committedCount === 0 ? "Perspektive erstellen" : "Perspektive ergänzen"}</a>
         {#if isComparable}
-          <a href="/cases/{caseData.id}/compare?actor={demoActorId}" class="btn">Zum Vergleichsmodus</a>
+          <a href="/cases/{caseData.id}/compare?actor={demoActorId}" class="btn">Zum Vergleich</a>
         {:else}
           <span style="font-size: 0.85rem; color: var(--color-text-muted); display: inline-block; margin-left: 1rem;">
-            Vergleich nicht verfügbar (Sie haben noch nicht committed oder < 2 Commits gesamt)
+            Vergleich nicht verfügbar (Sie haben noch nicht committed oder &lt; 2 Commits gesamt)
           </span>
         {/if}
       </div>
