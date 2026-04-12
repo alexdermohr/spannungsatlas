@@ -132,11 +132,10 @@
             <a href="/cases/{caseData.id}/perspectives/new?actor={demoActorId}" class="btn btn-primary">Entwurf fortsetzen</a>
           {:else}
             <a href="/cases/{caseData.id}/perspectives/new?actor={demoActorId}" class="btn btn-primary">Perspektive erstellen</a>
+            <span style="font-size: 0.85rem; color: var(--color-text-muted); display: inline-block; margin-left: 1rem;">
+              Erst nach einem Commit kann Ihre Perspektive in den Vergleich eingehen.
+            </span>
           {/if}
-
-          <span style="font-size: 0.85rem; color: var(--color-text-muted); display: inline-block; margin-left: 1rem;">
-            Vergleich nicht verfügbar (Sie haben noch nicht committed)
-          </span>
         {/if}
       </div>
     </section>
