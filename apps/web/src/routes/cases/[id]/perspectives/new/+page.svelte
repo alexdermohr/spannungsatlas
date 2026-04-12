@@ -265,7 +265,7 @@
               <span class="field-label">Stufe</span>
               <select bind:value={row.level} onchange={saveDraft}>
                 {#each [0, 1, 2, 3, 4, 5] as lvl}
-                  <option value={lvl}>{uncertaintyLabels[lvl]}</option>
+                  <option value={lvl}>{lvl}</option>
                 {/each}
               </select>
             </label>

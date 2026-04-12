@@ -50,12 +50,17 @@
 
   function updateActorState() {
     if (!caseData || !demoActorId) return;
-    isComparable = getComparablePerspectivesForCase(caseData.id, demoActorId).length > 0;
 
-    // Both states derived directly from the loaded case object to ensure synchronous rendering
+    // All states derived directly from the loaded case object to ensure synchronous rendering
+    // and avoid unnecessary localStorage reads.
     const perspectives = caseData.perspectives || [];
+
     actorHasCommitted = perspectives.some(p => p.actorId === demoActorId && p.status === 'committed');
     actorHasDraft = perspectives.some(p => p.actorId === demoActorId && p.status === 'draft');
+
+    const committedCountTotal = perspectives.filter(p => p.status === 'committed').length;
+    // Compare is available if the actor has committed AND there are at least 2 total commits.
+    isComparable = actorHasCommitted && committedCountTotal >= 2;
   }
 
   onMount(() => {

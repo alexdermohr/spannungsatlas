@@ -3,11 +3,11 @@
   import { onMount } from 'svelte';
   import { getCase, getComparablePerspectivesForCase } from '$lib/services/case-service.js';
   import { roleLabels, evidenceLabels } from '$lib/ui/labels.js';
-  import type { Case, PerspectiveRecord } from '$domain/types.js';
+  import type { Case, PerspectiveCommittedRecord } from '$domain/types.js';
 
   let caseId = $state('');
   let caseData: Case | null = $state(null);
-  let perspectives: PerspectiveRecord[] = $state([]);
+  let perspectives: PerspectiveCommittedRecord[] = $state([]);
 
   let loaded = $state(false);
 
@@ -15,7 +15,7 @@
     caseId = page.params.id ?? '';
     caseData = getCase(caseId);
     const actor = page.url.searchParams.get('actor') || '';
-    perspectives = getComparablePerspectivesForCase(caseId, actor) as PerspectiveRecord[];
+    perspectives = getComparablePerspectivesForCase(caseId, actor) as PerspectiveCommittedRecord[];
 
     loaded = true;
   });
