@@ -1,7 +1,7 @@
 <script lang="ts">
   import { page } from '$app/state';
   import { onMount } from 'svelte';
-  import { getCase, getCommittedPerspectiveCount, getComparablePerspectivesForCase } from '$lib/services/case-service.js';
+  import { getCase, getCommittedPerspectiveCount } from '$lib/services/case-service.js';
   import { roleLabels, evidenceLabels } from '$lib/ui/labels.js';
   import { renderCaseAsMarkdown } from '$lib/services/case-report.js';
   import type { Case, EvidenceType } from '$domain/types.js';
