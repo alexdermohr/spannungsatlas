@@ -15,7 +15,7 @@
     caseId = page.params.id ?? '';
     caseData = getCase(caseId);
     const actor = page.url.searchParams.get('actor') || '';
-    perspectives = getComparablePerspectivesForCase(caseId, actor) as PerspectiveCommittedRecord[];
+    perspectives = [...getComparablePerspectivesForCase(caseId, actor)];
 
     loaded = true;
   });
