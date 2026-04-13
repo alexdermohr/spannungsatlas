@@ -4,7 +4,7 @@
   import { onMount } from 'svelte';
   import { getCase, addDraftPerspective, commitPerspective, getDraftPerspectiveForActor } from '$lib/services/case-service.js';
   import { mapCameraStateToFormValue } from '$domain/form-mappers.js';
-  import { roleLabels, evidenceLabels } from '$lib/ui/labels.js';
+  import { roleLabels, evidenceLabels, uncertaintyLabels } from '$lib/ui/labels.js';
   import type { Case, EvidenceType, UncertaintyLevel } from '$domain/types.js';
 
   let caseId = $state('');
@@ -265,7 +265,7 @@
               <span class="field-label">Stufe</span>
               <select bind:value={row.level} onchange={saveDraft}>
                 {#each [0, 1, 2, 3, 4, 5] as lvl}
-                  <option value={lvl}>{lvl}</option>
+                  <option value={lvl}>{uncertaintyLabels[lvl]}</option>
                 {/each}
               </select>
             </label>

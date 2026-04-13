@@ -12,3 +12,12 @@ export const evidenceLabels: Record<EvidenceType, string> = {
   derived: 'Abgeleitet',
   speculative: 'Spekulativ'
 };
+
+export const uncertaintyLabels: Record<0 | 1 | 2 | 3 | 4 | 5, string> = {
+  0: '0 (Sicher)',
+  1: '1 (Kaum Zweifel)',
+  2: '2 (Eher sicher)',
+  3: '3 (Mittel)',
+  4: '4 (Unsicher)',
+  5: '5 (Hoch spekulativ)'
+};
