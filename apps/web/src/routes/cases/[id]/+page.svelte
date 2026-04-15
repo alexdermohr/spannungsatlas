@@ -1,7 +1,7 @@
 <script lang="ts">
   import { page } from '$app/state';
   import { onMount } from 'svelte';
-  import { getCase, getCommittedPerspectiveCount, getComparablePerspectivesForCase } from '$lib/services/case-service.js';
+  import { getCase, getCommittedPerspectiveCount } from '$lib/services/case-service.js';
   import { roleLabels, evidenceLabels } from '$lib/ui/labels.js';
   import { renderCaseAsMarkdown } from '$lib/services/case-report.js';
   import type { Case, EvidenceType } from '$domain/types.js';
@@ -12,6 +12,8 @@
   let committedCount: number = $state(0);
   let demoActorId: string = $state('');
   let isComparable: boolean = $state(false);
+  let actorHasCommitted: boolean = $state(false);
+  let actorHasDraft: boolean = $state(false);
 
   function evidenceBadgeClass(t: EvidenceType): string {
     return `badge badge-${t}`;
@@ -46,13 +48,28 @@
     }, 1500);
   }
 
+  function updateActorState() {
+    if (!caseData || !demoActorId) return;
+
+    // All states derived directly from the loaded case object to ensure synchronous rendering
+    // and avoid unnecessary localStorage reads.
+    const perspectives = caseData.perspectives || [];
+
+    actorHasCommitted = perspectives.some(p => p.actorId === demoActorId && p.status === 'committed');
+    actorHasDraft = perspectives.some(p => p.actorId === demoActorId && p.status === 'draft');
+
+    const committedCountTotal = perspectives.filter(p => p.status === 'committed').length;
+    // Compare is available if the actor has committed AND there are at least 2 total commits.
+    isComparable = actorHasCommitted && committedCountTotal >= 2;
+  }
+
   onMount(() => {
     const id = page.params.id ?? '';
     caseData = getCase(id);
     committedCount = getCommittedPerspectiveCount(id);
     if (caseData?.participants.length) {
       demoActorId = caseData.participants[0].id;
-      isComparable = getComparablePerspectivesForCase(id, demoActorId).length > 0;
+      updateActorState();
     }
     loaded = true;
   });
@@ -96,7 +113,7 @@
         <em>Demo-Zugriffssimulation (später via Benutzerkonto):</em>
         <label style="display: block; margin-top: 0.5rem; font-weight: bold;">
           Wer sind Sie jetzt?
-          <select bind:value={demoActorId} onchange={() => isComparable = getComparablePerspectivesForCase(caseData.id, demoActorId).length > 0} style="display: block; width: 100%; margin-top: 0.25rem;">
+          <select bind:value={demoActorId} onchange={updateActorState} style="display: block; width: 100%; margin-top: 0.25rem;">
             {#each caseData.participants as p}
               <option value={p.id}>{p.id} ({p.role ? roleLabels[p.role] ?? p.role : 'unbekannt'})</option>
             {/each}
@@ -106,13 +123,24 @@
 
       <p>Committed: <strong>{committedCount}</strong> / {caseData.participants.length}</p>
       <div class="actions" style="margin-top: 1rem; margin-bottom: 0;">
-        <a href="/cases/{caseData.id}/perspectives/new?actor={demoActorId}" class="btn btn-primary">Perspektive als {demoActorId} hinzufügen</a>
-        {#if isComparable}
-          <a href="/cases/{caseData.id}/compare?actor={demoActorId}" class="btn">Zum Vergleichsmodus</a>
+        {#if actorHasCommitted}
+          {#if isComparable}
+            <span style="font-size: 0.9rem; color: var(--color-success); display: inline-block; padding: 0.5rem 1rem 0.5rem 0;">Ihre Perspektive wurde bereits committed.</span>
+            <a href="/cases/{caseData.id}/compare?actor={demoActorId}" class="btn btn-primary">Zum Vergleich</a>
+          {:else}
+            <span style="font-size: 0.9rem; color: var(--color-success); display: inline-block; padding: 0.5rem 0;">
+              Ihre Perspektive wurde bereits committed. Ein Vergleich wird verfügbar, sobald mindestens zwei Perspektiven committed wurden.
+            </span>
+          {/if}
         {:else}
-          <span style="font-size: 0.85rem; color: var(--color-text-muted); display: inline-block; margin-left: 1rem;">
-            Vergleich nicht verfügbar (Sie haben noch nicht committed oder < 2 Commits gesamt)
-          </span>
+          {#if actorHasDraft}
+            <a href="/cases/{caseData.id}/perspectives/new?actor={demoActorId}" class="btn btn-primary">Entwurf fortsetzen</a>
+          {:else}
+            <a href="/cases/{caseData.id}/perspectives/new?actor={demoActorId}" class="btn btn-primary">Perspektive erstellen</a>
+            <span style="font-size: 0.85rem; color: var(--color-text-muted); display: inline-block; margin-left: 1rem;">
+              Erst nach einem Commit kann Ihre Perspektive in den Vergleich eingehen.
+            </span>
+          {/if}
         {/if}
       </div>
     </section>
