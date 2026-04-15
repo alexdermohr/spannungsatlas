@@ -1,92 +1,220 @@
+<script lang="ts">
+	import needsData from '../../../../../data/catalog/needs.json';
+	import determinantsData from '../../../../../data/catalog/determinants.json';
+	import clustersData from '../../../../../data/catalog/clusters.json';
+
+	let activeTab: 'needs' | 'determinants' | 'clusters' = 'needs';
+	let searchQuery = '';
+
+	$: activeData =
+		activeTab === 'needs' ? needsData :
+		activeTab === 'determinants' ? determinantsData :
+		clustersData;
+
+	$: filteredData = activeData.filter(item =>
+		item.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+		item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+		item.short.toLowerCase().includes(searchQuery.toLowerCase())
+	);
+</script>
+
 <div class="page">
-  <h1>Bedürfnis- und Determinantenraum</h1>
-  <p class="subtitle">Explorationsraum für pädagogische Bezugsrahmen</p>
+	<header class="page-header">
+		<h1>Explorationsraum</h1>
+		<p class="subtitle">Katalog für Bedürfnisse, Determinanten und Cluster</p>
+	</header>
 
-  <div class="card phase-notice">
-    <span class="phase-badge">Phase 2</span>
-    <strong>Noch nicht implementiert</strong>
-  </div>
+	<div class="controls">
+		<div class="tabs">
+			<button class:active={activeTab === 'needs'} on:click={() => activeTab = 'needs'}>
+				Bedürfnisse
+			</button>
+			<button class:active={activeTab === 'determinants'} on:click={() => activeTab = 'determinants'}>
+				Determinanten
+			</button>
+			<button class:active={activeTab === 'clusters'} on:click={() => activeTab = 'clusters'}>
+				Cluster
+			</button>
+		</div>
 
-  <section class="card catalog-section">
-    <h2>Bedürfniskatalog</h2>
-    <p>
-      Strukturierte Sammlung menschlicher Grundbedürfnisse als Bezugsrahmen für die
-      Reflexion. Beobachtungen und Deutungen werden mit Bedürfniskategorien verknüpft,
-      um Spannungsfelder systematisch einzuordnen.
-    </p>
-    <ul>
-      <li>Bedürfniskategorien nach pädagogischer Fachliteratur</li>
-      <li>Zuordnung zu beobachteten Situationen</li>
-      <li>Verknüpfung mit Deutungen und Gegen-Deutungen</li>
-    </ul>
-  </section>
+		<div class="search">
+			<input
+				type="text"
+				bind:value={searchQuery}
+				placeholder="Katalog durchsuchen..."
+				aria-label="Katalog durchsuchen"
+			/>
+		</div>
+	</div>
 
-  <section class="card catalog-section">
-    <h2>Determinantenkatalog</h2>
-    <p>
-      Kontextfaktoren und Einflussvariablen, die pädagogische Situationen prägen.
-      Determinanten helfen, die Rahmenbedingungen einer Beobachtung zu strukturieren.
-    </p>
-    <ul>
-      <li>Institutionelle Rahmenbedingungen</li>
-      <li>Soziale Kontextfaktoren</li>
-      <li>Individuelle Einflussvariablen</li>
-    </ul>
-  </section>
-
-  <section class="card catalog-section">
-    <h2>Clusterstruktur</h2>
-    <p>
-      Bedürfnisse und Determinanten werden in Clustern organisiert, um Zusammenhänge
-      sichtbar zu machen und die Navigation im Explorationsraum zu erleichtern.
-    </p>
-  </section>
+	<div class="catalog-grid">
+		{#if filteredData.length === 0}
+			<div class="empty-state card">
+				<p>Keine Einträge für "{searchQuery}" gefunden.</p>
+			</div>
+		{:else}
+			{#each filteredData as item (item.id)}
+				<article class="card catalog-card">
+					<header class="card-header">
+						<h2>{item.label}</h2>
+						<span class="badge">{item.short}</span>
+					</header>
+					<p class="description">{item.description}</p>
+					<div class="card-footer">
+						<code class="id-tag">{item.id}</code>
+					</div>
+				</article>
+			{/each}
+		{/if}
+	</div>
 </div>
 
 <style>
-  .subtitle {
-    color: var(--color-text-muted);
-    margin-top: -0.5rem;
-    margin-bottom: 1.5rem;
-  }
-  .phase-notice {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    background: var(--color-accent-light);
-    border-color: var(--color-accent);
-    margin-bottom: 1.25rem;
-    font-size: 0.9rem;
-  }
-  .phase-badge {
-    background: var(--color-accent);
-    color: #fff;
-    font-size: 0.75rem;
-    font-weight: 600;
-    padding: 0.2rem 0.6rem;
-    border-radius: 999px;
-    white-space: nowrap;
-  }
-  .catalog-section {
-    margin-bottom: 1rem;
-  }
-  .catalog-section h2 {
-    font-size: 1.05rem;
-    color: var(--color-accent);
-    margin-bottom: 0.3rem;
-  }
-  .catalog-section p {
-    color: var(--color-text-muted);
-    margin: 0.25rem 0 0.5rem;
-    font-size: 0.9rem;
-  }
-  .catalog-section ul {
-    margin: 0;
-    padding-left: 1.25rem;
-    font-size: 0.85rem;
-    color: var(--color-text-muted);
-  }
-  .catalog-section li {
-    margin-bottom: 0.2rem;
-  }
+	.page {
+		max-width: 800px;
+		margin: 0 auto;
+		padding: 2rem 1rem;
+	}
+
+	.page-header {
+		margin-bottom: 2rem;
+	}
+
+	h1 {
+		font-size: 2rem;
+		margin-bottom: 0.5rem;
+		color: var(--color-text);
+	}
+
+	.subtitle {
+		color: var(--color-text-muted);
+		font-size: 1.1rem;
+	}
+
+	.controls {
+		display: flex;
+		flex-direction: column;
+		gap: 1.5rem;
+		margin-bottom: 2rem;
+	}
+
+	@media (min-width: 600px) {
+		.controls {
+			flex-direction: row;
+			justify-content: space-between;
+			align-items: center;
+		}
+	}
+
+	.tabs {
+		display: flex;
+		gap: 0.5rem;
+		background: var(--color-bg-subtle, #f3f4f6);
+		padding: 0.25rem;
+		border-radius: 0.5rem;
+	}
+
+	.tabs button {
+		padding: 0.5rem 1rem;
+		border: none;
+		background: transparent;
+		border-radius: 0.375rem;
+		cursor: pointer;
+		font-weight: 500;
+		color: var(--color-text-muted);
+		transition: all 0.2s;
+	}
+
+	.tabs button:hover {
+		color: var(--color-text);
+	}
+
+	.tabs button.active {
+		background: var(--color-bg, #ffffff);
+		color: var(--color-accent, #3b82f6);
+		box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+	}
+
+	.search input {
+		width: 100%;
+		padding: 0.5rem 1rem;
+		border: 1px solid var(--color-border, #e5e7eb);
+		border-radius: 0.5rem;
+		font-size: 0.95rem;
+	}
+
+	.search input:focus {
+		outline: none;
+		border-color: var(--color-accent, #3b82f6);
+		box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+	}
+
+	.catalog-grid {
+		display: grid;
+		gap: 1rem;
+	}
+
+	.catalog-card {
+		padding: 1.5rem;
+		background: var(--color-bg, #ffffff);
+		border: 1px solid var(--color-border, #e5e7eb);
+		border-radius: 0.75rem;
+		transition: transform 0.2s, box-shadow 0.2s;
+	}
+
+	.catalog-card:hover {
+		transform: translateY(-2px);
+		box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+	}
+
+	.card-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: flex-start;
+		margin-bottom: 1rem;
+		gap: 1rem;
+	}
+
+	.card-header h2 {
+		font-size: 1.25rem;
+		margin: 0;
+		color: var(--color-text);
+	}
+
+	.badge {
+		background: var(--color-bg-subtle, #f3f4f6);
+		color: var(--color-text-muted);
+		padding: 0.25rem 0.5rem;
+		border-radius: 999px;
+		font-size: 0.75rem;
+		font-weight: 600;
+		white-space: nowrap;
+	}
+
+	.description {
+		color: var(--color-text-muted);
+		line-height: 1.5;
+		margin-bottom: 1.5rem;
+	}
+
+	.card-footer {
+		border-top: 1px solid var(--color-border, #e5e7eb);
+		padding-top: 1rem;
+	}
+
+	.id-tag {
+		font-size: 0.75rem;
+		color: var(--color-text-muted);
+		background: var(--color-bg-subtle, #f3f4f6);
+		padding: 0.125rem 0.375rem;
+		border-radius: 0.25rem;
+	}
+
+	.empty-state {
+		text-align: center;
+		padding: 3rem 1rem;
+		color: var(--color-text-muted);
+		background: var(--color-bg-subtle, #f3f4f6);
+		border-radius: 0.75rem;
+	}
 </style>
