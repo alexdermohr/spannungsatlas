@@ -1,21 +1,16 @@
 <script lang="ts">
-	import needsData from '../../../../../data/catalog/needs.json';
-	import determinantsData from '../../../../../data/catalog/determinants.json';
-	import clustersData from '../../../../../data/catalog/clusters.json';
+	import { needs, determinants, clusters } from '$lib/catalog/catalog-data';
+	import { filterCatalogItems } from '$lib/catalog/catalog-utils';
 
 	let activeTab: 'needs' | 'determinants' | 'clusters' = 'needs';
 	let searchQuery = '';
 
 	$: activeData =
-		activeTab === 'needs' ? needsData :
-		activeTab === 'determinants' ? determinantsData :
-		clustersData;
+		activeTab === 'needs' ? needs :
+		activeTab === 'determinants' ? determinants :
+		clusters;
 
-	$: filteredData = activeData.filter(item =>
-		item.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
-		item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-		item.short.toLowerCase().includes(searchQuery.toLowerCase())
-	);
+	$: filteredData = filterCatalogItems(activeData, searchQuery);
 </script>
 
 <div class="page">
@@ -25,14 +20,29 @@
 	</header>
 
 	<div class="controls">
-		<div class="tabs">
-			<button class:active={activeTab === 'needs'} on:click={() => activeTab = 'needs'}>
+		<div class="tabs" role="tablist" aria-label="Katalog Kategorien">
+			<button
+				role="tab"
+				aria-selected={activeTab === 'needs'}
+				class:active={activeTab === 'needs'}
+				on:click={() => activeTab = 'needs'}
+			>
 				Bedürfnisse
 			</button>
-			<button class:active={activeTab === 'determinants'} on:click={() => activeTab = 'determinants'}>
+			<button
+				role="tab"
+				aria-selected={activeTab === 'determinants'}
+				class:active={activeTab === 'determinants'}
+				on:click={() => activeTab = 'determinants'}
+			>
 				Determinanten
 			</button>
-			<button class:active={activeTab === 'clusters'} on:click={() => activeTab = 'clusters'}>
+			<button
+				role="tab"
+				aria-selected={activeTab === 'clusters'}
+				class:active={activeTab === 'clusters'}
+				on:click={() => activeTab = 'clusters'}
+			>
 				Cluster
 			</button>
 		</div>
