@@ -210,4 +210,5 @@ export interface Case {
   readonly revisions: readonly Revision[];
   readonly sources?: readonly CaseSource[];
   readonly perspectives?: readonly PerspectiveRecord[];
+  readonly appliedModels?: readonly string[];
 }

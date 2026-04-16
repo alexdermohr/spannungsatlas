@@ -498,6 +498,7 @@ describe("createCase", () => {
       "Das Kind zeigt körperliche Anspannung.",
     );
     expect(c.revisions).toHaveLength(0);
+    expect(c.appliedModels).toBeUndefined();
   });
 
   it("throws when id is empty", () => {

@@ -406,6 +406,7 @@ export interface CreateCaseInput {
   revisions?: CreateRevisionInput[];
   sources?: CaseSource[];
   perspectives?: PerspectiveRecord[];
+  appliedModels?: string[];
 }
 
 export function createCase(input: CreateCaseInput): Case {
@@ -443,6 +444,7 @@ export function createCase(input: CreateCaseInput): Case {
     revisions,
     ...(input.sources ? { sources: [...input.sources] } : {}),
     ...(input.perspectives ? { perspectives: [...input.perspectives] } : {}),
+    ...(input.appliedModels ? { appliedModels: [...input.appliedModels] } : {}),
   };
 
   // Run composite guard as final sanity check

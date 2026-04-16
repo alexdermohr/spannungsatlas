@@ -1,0 +1,65 @@
+id: model.stress_window
+type: psych_model
+label: Stresstoleranzfenster
+dimension: tension_regulation
+states:
+  - id: hyperarousal
+    label: Oberanspannung
+  - id: window
+    label: Reguliertes Spannungsfenster
+  - id: hypoarousal
+    label: Unterspannung / Erschöpfung
+transitions:
+  - trigger: stress_increase
+    from: window
+    to: hyperarousal
+  - trigger: depletion
+    from: window
+    to: hypoarousal
+properties:
+  recovery_required: true
+  non_linear: true
+
+---
+id: model.yerkes_dodson
+type: psych_model
+label: Yerkes-Dodson-Gesetz
+dimension: performance
+variables:
+  - arousal
+  - performance
+relationship:
+  type: inverted_u
+implications:
+  - optimal_mid_arousal
+  - overload_degrades_performance
+
+---
+id: model.maslow
+type: psych_model
+label: Bedürfnishierarchie
+levels:
+  - physiological
+  - safety
+  - bonding
+  - esteem
+  - self_actualization
+meta:
+  split:
+    hygiene: [physiological, safety]
+    growth: [bonding, esteem, self_actualization]
+
+---
+id: model.big_five
+type: psych_model
+label: Persönlichkeitsdimensionen
+traits:
+  - extraversion
+  - neuroticism
+  - openness
+  - agreeableness
+  - conscientiousness
+role:
+  modifies:
+    - stress_window_width
+    - arousal_response
