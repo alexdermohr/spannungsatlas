@@ -1,17 +1,20 @@
 ---
 id: psych-modelle-blaupause
 title: "Psychologische Modelle als Wissensmodule"
-doc_type: ux-ui
+doc_type: architecture
 status: draft
 canonicality: canonical
-summary: "Konzept zur Integration kanonischer Spannungsmodelle (Stressfenster, Yerkes-Dodson, Maslow, Big Five) als strukturierte Artefakte."
+summary: "Konzept zur initialen Sammlung kanonischer Spannungsmodelle (Stressfenster, Yerkes-Dodson, Maslow, Big Five) als epistemisch markierte Wissensartefakte."
 related_docs:
   - masterplan
-  - ux-ui-blaupause
+  - roadmap
 last_reviewed: "2026-04-16"
 ---
 
 # Psychologische Modelle als Wissensmodule
+
+> **Phasenschnitt:**
+> Dieser Blueprint beschreibt Phase A (Sammeln + Strukturieren + Doku-Einordnung) für psychologische Modelle im Spannungsatlas. Er etabliert formale, epistemisch markierte Datenartefakte ohne vorzeitige Domainmodell-Erweiterung (es gibt noch keine Berechnungslogik, Modellanwendung auf Cases oder UI-Integration). Diese Artefakte dienen vorerst als referenzierbare Wissensbausteine.
 
 ## These
 Die drei Tafelbilder liefern genau das, was dem Spannungsatlas bislang fehlt: kanonische Spannungsmodelle (Fenster, Leistungskurve, Bedürfnisstruktur) als integrierbare Wissensmodule.
@@ -21,7 +24,7 @@ Unstrukturiert gesammelt bleiben sie:
 → didaktische Skizzen, aber nicht systemisch anschlussfähig (keine Typisierung, keine Contracts, keine Relationen).
 
 ## Synthese
-Wir überführen sie in Repo-kompatible, wiederverwendbare Wissensartefakte (→ Katalog + Domain anschlussfähig).
+Wir überführen sie in Repo-kompatible, epistemisch markierte Wissensartefakte. Sie werden pro Modell als einzelne Datei abgelegt, um Adressierbarkeit und spätere Erweiterbarkeit (Validierung via Contracts) zu garantieren.
 
 ---
 
@@ -64,111 +67,72 @@ Wir überführen sie in Repo-kompatible, wiederverwendbare Wissensartefakte (→
 ## 2. Repo-Integration (entscheidend)
 
 ### 2.1 Neuer Katalog-Typ: psych_model
-
-```yaml
-id: model.stress_window
-type: psych_model
-label: Stresstoleranzfenster
-category: regulation
-```
+Jedes Modell wird unter `data/catalog/psych-models/` abgelegt. Es handelt sich um *vorläufige Seed-Daten*, da ein zwingender Validation-Contract (z.B. JSON-Schema) erst in Phase B definiert wird.
 
 ---
 
-## 3. Konkrete Artefakte (copy-paste-fähig)
+## 3. Konkrete Artefakte
 
-### 3.1 Stressfenster
+Diese werden bewusst mit epistemischen Markern versehen (z.B. `source_origin`, `evidence_status`, `limitations`), um nicht fälschlicherweise eine harte Messphysik zu suggerieren.
 
+### 3.1 Stressfenster (`stress-window.yaml`)
 ```yaml
 id: model.stress_window
 type: psych_model
 label: Stresstoleranzfenster
 dimension: tension_regulation
-
-states:
-  - id: hyperarousal
-    label: Oberanspannung
-  - id: window
-    label: Reguliertes Spannungsfenster
-  - id: hypoarousal
-    label: Unterspannung / Erschöpfung
-
-transitions:
-  - trigger: stress_increase
-    from: window
-    to: hyperarousal
-  - trigger: depletion
-    from: window
-    to: hypoarousal
-
-properties:
-  recovery_required: true
-  non_linear: true
+source_origin: didactic_capture
+evidence_status: heuristic
+limitations:
+  - heuristic_regulation_model
+  - not_a_strict_measurement
+states: ...
+transitions: ...
+properties: ...
 ```
 
----
-
-### 3.2 Yerkes-Dodson
-
+### 3.2 Yerkes-Dodson (`yerkes-dodson.yaml`)
 ```yaml
 id: model.yerkes_dodson
 type: psych_model
 label: Yerkes-Dodson-Gesetz
 dimension: performance
-
-variables:
-  - arousal
-  - performance
-
-relationship:
-  type: inverted_u
-
-implications:
-  - optimal_mid_arousal
-  - overload_degrades_performance
+source_origin: didactic_capture
+evidence_status: heuristic
+limitations:
+  - not_a_universal_performance_law
+  - simplifies_complex_arousal_relationships
+variables: ...
+relationship: ...
+implications: ...
 ```
 
----
-
-### 3.3 Bedürfnisstruktur
-
+### 3.3 Bedürfnisstruktur (`maslow.yaml`)
 ```yaml
 id: model.maslow
 type: psych_model
 label: Bedürfnishierarchie
-
-levels:
-  - physiological
-  - safety
-  - bonding
-  - esteem
-  - self_actualization
-
-meta:
-  split:
-    hygiene: [physiological, safety]
-    growth: [bonding, esteem, self_actualization]
+source_origin: didactic_capture
+evidence_status: heuristic
+limitations:
+  - culturally_contingent
+  - not_a_strict_universal_sequence
+levels: ...
+meta: ...
 ```
 
----
-
-### 3.4 Traits als Modulator
-
+### 3.4 Traits als Modulator (`big-five.yaml`)
 ```yaml
 id: model.big_five
 type: psych_model
 label: Persönlichkeitsdimensionen
-
-traits:
-  - extraversion
-  - neuroticism
-  - openness
-  - agreeableness
-  - conscientiousness
-
-role:
-  modifies:
-    - stress_window_width
-    - arousal_response
+source_origin: didactic_capture
+evidence_status: heuristic
+limitations:
+  - simplifies_personality
+  - trait_expression_is_context_dependent
+traits: ...
+role: ...
 ```
 
 ---
@@ -218,7 +182,7 @@ Alternative (mächtiger):
 - Priorisierung bei Konflikt (z. B. Bedürfnis vs. Leistung)
 - Messbarkeit (Skalen fehlen komplett)
 
-→ nötig für operative Nutzung
+→ Dies wird in späteren Phasen im Rahmen von Contract-Validierung (Phase B) und Runtime-Integration (Phase C) gelöst.
 
 ---
 
@@ -230,33 +194,4 @@ Alternative (mächtiger):
 **Lesart B (radikal):**
 → Modelle als Berechnungsbasis für Spannungszustände
 
-→ B ist mächtiger, aber gefährlich (Pseudo-Objektivität)
-
----
-
-## 9. Unsicherheitsgrad: 0.22
-
-**Ursachen:**
-- visuelle Interpretation relativ eindeutig
-- aber semantische Formalisierung nicht explizit gegeben
-
----
-
-## 10. Interpolationsgrad: 0.34
-
-**Annahmen:**
-- Mapping auf YAML/Domain
-- Ergänzung von impliziten Konzepten (Transitions, Modulation)
-
----
-
-## Essenz
-
-**Hebel:**
-→ Psychologische Modelle als strukturierte Artefakte einführen
-
-**Entscheidung:**
-→ Katalog-System um psych_model erweitern
-
-**Nächste Aktion:**
-→ 3 Modelle ins Repo legen + Relation zu Cases definieren
+→ B ist mächtiger, aber gefährlich (Pseudo-Objektivität). Derzeit wird Lesart A als isoliertes, adressierbares Wissensmodul-Set verfolgt.

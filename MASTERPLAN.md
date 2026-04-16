@@ -464,6 +464,8 @@ Zulässige Richtung:
 - alternative Deutung: Überforderung / Bindungstest / Ambiguitätsstress
 
 ## 11. Ausbaupfade nach V1
+n### 11.0 Wissensmodule und epistemische Artefakte
+- [Psychologische Modelle als Katalogbausteine](docs/blueprints/psych-modelle-blaupause.md) (Sammlung kanonischer Referenzmodelle wie Yerkes-Dodson, Maslow)
 
 Die folgenden Ausbaustufen sind **SPÄTER** und nicht Teil des harten V1-Scope.
 

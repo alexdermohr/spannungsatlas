@@ -1,0 +1,18 @@
+id: model.maslow
+type: psych_model
+label: Bedürfnishierarchie
+source_origin: didactic_capture
+evidence_status: heuristic
+limitations:
+  - culturally_contingent
+  - not_a_strict_universal_sequence
+levels:
+  - physiological
+  - safety
+  - bonding
+  - esteem
+  - self_actualization
+meta:
+  split:
+    hygiene: [physiological, safety]
+    growth: [bonding, esteem, self_actualization]

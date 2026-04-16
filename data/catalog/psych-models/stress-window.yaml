@@ -1,0 +1,26 @@
+id: model.stress_window
+type: psych_model
+label: Stresstoleranzfenster
+dimension: tension_regulation
+source_origin: didactic_capture
+evidence_status: heuristic
+limitations:
+  - heuristic_regulation_model
+  - not_a_strict_measurement
+states:
+  - id: hyperarousal
+    label: Oberanspannung
+  - id: window
+    label: Reguliertes Spannungsfenster
+  - id: hypoarousal
+    label: Unterspannung / Erschöpfung
+transitions:
+  - trigger: stress_increase
+    from: window
+    to: hyperarousal
+  - trigger: depletion
+    from: window
+    to: hypoarousal
+properties:
+  recovery_required: true
+  non_linear: true
