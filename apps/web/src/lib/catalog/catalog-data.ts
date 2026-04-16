@@ -5,9 +5,8 @@ import determinantsRaw from '../../../../../data/catalog/determinants.json';
 import clustersRaw from '../../../../../data/catalog/clusters.json';
 
 /**
- * Minimaler Katalog-Contract für Phase 2b.
- * Explizit: keine Relationen, nur Anzeige + Filter.
- * Ziel ist ein reiner Referenzraum ohne implizite Domain-Verknüpfungen.
+ * Minimaler Pflicht-Contract für Anzeige und Filter in Phase 2b.
+ * Spätere Erweiterungen sind nicht verboten, aber hier nicht Gegenstand.
  */
 export interface CatalogItem {
   id: string;
@@ -16,7 +15,7 @@ export interface CatalogItem {
   description: string;
 }
 
-function validateCatalogData(data: unknown, context: string): CatalogItem[] {
+export function validateCatalogData(data: unknown, context: string): CatalogItem[] {
   if (!Array.isArray(data)) {
     throw new Error(`Catalog import failed: ${context} data is not an array.`);
   }
@@ -31,10 +30,10 @@ function validateCatalogData(data: unknown, context: string): CatalogItem[] {
     if (typeof item.label !== 'string' || item.label.trim().length === 0) {
        throw new Error(`Catalog import failed: ${context} item at index ${index} missing valid 'label' string.`);
     }
-    if (typeof item.short !== 'string') {
+    if (typeof item.short !== 'string' || item.short.trim().length === 0) {
        throw new Error(`Catalog import failed: ${context} item at index ${index} missing valid 'short' string.`);
     }
-    if (typeof item.description !== 'string') {
+    if (typeof item.description !== 'string' || item.description.trim().length === 0) {
        throw new Error(`Catalog import failed: ${context} item at index ${index} missing valid 'description' string.`);
     }
 
