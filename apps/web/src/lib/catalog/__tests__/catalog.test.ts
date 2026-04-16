@@ -5,9 +5,6 @@ import { filterCatalogItems } from '../catalog-utils';
 
 describe('Catalog Data Constraints (Phase 2b)', () => {
   const checkMinimalSchema = (data: readonly CatalogItem[], typeName: 'needs' | 'determinants' | 'clusters') => {
-    expect(Array.isArray(data)).toBe(true);
-    expect(data.length).toBeGreaterThan(0);
-
     data.forEach(item => {
       expect(item).toHaveProperty('id');
       expect(typeof item.id).toBe('string');

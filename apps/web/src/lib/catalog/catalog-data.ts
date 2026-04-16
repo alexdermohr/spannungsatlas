@@ -1,9 +1,14 @@
 // TODO: Tech Debt - These deep relative imports bypass module resolution boundaries.
-// Consider configuring a data alias or serving these via an internal API.
+// data/catalog ist aktuell eine globale Quelle. Zukünftig über API oder Alias kapseln.
 import needsRaw from '../../../../../data/catalog/needs.json';
 import determinantsRaw from '../../../../../data/catalog/determinants.json';
 import clustersRaw from '../../../../../data/catalog/clusters.json';
 
+/**
+ * Minimaler Katalog-Contract für Phase 2b.
+ * Explizit: keine Relationen, nur Anzeige + Filter.
+ * Ziel ist ein reiner Referenzraum ohne implizite Domain-Verknüpfungen.
+ */
 export interface CatalogItem {
   id: string;
   label: string;
@@ -20,10 +25,10 @@ function validateCatalogData(data: unknown, context: string): CatalogItem[] {
     if (!item || typeof item !== 'object') {
        throw new Error(`Catalog import failed: ${context} item at index ${index} is not an object.`);
     }
-    if (typeof item.id !== 'string') {
+    if (typeof item.id !== 'string' || item.id.trim().length === 0) {
        throw new Error(`Catalog import failed: ${context} item at index ${index} missing valid 'id' string.`);
     }
-    if (typeof item.label !== 'string') {
+    if (typeof item.label !== 'string' || item.label.trim().length === 0) {
        throw new Error(`Catalog import failed: ${context} item at index ${index} missing valid 'label' string.`);
     }
     if (typeof item.short !== 'string') {
