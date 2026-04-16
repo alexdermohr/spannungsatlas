@@ -1,9 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import { needs, determinants, clusters } from '../catalog-data';
+import type { CatalogItem } from '../catalog-data';
 import { filterCatalogItems } from '../catalog-utils';
 
 describe('Catalog Data Constraints (Phase 2b)', () => {
-  const checkMinimalSchema = (data: any[], typeName: string) => {
+  const checkMinimalSchema = (data: readonly CatalogItem[], typeName: string) => {
     expect(Array.isArray(data)).toBe(true);
     expect(data.length).toBeGreaterThan(0);
 
@@ -47,7 +48,7 @@ describe('Catalog Data Constraints (Phase 2b)', () => {
 });
 
 describe('Catalog Filtering Logic', () => {
-  const mockItems = [
+  const mockItems: readonly CatalogItem[] = [
     { id: '1', label: 'Apfelbaum', short: 'Apfel', description: 'Ein roter Apfel' },
     { id: '2', label: 'Birnenbaum', short: 'Birne', description: 'Eine grüne Frucht' },
     { id: '3', label: 'Kirschbaum', short: 'Kirsche', description: 'Kleine rote Früchte' }
@@ -55,6 +56,12 @@ describe('Catalog Filtering Logic', () => {
 
   it('returns all items when query is empty', () => {
     const result = filterCatalogItems(mockItems, '');
+    expect(result).toHaveLength(3);
+    expect(result).toEqual(mockItems);
+  });
+
+  it('returns all items when query contains only whitespace', () => {
+    const result = filterCatalogItems(mockItems, '   ');
     expect(result).toHaveLength(3);
     expect(result).toEqual(mockItems);
   });

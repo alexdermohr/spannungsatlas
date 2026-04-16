@@ -1,12 +1,12 @@
 import type { CatalogItem } from './catalog-data';
 
-export function filterCatalogItems(items: CatalogItem[], query: string): CatalogItem[] {
-  if (!query) return items;
+export function filterCatalogItems(items: readonly CatalogItem[], query: string): readonly CatalogItem[] {
+  const normalized = query.trim().toLowerCase();
+  if (!normalized) return items;
 
-  const lowerQuery = query.toLowerCase();
   return items.filter(item =>
-    item.label.toLowerCase().includes(lowerQuery) ||
-    item.description.toLowerCase().includes(lowerQuery) ||
-    item.short.toLowerCase().includes(lowerQuery)
+    item.label.toLowerCase().includes(normalized) ||
+    item.description.toLowerCase().includes(normalized) ||
+    item.short.toLowerCase().includes(normalized)
   );
 }

@@ -9,6 +9,6 @@ export interface CatalogItem {
   description: string;
 }
 
-export const needs: CatalogItem[] = needsRaw;
-export const determinants: CatalogItem[] = determinantsRaw;
-export const clusters: CatalogItem[] = clustersRaw;
+export const needs: readonly CatalogItem[] = needsRaw;
+export const determinants: readonly CatalogItem[] = determinantsRaw;
+export const clusters: readonly CatalogItem[] = clustersRaw;

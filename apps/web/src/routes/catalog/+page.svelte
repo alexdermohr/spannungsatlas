@@ -22,6 +22,7 @@
 	<div class="controls">
 		<div class="tabs" role="tablist" aria-label="Katalog Kategorien">
 			<button
+				type="button"
 				role="tab"
 				aria-selected={activeTab === 'needs'}
 				class:active={activeTab === 'needs'}
@@ -30,6 +31,7 @@
 				Bedürfnisse
 			</button>
 			<button
+				type="button"
 				role="tab"
 				aria-selected={activeTab === 'determinants'}
 				class:active={activeTab === 'determinants'}
@@ -38,6 +40,7 @@
 				Determinanten
 			</button>
 			<button
+				type="button"
 				role="tab"
 				aria-selected={activeTab === 'clusters'}
 				class:active={activeTab === 'clusters'}
