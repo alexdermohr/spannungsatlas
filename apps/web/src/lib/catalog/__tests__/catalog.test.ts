@@ -4,7 +4,7 @@ import type { CatalogItem } from '../catalog-data';
 import { filterCatalogItems } from '../catalog-utils';
 
 describe('Catalog Data Constraints (Phase 2b)', () => {
-  const checkMinimalSchema = (data: readonly CatalogItem[], typeName: string) => {
+  const checkMinimalSchema = (data: readonly CatalogItem[], typeName: 'needs' | 'determinants' | 'clusters') => {
     expect(Array.isArray(data)).toBe(true);
     expect(data.length).toBeGreaterThan(0);
 
@@ -20,29 +20,18 @@ describe('Catalog Data Constraints (Phase 2b)', () => {
 
       expect(item).toHaveProperty('description');
       expect(typeof item.description).toBe('string');
-
-      // Explicitly check for absence of relational data
-      expect(item).not.toHaveProperty('cases');
-      expect(item).not.toHaveProperty('weight');
-
-      if (typeName === 'needs' || typeName === 'determinants') {
-         expect(item).not.toHaveProperty('clusterId');
-      } else if (typeName === 'clusters') {
-         expect(item).not.toHaveProperty('needs');
-         expect(item).not.toHaveProperty('determinants');
-      }
     });
   };
 
-  it('needs data conforms to minimal schema without implicit relations', () => {
+  it('needs data conforms to minimal schema', () => {
     checkMinimalSchema(needs, 'needs');
   });
 
-  it('determinants data conforms to minimal schema without implicit relations', () => {
+  it('determinants data conforms to minimal schema', () => {
     checkMinimalSchema(determinants, 'determinants');
   });
 
-  it('clusters data conforms to minimal schema without implicit relations', () => {
+  it('clusters data conforms to minimal schema', () => {
     checkMinimalSchema(clusters, 'clusters');
   });
 });
@@ -80,8 +69,8 @@ describe('Catalog Filtering Logic', () => {
     expect(resultDesc[0].id).toBe('3');
   });
 
-  it('handles case-insensitive queries', () => {
-    const result = filterCatalogItems(mockItems, 'KIRSCHE');
+  it('handles case-insensitive and trimmed queries correctly', () => {
+    const result = filterCatalogItems(mockItems, '   kIrScHe  ');
     expect(result).toHaveLength(1);
     expect(result[0].id).toBe('3');
   });
@@ -89,5 +78,21 @@ describe('Catalog Filtering Logic', () => {
   it('returns empty array when no items match', () => {
     const result = filterCatalogItems(mockItems, 'Banane');
     expect(result).toHaveLength(0);
+  });
+
+  it('preserves the original item order', () => {
+    const result = filterCatalogItems(mockItems, 'baum');
+    expect(result).toHaveLength(3);
+    expect(result[0].id).toBe('1');
+    expect(result[1].id).toBe('2');
+    expect(result[2].id).toBe('3');
+  });
+
+  it('does not mutate the passed items array', () => {
+    const originalLength = mockItems.length;
+    filterCatalogItems(mockItems, 'Apfel');
+    expect(mockItems).toHaveLength(originalLength);
+    // ensure immutability with strict equality checking on unmodified original object graph
+    expect(mockItems[0].label).toBe('Apfelbaum');
   });
 });

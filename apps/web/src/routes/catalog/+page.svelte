@@ -11,6 +11,12 @@
 		clusters;
 
 	$: filteredData = filterCatalogItems(activeData, searchQuery);
+
+	const contextDescriptions = {
+		needs: "Grundlegende menschliche Bedürfnisse, die pädagogisches Handeln leiten und erklären.",
+		determinants: "Äußere und innere Rahmenbedingungen, die eine Situation prägen.",
+		clusters: "Thematische Zusammenhänge zwischen bestimmten Bedürfnissen und Determinanten."
+	};
 </script>
 
 <div class="page">
@@ -28,7 +34,7 @@
 				class:active={activeTab === 'needs'}
 				on:click={() => activeTab = 'needs'}
 			>
-				Bedürfnisse
+				Bedürfnisse <span class="count">({needs.length})</span>
 			</button>
 			<button
 				type="button"
@@ -37,7 +43,7 @@
 				class:active={activeTab === 'determinants'}
 				on:click={() => activeTab = 'determinants'}
 			>
-				Determinanten
+				Determinanten <span class="count">({determinants.length})</span>
 			</button>
 			<button
 				type="button"
@@ -46,7 +52,7 @@
 				class:active={activeTab === 'clusters'}
 				on:click={() => activeTab = 'clusters'}
 			>
-				Cluster
+				Cluster <span class="count">({clusters.length})</span>
 			</button>
 		</div>
 
@@ -60,10 +66,15 @@
 		</div>
 	</div>
 
+	<div class="context-notice card">
+		<p>{contextDescriptions[activeTab]}</p>
+	</div>
+
 	<div class="catalog-grid">
 		{#if filteredData.length === 0}
 			<div class="empty-state card">
-				<p>Keine Einträge für "{searchQuery}" gefunden.</p>
+				<p>Keine Treffer für <strong>"{searchQuery}"</strong> in dieser Kategorie.</p>
+				<p class="hint">Bitte überprüfe die Schreibweise oder wechsle den Tab.</p>
 			</div>
 		{:else}
 			{#each filteredData as item (item.id)}
@@ -108,7 +119,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: 1.5rem;
-		margin-bottom: 2rem;
+		margin-bottom: 1.5rem;
 	}
 
 	@media (min-width: 600px) {
@@ -136,6 +147,14 @@
 		font-weight: 500;
 		color: var(--color-text-muted);
 		transition: all 0.2s;
+		display: flex;
+		align-items: center;
+		gap: 0.35rem;
+	}
+
+	.tabs button .count {
+		font-size: 0.8em;
+		opacity: 0.7;
 	}
 
 	.tabs button:hover {
@@ -160,6 +179,19 @@
 		outline: none;
 		border-color: var(--color-accent, #3b82f6);
 		box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+	}
+
+	.context-notice {
+		margin-bottom: 1.5rem;
+		padding: 1rem 1.25rem;
+		background: var(--color-bg-subtle, #f8f9fa);
+		border-left: 4px solid var(--color-accent, #3b82f6);
+	}
+
+	.context-notice p {
+		margin: 0;
+		color: var(--color-text-muted);
+		font-size: 0.95rem;
 	}
 
 	.catalog-grid {
@@ -229,5 +261,11 @@
 		color: var(--color-text-muted);
 		background: var(--color-bg-subtle, #f3f4f6);
 		border-radius: 0.75rem;
+	}
+
+	.empty-state .hint {
+		font-size: 0.9rem;
+		margin-top: 0.5rem;
+		opacity: 0.8;
 	}
 </style>
