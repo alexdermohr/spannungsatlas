@@ -1,0 +1,32 @@
+[
+  {
+    "id": "need_phys",
+    "label": "Physiologische Bedürfnisse",
+    "short": "Physisch",
+    "description": "Grundbedürfnisse nach Nahrung, Schlaf, Bewegung und körperlicher Unversehrtheit."
+  },
+  {
+    "id": "need_sec",
+    "label": "Sicherheit",
+    "short": "Sicherheit",
+    "description": "Bedürfnis nach Vorhersehbarkeit, Schutz vor Gefahr, festen Strukturen und emotionaler Sicherheit."
+  },
+  {
+    "id": "need_soc",
+    "label": "Soziale Zugehörigkeit",
+    "short": "Zugehörigkeit",
+    "description": "Bedürfnis nach Integration in die Gruppe, Akzeptanz, Freundschaft und positiver Interaktion."
+  },
+  {
+    "id": "need_rec",
+    "label": "Anerkennung und Wertschätzung",
+    "short": "Anerkennung",
+    "description": "Bedürfnis nach Bestätigung, Respekt, Status und dem Gefühl von Kompetenz und Wirksamkeit."
+  },
+  {
+    "id": "need_aut",
+    "label": "Autonomie",
+    "short": "Autonomie",
+    "description": "Bedürfnis nach Selbstbestimmung, Handlungsspielraum und Mitentscheidung."
+  }
+]

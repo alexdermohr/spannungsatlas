@@ -1,0 +1,20 @@
+[
+  {
+    "id": "cluster_basic",
+    "label": "Basisversorgung und Struktur",
+    "short": "Basis",
+    "description": "Zusammenspiel von grundlegenden physiologischen Bedürfnissen und den sie rahmenden Raum- und Zeitstrukturen."
+  },
+  {
+    "id": "cluster_social",
+    "label": "Soziales Gefüge",
+    "short": "Soziales",
+    "description": "Interaktionen zwischen Zugehörigkeitsbedürfnissen, Gruppendynamik und personeller Präsenz."
+  },
+  {
+    "id": "cluster_develop",
+    "label": "Entwicklungs- und Wirkungsraum",
+    "short": "Entwicklung",
+    "description": "Feld der Autonomie- und Anerkennungsbedürfnisse im Kontext institutioneller Grenzen und Vorgaben."
+  }
+]

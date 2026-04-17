@@ -1,0 +1,32 @@
+[
+  {
+    "id": "det_env",
+    "label": "Räumlich-materielle Umgebung",
+    "short": "Raum",
+    "description": "Physische Gegebenheiten, Raumgestaltung, Platzangebot, Lärmpegel und verfügbare Materialien."
+  },
+  {
+    "id": "det_time",
+    "label": "Zeitstrukturen",
+    "short": "Zeit",
+    "description": "Tagesablauf, Dauer von Phasen, Rhythmisierung, Übergänge und zeitlicher Druck."
+  },
+  {
+    "id": "det_group",
+    "label": "Gruppendynamik",
+    "short": "Gruppe",
+    "description": "Zusammensetzung der Gruppe, Rollenverteilung, Konfliktniveau und Peerkultur."
+  },
+  {
+    "id": "det_staff",
+    "label": "Personal- und Ressourcen",
+    "short": "Personal",
+    "description": "Betreuungsschlüssel, Qualifikation, Teamdynamik und aktuelle Belastungssituation."
+  },
+  {
+    "id": "det_inst",
+    "label": "Institutionelle Vorgaben",
+    "short": "Institution",
+    "description": "Konzepte, Regeln, Gesetze, Vorgaben von Trägern und Erwartungen der Stakeholder."
+  }
+]
