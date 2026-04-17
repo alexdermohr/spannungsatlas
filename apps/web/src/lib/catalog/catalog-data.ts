@@ -16,7 +16,7 @@ export interface CatalogItem {
   description: string;
 }
 
-export function validateCatalogData(data: unknown, context: string): CatalogItem[] {
+function validateCatalogData(data: unknown, context: string): CatalogItem[] {
   if (!Array.isArray(data)) {
     throw new Error(`Catalog import failed: ${context} data is not an array.`);
   }
@@ -35,24 +35,26 @@ export function validateCatalogData(data: unknown, context: string): CatalogItem
       }
     }
 
-    if (typeof (item as any).id !== 'string' || (item as any).id.trim().length === 0) {
+    const record = item as Record<string, unknown>;
+
+    if (typeof record.id !== 'string' || record.id.trim().length === 0) {
        throw new Error(`Catalog import failed: ${context} item at index ${index} missing valid 'id' string.`);
     }
-    if (typeof (item as any).label !== 'string' || (item as any).label.trim().length === 0) {
+    if (typeof record.label !== 'string' || record.label.trim().length === 0) {
        throw new Error(`Catalog import failed: ${context} item at index ${index} missing valid 'label' string.`);
     }
-    if (typeof (item as any).short !== 'string' || (item as any).short.trim().length === 0) {
+    if (typeof record.short !== 'string' || record.short.trim().length === 0) {
        throw new Error(`Catalog import failed: ${context} item at index ${index} missing valid 'short' string.`);
     }
-    if (typeof (item as any).description !== 'string' || (item as any).description.trim().length === 0) {
+    if (typeof record.description !== 'string' || record.description.trim().length === 0) {
        throw new Error(`Catalog import failed: ${context} item at index ${index} missing valid 'description' string.`);
     }
 
     return {
-      id: (item as any).id,
-      label: (item as any).label,
-      short: (item as any).short,
-      description: (item as any).description
+      id: record.id,
+      label: record.label,
+      short: record.short,
+      description: record.description
     };
   });
 }
