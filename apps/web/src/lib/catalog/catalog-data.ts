@@ -16,7 +16,8 @@ export interface CatalogItem {
   description: string;
 }
 
-export function validateCatalogData(data: unknown, context: string): CatalogItem[] {
+// Internal utility function
+function validateCatalogData(data: unknown, context: string): CatalogItem[] {
   if (!Array.isArray(data)) {
     throw new Error(`Catalog import failed: ${context} data is not an array.`);
   }
@@ -58,6 +59,9 @@ export function validateCatalogData(data: unknown, context: string): CatalogItem
     };
   });
 }
+
+// Export for tests only
+export const _validateCatalogDataForTests = validateCatalogData;
 
 export const needs: readonly CatalogItem[] = validateCatalogData(needsRaw, 'Needs');
 export const determinants: readonly CatalogItem[] = validateCatalogData(determinantsRaw, 'Determinants');
