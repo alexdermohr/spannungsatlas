@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { needs, determinants, clusters } from '../catalog-data';
+import { needs, determinants, clusters, validateCatalogData } from '../catalog-data';
 import type { CatalogItem } from '../catalog-data';
 import { filterCatalogItems } from '../catalog-utils';
 
@@ -23,6 +23,8 @@ describe('Catalog Data Constraints (Phase 2b)', () => {
       expect(item).toHaveProperty('description');
       expect(typeof item.description).toBe('string');
       expect(item.description.trim().length).toBeGreaterThan(0);
+
+      expect(Object.keys(item).sort()).toEqual(['description', 'id', 'label', 'short']);
     });
   };
 
@@ -36,6 +38,22 @@ describe('Catalog Data Constraints (Phase 2b)', () => {
 
   it('clusters data conforms to minimal schema', () => {
     checkMinimalSchema(clusters);
+  });
+});
+
+describe('Catalog Raw Data Strictness', () => {
+  it('rejects raw items with additional fields (source-level enforcement)', () => {
+    const raw = [
+      {
+        id: 'x',
+        label: 'L',
+        short: 'S',
+        description: 'D',
+        extra: 'forbidden'
+      }
+    ];
+    expect(() => validateCatalogData(raw, 'Test'))
+      .toThrow("contains forbidden key 'extra'");
   });
 });
 
