@@ -6,7 +6,7 @@
  *
  * Invariants:
  *   - A draft perspective is readable and writable ONLY by its owning actor.
- *   - A committed perspective is readable by any actor, but never writable.
+ *   - A committed perspective is readable ONLY by its owning actor (Modus A - streng blind), but never writable.
  *   - No actor may see metadata about OTHER actors' draft perspectives
  *     (count, existence, progress).
  *   - Comparison mode (reading multiple perspectives side-by-side) requires
@@ -24,17 +24,13 @@ import type { PerspectiveRecord, PerspectiveCommittedRecord } from "./types.js";
  *
  * Rules:
  *   - Draft → only the owning actor.
- *   - Committed → any actor.
+ *   - Committed → only the owning actor.
  */
 export function canReadPerspective(
   perspective: PerspectiveRecord,
   requestingActorId: string,
 ): boolean {
-  if (perspective.status === "draft") {
-    return perspective.actorId === requestingActorId;
-  }
-  // committed → readable by anyone
-  return true;
+  return perspective.actorId === requestingActorId;
 }
 
 // ---------------------------------------------------------------------------
@@ -108,7 +104,7 @@ export function canComparePerspectives(
  *
  * Returns:
  *   - The actor's own draft (if any).
- *   - All committed perspectives.
+ *   - The actor's own committed perspective.
  *   - NEVER another actor's draft.
  */
 export function filterVisiblePerspectives(

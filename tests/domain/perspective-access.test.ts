@@ -56,8 +56,8 @@ describe("canReadPerspective", () => {
     expect(canReadPerspective(draftPerspective("actor-1"), "actor-2")).toBe(false);
   });
 
-  it("allows anyone to read a committed perspective", () => {
-    expect(canReadPerspective(committedPerspective("actor-1"), "actor-2")).toBe(true);
+  it("denies non-owner from reading a committed perspective", () => {
+    expect(canReadPerspective(committedPerspective("actor-1"), "actor-2")).toBe(false);
   });
 
   it("allows owner to read their own committed perspective", () => {
@@ -174,7 +174,7 @@ describe("getComparablePerspectives", () => {
 // ---------------------------------------------------------------------------
 
 describe("filterVisiblePerspectives", () => {
-  it("returns own draft + all committed", () => {
+  it("returns own draft + own committed", () => {
     const perspectives = [
       draftPerspective("actor-1", "p-1"),
       draftPerspective("actor-2", "p-2"),
@@ -182,8 +182,8 @@ describe("filterVisiblePerspectives", () => {
     ];
 
     const visible = filterVisiblePerspectives(perspectives, "actor-1");
-    expect(visible).toHaveLength(2);
-    expect(visible.map((p) => p.id).sort()).toEqual(["p-1", "p-3"]);
+    expect(visible).toHaveLength(1);
+    expect(visible[0].id).toBe("p-1");
   });
 
   it("never shows another actor's draft", () => {
@@ -198,14 +198,14 @@ describe("filterVisiblePerspectives", () => {
     expect(visible[0].id).toBe("p-2");
   });
 
-  it("returns all committed perspectives to any actor", () => {
+  it("never shows another actor's committed perspective", () => {
     const perspectives = [
       committedPerspective("actor-1", "p-1"),
       committedPerspective("actor-2", "p-2"),
     ];
 
     const visible = filterVisiblePerspectives(perspectives, "actor-99");
-    expect(visible).toHaveLength(2);
+    expect(visible).toHaveLength(0);
   });
 
   it("returns empty if no perspectives match", () => {

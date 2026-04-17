@@ -155,85 +155,95 @@
       {/if}
     </section>
 
-    <!-- Deutung -->
-    {#if caseData.currentReflection?.interpretation}
+    {#if !actorHasCommitted}
       <section class="card section">
-        <h2>Deutung</h2>
-        <p>{caseData.currentReflection.interpretation.text}</p>
-        <span class={evidenceBadgeClass(caseData.currentReflection.interpretation.evidenceType)}>
-          {evidenceLabels[caseData.currentReflection.interpretation.evidenceType]}
-        </span>
+        <h2>Reflexionskern gesperrt</h2>
+        <p style="color: var(--color-text-muted); font-size: 0.95rem;">
+          Der Reflexionskern (Deutungen, Gegen-Deutungen, Unsicherheiten) bleibt in der Blindphase verborgen,
+          bis Sie Ihre eigene Perspektive als "committed" gespeichert haben.
+        </p>
       </section>
-    {/if}
+    {:else}
+      <!-- Deutung -->
+      {#if caseData.currentReflection?.interpretation}
+        <section class="card section">
+          <h2>Deutung</h2>
+          <p>{caseData.currentReflection.interpretation.text}</p>
+          <span class={evidenceBadgeClass(caseData.currentReflection.interpretation.evidenceType)}>
+            {evidenceLabels[caseData.currentReflection.interpretation.evidenceType]}
+          </span>
+        </section>
+      {/if}
 
-    <!-- Gegen-Deutungen -->
-    {#if caseData.currentReflection?.counterInterpretations?.length}
-      <section class="card section">
-        <h2>Gegen-Deutungen</h2>
-        {#each caseData.currentReflection.counterInterpretations as counter, i}
-          <div class="counter-item">
-            <strong class="sub-heading">Gegen-Deutung {i + 1}</strong>
-            <p>{counter.text}</p>
-            <span class={evidenceBadgeClass(counter.evidenceType)}>
-              {evidenceLabels[counter.evidenceType]}
-            </span>
-          </div>
-        {/each}
-      </section>
-    {/if}
-
-    <!-- Unsicherheiten -->
-    {#if caseData.currentReflection?.uncertainties?.length}
-      <section class="card section">
-        <h2>Unsicherheiten</h2>
-        {#each caseData.currentReflection.uncertainties as u, i}
-          <div class="uncertainty-item">
-            <strong class="sub-heading">Unsicherheit {i + 1}</strong>
-            <div class="uncertainty-level">
-              <strong>Stufe {u.level}</strong> / 5
+      <!-- Gegen-Deutungen -->
+      {#if caseData.currentReflection?.counterInterpretations?.length}
+        <section class="card section">
+          <h2>Gegen-Deutungen</h2>
+          {#each caseData.currentReflection.counterInterpretations as counter, i}
+            <div class="counter-item">
+              <strong class="sub-heading">Gegen-Deutung {i + 1}</strong>
+              <p>{counter.text}</p>
+              <span class={evidenceBadgeClass(counter.evidenceType)}>
+                {evidenceLabels[counter.evidenceType]}
+              </span>
             </div>
-            <div class="uncertainty-bar">
-              <div
-                class="uncertainty-fill"
-                style="width: {(u.level / 5) * 100}%"
-              ></div>
-            </div>
-            <p class="rationale">{u.rationale}</p>
-          </div>
-        {/each}
-      </section>
-    {/if}
+          {/each}
+        </section>
+      {/if}
 
-    <!-- Spannungen -->
-    {#if caseData.currentReflection?.tensions?.length}
-      <section class="card section">
-        <h2>Spannungen</h2>
-        {#each caseData.currentReflection.tensions as tension}
-          <div class="tension-edge">
-            <span class="tension-source">{tension.source}</span>
-            <span class="tension-arrow">{tension.direction === 'bidirectional' ? '↔' : '→'}</span>
-            <span class="tension-target">{tension.target}</span>
-            <span class="tension-label">({tension.label})</span>
-          </div>
-          <p class="tension-context">{tension.context}</p>
-        {/each}
-      </section>
-    {/if}
-
-    <!-- Revisionen -->
-    {#if caseData.revisions.length > 0}
-      <section class="card section">
-        <h2>Revisionen</h2>
-        {#each caseData.revisions as rev}
-          <div class="revision">
-            <div class="revision-header">
-              <strong>{formatDate(rev.at)}</strong>
-              <span class="badge badge-derived">{rev.driftType}</span>
+      <!-- Unsicherheiten -->
+      {#if caseData.currentReflection?.uncertainties?.length}
+        <section class="card section">
+          <h2>Unsicherheiten</h2>
+          {#each caseData.currentReflection.uncertainties as u, i}
+            <div class="uncertainty-item">
+              <strong class="sub-heading">Unsicherheit {i + 1}</strong>
+              <div class="uncertainty-level">
+                <strong>Stufe {u.level}</strong> / 5
+              </div>
+              <div class="uncertainty-bar">
+                <div
+                  class="uncertainty-fill"
+                  style="width: {(u.level / 5) * 100}%"
+                ></div>
+              </div>
+              <p class="rationale">{u.rationale}</p>
             </div>
-            <p>{rev.reason}</p>
-          </div>
-        {/each}
-      </section>
+          {/each}
+        </section>
+      {/if}
+
+      <!-- Spannungen -->
+      {#if caseData.currentReflection?.tensions?.length}
+        <section class="card section">
+          <h2>Spannungen</h2>
+          {#each caseData.currentReflection.tensions as tension}
+            <div class="tension-edge">
+              <span class="tension-source">{tension.source}</span>
+              <span class="tension-arrow">{tension.direction === 'bidirectional' ? '↔' : '→'}</span>
+              <span class="tension-target">{tension.target}</span>
+              <span class="tension-label">({tension.label})</span>
+            </div>
+            <p class="tension-context">{tension.context}</p>
+          {/each}
+        </section>
+      {/if}
+
+      <!-- Revisionen -->
+      {#if caseData.revisions.length > 0}
+        <section class="card section">
+          <h2>Revisionen</h2>
+          {#each caseData.revisions as rev}
+            <div class="revision">
+              <div class="revision-header">
+                <strong>{formatDate(rev.at)}</strong>
+                <span class="badge badge-derived">{rev.driftType}</span>
+              </div>
+              <p>{rev.reason}</p>
+            </div>
+          {/each}
+        </section>
+      {/if}
     {/if}
 
     <div class="actions">
