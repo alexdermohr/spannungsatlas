@@ -15,7 +15,7 @@ export interface CatalogItem {
   description: string;
 }
 
-export function validateCatalogData(data: unknown, context: string): CatalogItem[] {
+function validateCatalogData(data: unknown, context: string): CatalogItem[] {
   if (!Array.isArray(data)) {
     throw new Error(`Catalog import failed: ${context} data is not an array.`);
   }

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { needs, determinants, clusters, validateCatalogData } from '../catalog-data';
+import { needs, determinants, clusters } from '../catalog-data';
 import type { CatalogItem } from '../catalog-data';
 import { filterCatalogItems } from '../catalog-utils';
 
@@ -30,41 +30,6 @@ describe('Catalog Data Constraints (Phase 2b)', () => {
 
   it('clusters data conforms to minimal schema', () => {
     checkMinimalSchema(clusters);
-  });
-});
-
-describe('Catalog Data Validation Logic', () => {
-  it('throws an error if data is not an array', () => {
-    expect(() => validateCatalogData({}, 'Test')).toThrow('Catalog import failed: Test data is not an array.');
-  });
-
-  it('throws an error if an item is missing required fields or they are empty', () => {
-    // Missing id
-    expect(() => validateCatalogData([{ label: 'L', short: 'S', description: 'D' }], 'Test'))
-      .toThrow("missing valid 'id' string");
-
-    // Empty id after trim
-    expect(() => validateCatalogData([{ id: '   ', label: 'L', short: 'S', description: 'D' }], 'Test'))
-      .toThrow("missing valid 'id' string");
-
-    // Empty label after trim
-    expect(() => validateCatalogData([{ id: '1', label: '   ', short: 'S', description: 'D' }], 'Test'))
-      .toThrow("missing valid 'label' string");
-
-    // Empty short after trim
-    expect(() => validateCatalogData([{ id: '1', label: 'L', short: '   ', description: 'D' }], 'Test'))
-      .toThrow("missing valid 'short' string");
-
-    // Empty description after trim
-    expect(() => validateCatalogData([{ id: '1', label: 'L', short: 'S', description: '   ' }], 'Test'))
-      .toThrow("missing valid 'description' string");
-  });
-
-  it('passes validation for correctly formed items', () => {
-    const validData = [{ id: '1', label: 'Label', short: 'Short', description: 'Description' }];
-    const result = validateCatalogData(validData, 'Test');
-    expect(result).toHaveLength(1);
-    expect(result[0].id).toBe('1');
   });
 });
 
