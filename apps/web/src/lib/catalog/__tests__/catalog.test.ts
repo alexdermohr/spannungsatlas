@@ -5,18 +5,24 @@ import { filterCatalogItems } from '../catalog-utils';
 
 describe('Catalog Data Constraints (Phase 2b)', () => {
   const checkMinimalSchema = (data: readonly CatalogItem[]) => {
+    expect(data.length).toBeGreaterThan(0);
+
     data.forEach(item => {
       expect(item).toHaveProperty('id');
       expect(typeof item.id).toBe('string');
+      expect(item.id.trim().length).toBeGreaterThan(0);
 
       expect(item).toHaveProperty('label');
       expect(typeof item.label).toBe('string');
+      expect(item.label.trim().length).toBeGreaterThan(0);
 
       expect(item).toHaveProperty('short');
       expect(typeof item.short).toBe('string');
+      expect(item.short.trim().length).toBeGreaterThan(0);
 
       expect(item).toHaveProperty('description');
       expect(typeof item.description).toBe('string');
+      expect(item.description.trim().length).toBeGreaterThan(0);
     });
   };
 
