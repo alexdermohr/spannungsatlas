@@ -1,0 +1,17 @@
+id: model.yerkes_dodson
+type: psych_model
+label: Yerkes-Dodson-Gesetz
+dimension: performance
+source_origin: didactic_capture
+evidence_status: heuristic
+limitations:
+  - not_a_universal_performance_law
+  - simplifies_complex_arousal_relationships
+variables:
+  - arousal
+  - performance
+relationship:
+  type: inverted_u
+implications:
+  - optimal_mid_arousal
+  - overload_degrades_performance

@@ -1,0 +1,18 @@
+id: model.big_five
+type: psych_model
+label: Persönlichkeitsdimensionen
+source_origin: didactic_capture
+evidence_status: heuristic
+limitations:
+  - simplifies_personality
+  - trait_expression_is_context_dependent
+traits:
+  - extraversion
+  - neuroticism
+  - openness
+  - agreeableness
+  - conscientiousness
+role:
+  modifies:
+    - stress_window_width
+    - arousal_response

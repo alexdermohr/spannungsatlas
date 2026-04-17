@@ -6,13 +6,14 @@ status: active
 canonicality: navigation
 summary: "Navigationsdokument: geordnete Einstiegskarte in die Repo-Dokumentation."
 related_docs:
+  - psych-modelle-blaupause
   - perspektiven-blaupause
   - perspective-record
   - masterplan
   - ux-ui-blaupause
   - icf-integration-blaupause
   - roadmap
-last_reviewed: "2026-04-03"
+last_reviewed: "2026-04-16"
 ---
 
 # Spannungsatlas – Dokumentationsübersicht
@@ -84,3 +85,9 @@ last_reviewed: "2026-04-03"
 | [Orphans](_generated/orphans.md) | Verwaiste Dokumente ohne Verlinkung |
 | [Schwach eingebunden](_generated/weak-links.md) | Dokumente, die nur navigativ eingebunden sind |
 | [System-Map](_generated/system-map.md) | Strukturübersicht des Repos |
+
+## Wissensmodule
+
+| Dokument | Beschreibung |
+|----------|-------------|
+| [Psychologische Modelle (Blaupause)](blueprints/psych-modelle-blaupause.md) | Kanonische Spannungsmodelle (Stressfenster, Yerkes-Dodson, Maslow, Big Five) als integrierbare Wissensmodule |
