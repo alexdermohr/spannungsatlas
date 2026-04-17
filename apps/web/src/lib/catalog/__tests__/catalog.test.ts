@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { needs, determinants, clusters, _validateCatalogDataForTests } from '../catalog-data';
+import { needs, determinants, clusters, validateCatalogData } from '../catalog-data';
 import type { CatalogItem } from '../catalog-data';
 import { filterCatalogItems } from '../catalog-utils';
 
@@ -43,45 +43,45 @@ describe('Catalog Data Constraints (Phase 2b)', () => {
 
 describe('Catalog Data Validation Logic', () => {
   it('throws an error if data is not an array', () => {
-    expect(() => _validateCatalogDataForTests({}, 'Test')).toThrow('Catalog import failed: Test data is not an array.');
+    expect(() => validateCatalogData({}, 'Test')).toThrow('Catalog import failed: Test data is not an array.');
   });
 
   it('throws an error if an item is missing required fields or they are empty', () => {
     // Missing id
-    expect(() => _validateCatalogDataForTests([{ label: 'L', short: 'S', description: 'D' }], 'Test'))
+    expect(() => validateCatalogData([{ label: 'L', short: 'S', description: 'D' }], 'Test'))
       .toThrow("missing valid 'id' string");
 
     // Empty id after trim
-    expect(() => _validateCatalogDataForTests([{ id: '   ', label: 'L', short: 'S', description: 'D' }], 'Test'))
+    expect(() => validateCatalogData([{ id: '   ', label: 'L', short: 'S', description: 'D' }], 'Test'))
       .toThrow("missing valid 'id' string");
 
     // Empty label after trim
-    expect(() => _validateCatalogDataForTests([{ id: '1', label: '   ', short: 'S', description: 'D' }], 'Test'))
+    expect(() => validateCatalogData([{ id: '1', label: '   ', short: 'S', description: 'D' }], 'Test'))
       .toThrow("missing valid 'label' string");
 
     // Empty short after trim
-    expect(() => _validateCatalogDataForTests([{ id: '1', label: 'L', short: '   ', description: 'D' }], 'Test'))
+    expect(() => validateCatalogData([{ id: '1', label: 'L', short: '   ', description: 'D' }], 'Test'))
       .toThrow("missing valid 'short' string");
 
     // Empty description after trim
-    expect(() => _validateCatalogDataForTests([{ id: '1', label: 'L', short: 'S', description: '   ' }], 'Test'))
+    expect(() => validateCatalogData([{ id: '1', label: 'L', short: 'S', description: '   ' }], 'Test'))
       .toThrow("missing valid 'description' string");
   });
 
   it('throws an error if an item contains forbidden extra fields (strict schema)', () => {
-    expect(() => _validateCatalogDataForTests([{ id: '1', label: 'L', short: 'S', description: 'D', weight: 10 }], 'Test'))
+    expect(() => validateCatalogData([{ id: '1', label: 'L', short: 'S', description: 'D', weight: 10 }], 'Test'))
       .toThrow("contains forbidden key 'weight'");
 
-    expect(() => _validateCatalogDataForTests([{ id: '1', label: 'L', short: 'S', description: 'D', clusterId: 'c1' }], 'Test'))
+    expect(() => validateCatalogData([{ id: '1', label: 'L', short: 'S', description: 'D', clusterId: 'c1' }], 'Test'))
       .toThrow("contains forbidden key 'clusterId'");
 
-    expect(() => _validateCatalogDataForTests([{ id: '1', label: 'L', short: 'S', description: 'D', cases: [] }], 'Test'))
+    expect(() => validateCatalogData([{ id: '1', label: 'L', short: 'S', description: 'D', cases: [] }], 'Test'))
       .toThrow("contains forbidden key 'cases'");
   });
 
   it('passes validation for correctly formed strict items', () => {
     const validData = [{ id: '1', label: 'Label', short: 'Short', description: 'Description' }];
-    const result = _validateCatalogDataForTests(validData, 'Test');
+    const result = validateCatalogData(validData, 'Test');
     expect(result).toHaveLength(1);
     expect(result[0].id).toBe('1');
   });
