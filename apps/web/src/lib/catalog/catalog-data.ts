@@ -6,7 +6,8 @@ import clustersRaw from '../../../../../data/catalog/clusters.json';
 
 /**
  * Minimaler Pflicht-Contract für Anzeige und Filter in Phase 2b.
- * Spätere Erweiterungen sind nicht verboten, aber hier nicht Gegenstand.
+ * Phase 2b erzwingt bewusst einen strikt relationalitätsfreien Minimalcontract.
+ * Spätere Erweiterungen erfordern eine explizite Contract-Änderung.
  */
 export interface CatalogItem {
   id: string;
@@ -15,33 +16,43 @@ export interface CatalogItem {
   description: string;
 }
 
-function validateCatalogData(data: unknown, context: string): CatalogItem[] {
+export function validateCatalogData(data: unknown, context: string): CatalogItem[] {
   if (!Array.isArray(data)) {
     throw new Error(`Catalog import failed: ${context} data is not an array.`);
   }
+
+  const allowedKeys = new Set(['id', 'label', 'short', 'description']);
 
   return data.map((item, index) => {
     if (!item || typeof item !== 'object') {
        throw new Error(`Catalog import failed: ${context} item at index ${index} is not an object.`);
     }
-    if (typeof item.id !== 'string' || item.id.trim().length === 0) {
+
+    const itemKeys = Object.keys(item);
+    for (const key of itemKeys) {
+      if (!allowedKeys.has(key)) {
+        throw new Error(`Catalog import failed: ${context} item at index ${index} contains forbidden key '${key}'. Phase 2b catalog requires strict minimal schema.`);
+      }
+    }
+
+    if (typeof (item as any).id !== 'string' || (item as any).id.trim().length === 0) {
        throw new Error(`Catalog import failed: ${context} item at index ${index} missing valid 'id' string.`);
     }
-    if (typeof item.label !== 'string' || item.label.trim().length === 0) {
+    if (typeof (item as any).label !== 'string' || (item as any).label.trim().length === 0) {
        throw new Error(`Catalog import failed: ${context} item at index ${index} missing valid 'label' string.`);
     }
-    if (typeof item.short !== 'string' || item.short.trim().length === 0) {
+    if (typeof (item as any).short !== 'string' || (item as any).short.trim().length === 0) {
        throw new Error(`Catalog import failed: ${context} item at index ${index} missing valid 'short' string.`);
     }
-    if (typeof item.description !== 'string' || item.description.trim().length === 0) {
+    if (typeof (item as any).description !== 'string' || (item as any).description.trim().length === 0) {
        throw new Error(`Catalog import failed: ${context} item at index ${index} missing valid 'description' string.`);
     }
 
     return {
-      id: item.id,
-      label: item.label,
-      short: item.short,
-      description: item.description
+      id: (item as any).id,
+      label: (item as any).label,
+      short: (item as any).short,
+      description: (item as any).description
     };
   });
 }
