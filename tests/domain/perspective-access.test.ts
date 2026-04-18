@@ -111,61 +111,23 @@ describe("canComparePerspectives", () => {
     expect(canComparePerspectives(perspectives, "actor-1")).toBe(false);
   });
 
-  it("allows if actor has committed and total >= 2", () => {
+  it("denies even if actor has committed and total >= 2 (Phase 1 rule)", () => {
     const perspectives = [
       committedPerspective("actor-1", "p-1"),
       committedPerspective("actor-2", "p-2"),
     ];
-    expect(canComparePerspectives(perspectives, "actor-1")).toBe(true);
+    expect(canComparePerspectives(perspectives, "actor-1")).toBe(false);
   });
 });
 
 describe("getComparablePerspectives", () => {
-  it("returns empty when no perspectives exist", () => {
+  it("returns empty unconditionally in Phase 1 (streng blind)", () => {
     expect(getComparablePerspectives([])).toEqual([]);
-  });
-
-  it("returns empty when only one committed perspective exists", () => {
-    const perspectives = [committedPerspective("actor-1")];
-    expect(getComparablePerspectives(perspectives)).toEqual([]);
-  });
-
-  it("returns all committed when >= 2 exist", () => {
     const perspectives = [
       committedPerspective("actor-1", "p-1"),
       committedPerspective("actor-2", "p-2"),
-    ];
-    const result = getComparablePerspectives(perspectives);
-    expect(result).toHaveLength(2);
-  });
-
-  it("ignores draft perspectives in the count", () => {
-    const perspectives = [
-      committedPerspective("actor-1", "p-1"),
-      draftPerspective("actor-2", "p-2"),
     ];
     expect(getComparablePerspectives(perspectives)).toEqual([]);
-  });
-
-  it("returns only committed perspectives (excludes drafts)", () => {
-    const perspectives = [
-      committedPerspective("actor-1", "p-1"),
-      committedPerspective("actor-2", "p-2"),
-      draftPerspective("actor-3", "p-3"),
-    ];
-    const result = getComparablePerspectives(perspectives);
-    expect(result).toHaveLength(2);
-    expect(result.every((p) => p.status === "committed")).toBe(true);
-  });
-
-  it("respects custom minRequired threshold", () => {
-    const perspectives = [
-      committedPerspective("actor-1", "p-1"),
-      committedPerspective("actor-2", "p-2"),
-    ];
-    expect(getComparablePerspectives(perspectives, 3)).toEqual([]);
-    expect(getComparablePerspectives(perspectives, 2)).toHaveLength(2);
-    expect(getComparablePerspectives(perspectives, 1)).toHaveLength(2);
   });
 });
 

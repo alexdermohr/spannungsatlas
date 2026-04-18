@@ -45,8 +45,11 @@
 
     {#if perspectives.length < 2}
       <div class="card empty-state">
-        <h2>Nicht genügend Daten</h2>
-        <p>Der Vergleichsmodus wird erst freigeschaltet, wenn Sie Ihre eigene Perspektive committed haben UND insgesamt mindestens 2 committed Perspektiven existieren.</p>
+        <h2>Vergleichsmodus deaktiviert</h2>
+        <p>
+          Der Spannungsatlas befindet sich in Phase 1 (Streng blind).
+          Der Vergleichsmodus ist momentan deaktiviert, um eine vollständige epistemische Unabhängigkeit zu gewährleisten.
+        </p>
         <!-- Don't show misleading perspectives.length count -->
         <a href="/cases/{caseId}" class="btn">Zurück zum Fall</a>
       </div>

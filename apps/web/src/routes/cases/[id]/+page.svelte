@@ -60,7 +60,7 @@
 
     const committedCountTotal = perspectives.filter(p => p.status === 'committed').length;
     // Compare is available if the actor has committed AND there are at least 2 total commits.
-    isComparable = actorHasCommitted && committedCountTotal >= 2;
+    isComparable = false; // Compare disabled in Phase 1
   }
 
   onMount(() => {
@@ -124,14 +124,9 @@
       <p>Committed: <strong>{committedCount}</strong> / {caseData.participants.length}</p>
       <div class="actions" style="margin-top: 1rem; margin-bottom: 0;">
         {#if actorHasCommitted}
-          {#if isComparable}
-            <span style="font-size: 0.9rem; color: var(--color-success); display: inline-block; padding: 0.5rem 1rem 0.5rem 0;">Ihre Perspektive wurde bereits committed.</span>
-            <a href="/cases/{caseData.id}/compare?actor={demoActorId}" class="btn btn-primary">Zum Vergleich</a>
-          {:else}
-            <span style="font-size: 0.9rem; color: var(--color-success); display: inline-block; padding: 0.5rem 0;">
-              Ihre Perspektive wurde bereits committed. Ein Vergleich wird verfügbar, sobald mindestens zwei Perspektiven committed wurden.
-            </span>
-          {/if}
+          <span style="font-size: 0.9rem; color: var(--color-success); display: inline-block; padding: 0.5rem 0;">
+            Ihre Perspektive wurde bereits committed. (Phase 1: Streng blind. Vergleichsmodus ist momentan deaktiviert.)
+          </span>
         {:else}
           {#if actorHasDraft}
             <a href="/cases/{caseData.id}/perspectives/new?actor={demoActorId}" class="btn btn-primary">Entwurf fortsetzen</a>
@@ -155,95 +150,85 @@
       {/if}
     </section>
 
-    {#if !actorHasCommitted}
+    <!-- Deutung -->
+    {#if caseData.currentReflection?.interpretation}
       <section class="card section">
-        <h2>Reflexionskern gesperrt</h2>
-        <p style="color: var(--color-text-muted); font-size: 0.95rem;">
-          Der Reflexionskern (Deutungen, Gegen-Deutungen, Unsicherheiten) bleibt in der Blindphase verborgen,
-          bis Sie Ihre eigene Perspektive als "committed" gespeichert haben.
-        </p>
+        <h2>Deutung</h2>
+        <p>{caseData.currentReflection.interpretation.text}</p>
+        <span class={evidenceBadgeClass(caseData.currentReflection.interpretation.evidenceType)}>
+          {evidenceLabels[caseData.currentReflection.interpretation.evidenceType]}
+        </span>
       </section>
-    {:else}
-      <!-- Deutung -->
-      {#if caseData.currentReflection?.interpretation}
-        <section class="card section">
-          <h2>Deutung</h2>
-          <p>{caseData.currentReflection.interpretation.text}</p>
-          <span class={evidenceBadgeClass(caseData.currentReflection.interpretation.evidenceType)}>
-            {evidenceLabels[caseData.currentReflection.interpretation.evidenceType]}
-          </span>
-        </section>
-      {/if}
+    {/if}
 
-      <!-- Gegen-Deutungen -->
-      {#if caseData.currentReflection?.counterInterpretations?.length}
-        <section class="card section">
-          <h2>Gegen-Deutungen</h2>
-          {#each caseData.currentReflection.counterInterpretations as counter, i}
-            <div class="counter-item">
-              <strong class="sub-heading">Gegen-Deutung {i + 1}</strong>
-              <p>{counter.text}</p>
-              <span class={evidenceBadgeClass(counter.evidenceType)}>
-                {evidenceLabels[counter.evidenceType]}
-              </span>
-            </div>
-          {/each}
-        </section>
-      {/if}
+    <!-- Gegen-Deutungen -->
+    {#if caseData.currentReflection?.counterInterpretations?.length}
+      <section class="card section">
+        <h2>Gegen-Deutungen</h2>
+        {#each caseData.currentReflection.counterInterpretations as counter, i}
+          <div class="counter-item">
+            <strong class="sub-heading">Gegen-Deutung {i + 1}</strong>
+            <p>{counter.text}</p>
+            <span class={evidenceBadgeClass(counter.evidenceType)}>
+              {evidenceLabels[counter.evidenceType]}
+            </span>
+          </div>
+        {/each}
+      </section>
+    {/if}
 
-      <!-- Unsicherheiten -->
-      {#if caseData.currentReflection?.uncertainties?.length}
-        <section class="card section">
-          <h2>Unsicherheiten</h2>
-          {#each caseData.currentReflection.uncertainties as u, i}
-            <div class="uncertainty-item">
-              <strong class="sub-heading">Unsicherheit {i + 1}</strong>
-              <div class="uncertainty-level">
-                <strong>Stufe {u.level}</strong> / 5
-              </div>
-              <div class="uncertainty-bar">
-                <div
-                  class="uncertainty-fill"
-                  style="width: {(u.level / 5) * 100}%"
-                ></div>
-              </div>
-              <p class="rationale">{u.rationale}</p>
+    <!-- Unsicherheiten -->
+    {#if caseData.currentReflection?.uncertainties?.length}
+      <section class="card section">
+        <h2>Unsicherheiten</h2>
+        {#each caseData.currentReflection.uncertainties as u, i}
+          <div class="uncertainty-item">
+            <strong class="sub-heading">Unsicherheit {i + 1}</strong>
+            <div class="uncertainty-level">
+              <strong>Stufe {u.level}</strong> / 5
             </div>
-          {/each}
-        </section>
-      {/if}
+            <div class="uncertainty-bar">
+              <div
+                class="uncertainty-fill"
+                style="width: {(u.level / 5) * 100}%"
+              ></div>
+            </div>
+            <p class="rationale">{u.rationale}</p>
+          </div>
+        {/each}
+      </section>
+    {/if}
 
-      <!-- Spannungen -->
-      {#if caseData.currentReflection?.tensions?.length}
-        <section class="card section">
-          <h2>Spannungen</h2>
-          {#each caseData.currentReflection.tensions as tension}
-            <div class="tension-edge">
-              <span class="tension-source">{tension.source}</span>
-              <span class="tension-arrow">{tension.direction === 'bidirectional' ? '↔' : '→'}</span>
-              <span class="tension-target">{tension.target}</span>
-              <span class="tension-label">({tension.label})</span>
-            </div>
-            <p class="tension-context">{tension.context}</p>
-          {/each}
-        </section>
-      {/if}
+    <!-- Spannungen -->
+    {#if caseData.currentReflection?.tensions?.length}
+      <section class="card section">
+        <h2>Spannungen</h2>
+        {#each caseData.currentReflection.tensions as tension}
+          <div class="tension-edge">
+            <span class="tension-source">{tension.source}</span>
+            <span class="tension-arrow">{tension.direction === 'bidirectional' ? '↔' : '→'}</span>
+            <span class="tension-target">{tension.target}</span>
+            <span class="tension-label">({tension.label})</span>
+          </div>
+          <p class="tension-context">{tension.context}</p>
+        {/each}
+      </section>
+    {/if}
 
-      <!-- Revisionen -->
-      {#if caseData.revisions.length > 0}
-        <section class="card section">
-          <h2>Revisionen</h2>
-          {#each caseData.revisions as rev}
-            <div class="revision">
-              <div class="revision-header">
-                <strong>{formatDate(rev.at)}</strong>
-                <span class="badge badge-derived">{rev.driftType}</span>
-              </div>
-              <p>{rev.reason}</p>
+    <!-- Revisionen -->
+    {#if caseData.revisions.length > 0}
+      <section class="card section">
+        <h2>Revisionen</h2>
+        {#each caseData.revisions as rev}
+          <div class="revision">
+            <div class="revision-header">
+              <strong>{formatDate(rev.at)}</strong>
+              <span class="badge badge-derived">{rev.driftType}</span>
             </div>
-          {/each}
-        </section>
-      {/if}
+            <p>{rev.reason}</p>
+          </div>
+        {/each}
+      </section>
     {/if}
 
     <div class="actions">

@@ -6,7 +6,7 @@
  *
  * Invariants:
  *   - A draft perspective is readable and writable ONLY by its owning actor.
- *   - A committed perspective is readable ONLY by its owning actor (Modus A - streng blind), but never writable.
+ *   - A committed perspective is readable by any actor, but never writable.
  *   - No actor may see metadata about OTHER actors' draft perspectives
  *     (count, existence, progress).
  *   - Comparison mode (reading multiple perspectives side-by-side) requires
@@ -70,10 +70,8 @@ export function getComparablePerspectives(
   perspectives: readonly PerspectiveRecord[],
   minRequired: number = 2,
 ): readonly PerspectiveCommittedRecord[] {
-  const committed = perspectives.filter(
-    (p): p is PerspectiveCommittedRecord => p.status === "committed"
-  );
-  return committed.length >= minRequired ? committed : [];
+  // Compare logic is explicitly disabled in Phase 1 / Modus A (streng blind)
+  return [];
 }
 
 /**
@@ -86,11 +84,8 @@ export function canComparePerspectives(
   requestingActorId: string,
   minRequired: number = 2,
 ): boolean {
-  const committed = perspectives.filter((p) => p.status === "committed");
-  if (committed.length < minRequired) return false;
-
-  const actorHasCommitted = committed.some((p) => p.actorId === requestingActorId);
-  return actorHasCommitted;
+  // Compare logic is explicitly disabled in Phase 1 / Modus A (streng blind)
+  return false;
 }
 
 // ---------------------------------------------------------------------------
