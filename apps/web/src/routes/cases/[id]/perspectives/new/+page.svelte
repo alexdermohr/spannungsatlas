@@ -3,7 +3,9 @@
   import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
   import { getCase, addDraftPerspective, commitPerspective, getDraftPerspectiveForActor } from '$lib/services/case-service.js';
-  import { needs, determinants } from '$lib/catalog/catalog-data.js';
+  import { clusters, needs, determinants } from '$lib/catalog/catalog-data.js';
+  import { filterCatalogItems } from '$lib/catalog/catalog-utils.js';
+  import { filterItemsByClusterFocus, getClusterFocusItemIds } from '$lib/catalog/cluster-focus.js';
   import {
     selectedIdsFromCatalogSelections,
     toCatalogSelections,
@@ -30,7 +32,13 @@
   let uncertaintyRows = $state<{ level: UncertaintyLevel; rationale: string }[]>([{ level: 2, rationale: '' }]);
   let selectedNeedIds = $state<string[]>([]);
   let selectedDeterminantIds = $state<string[]>([]);
+  let activeClusterId = $state<string>(clusters[0]?.id ?? '');
+  let selectionSearch = $state('');
   const uncertaintyLevelOptions: UncertaintyLevel[] = [0, 1, 2, 3, 4, 5];
+
+  const activeCluster = $derived(clusters.find((cluster) => cluster.id === activeClusterId) ?? null);
+  const visibleNeeds = $derived(filterItemsByClusterFocus(filterCatalogItems(needs, selectionSearch), activeClusterId, 'need'));
+  const visibleDeterminants = $derived(filterItemsByClusterFocus(filterCatalogItems(determinants, selectionSearch), activeClusterId, 'determinant'));
 
   let draftId = $state<string | null>(null);
   let draftCreatedAt = $state<string | null>(null);
@@ -101,6 +109,16 @@
   function toggleDeterminantSelection(determinantId: string) {
     selectedDeterminantIds = toggleSelectionId(selectedDeterminantIds, determinantId);
     saveDraft();
+  }
+
+  function selectedNeedCountForCluster(clusterId: string): number {
+    const ids = new Set(getClusterFocusItemIds(clusterId).needs);
+    return selectedNeedIds.filter((id) => ids.has(id)).length;
+  }
+
+  function selectedDeterminantCountForCluster(clusterId: string): number {
+    const ids = new Set(getClusterFocusItemIds(clusterId).determinants);
+    return selectedDeterminantIds.filter((id) => ids.has(id)).length;
   }
 
   function handleActorChange(e: Event) {
@@ -243,10 +261,42 @@
         <h2>2. Explorationsraum</h2>
         <p class="helper">Markieren Sie relevante Bedürfnisse und Determinanten als Reflexionsanker. Es erfolgt keine automatische Deutung.</p>
 
+        <div class="cluster-focus-controls" role="group" aria-label="Cluster-Fokus">
+          {#each clusters as cluster (cluster.id)}
+            <button
+              type="button"
+              class:active={activeClusterId === cluster.id}
+              aria-pressed={activeClusterId === cluster.id}
+              onclick={() => activeClusterId = cluster.id}
+            >
+              <span>{cluster.short}</span>
+              <small aria-label={`Bedürfnisse ${selectedNeedCountForCluster(cluster.id)}, Determinanten ${selectedDeterminantCountForCluster(cluster.id)}`}>
+                {selectedNeedCountForCluster(cluster.id)} B / {selectedDeterminantCountForCluster(cluster.id)} D
+              </small>
+            </button>
+          {/each}
+        </div>
+
+        {#if activeCluster}
+          <div class="cluster-focus-card">
+            <h3>{activeCluster.label}</h3>
+            <p>{activeCluster.description}</p>
+          </div>
+        {/if}
+
+        <label class="field selection-search">
+          <span class="field-label">Suche im aktuellen Cluster-Fokus</span>
+          <input
+            type="text"
+            bind:value={selectionSearch}
+            placeholder="z. B. Sicherheit, Gruppe, Raum"
+          />
+        </label>
+
         <div class="selection-group">
-          <h3>Bedürfnisse ({selectedNeedIds.length} ausgewählt)</h3>
+          <h3>Bedürfnisse ({selectedNeedIds.length} ausgewählt, {visibleNeeds.length} sichtbar)</h3>
           <div class="selection-grid">
-            {#each needs as need (need.id)}
+            {#each visibleNeeds as need (need.id)}
               <label class="selection-item">
                 <input
                   type="checkbox"
@@ -260,9 +310,9 @@
         </div>
 
         <div class="selection-group">
-          <h3>Determinanten ({selectedDeterminantIds.length} ausgewählt)</h3>
+          <h3>Determinanten ({selectedDeterminantIds.length} ausgewählt, {visibleDeterminants.length} sichtbar)</h3>
           <div class="selection-grid">
-            {#each determinants as determinant (determinant.id)}
+            {#each visibleDeterminants as determinant (determinant.id)}
               <label class="selection-item">
                 <input
                   type="checkbox"
@@ -370,6 +420,65 @@
   .field-counter-evidence { flex: 1; margin-bottom: 0; }
   .selection-group { margin-bottom: 1rem; }
   .selection-group h3 { margin: 0 0 0.5rem 0; font-size: 0.9rem; color: var(--color-text); }
+  .cluster-focus-controls {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 0.5rem;
+    margin-bottom: 0.65rem;
+  }
+  .cluster-focus-controls button {
+    border: 1px solid var(--color-border);
+    background: var(--color-bg);
+    border-radius: var(--radius);
+    padding: 0.45rem 0.6rem;
+    text-align: left;
+    color: var(--color-text);
+    font-size: 0.82rem;
+    cursor: pointer;
+  }
+  .cluster-focus-controls button.active {
+    border-color: var(--color-accent);
+    box-shadow: inset 0 0 0 1px var(--color-accent);
+  }
+  .cluster-focus-controls button small {
+    display: block;
+    margin-top: 0.2rem;
+    color: var(--color-text-muted);
+    font-size: 0.74rem;
+  }
+  .cluster-focus-card {
+    border: 1px dashed var(--color-border);
+    border-radius: var(--radius);
+    padding: 0.55rem 0.7rem;
+    margin-bottom: 0.75rem;
+    background: rgba(45, 90, 155, 0.04);
+  }
+  .cluster-focus-card h3 {
+    margin: 0 0 0.3rem 0;
+    color: var(--color-text);
+    font-size: 0.9rem;
+  }
+  .cluster-focus-card p {
+    margin: 0;
+    font-size: 0.82rem;
+    color: var(--color-text-muted);
+  }
+  .selection-search { margin-bottom: 0.85rem; }
+  .selection-search input {
+    width: 100%;
+    padding: 0.5rem 0.65rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    font-family: inherit;
+    font-size: 0.9rem;
+    background: var(--color-bg);
+    color: var(--color-text);
+  }
+  .selection-search input:focus {
+    outline: 2px solid var(--color-accent);
+    outline-offset: -1px;
+    border-color: var(--color-accent);
+  }
   .selection-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
