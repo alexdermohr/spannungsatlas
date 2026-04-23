@@ -4,13 +4,11 @@
  * These functions enforce the epistemic isolation invariants at the data layer,
  * independent of any UI logic. They must be called on every read/write path.
  *
- * Invariants:
+ * Invariants (Phase 1 / Streng blind):
  *   - A draft perspective is readable and writable ONLY by its owning actor.
- *   - A committed perspective is readable by any actor, but never writable.
- *   - No actor may see metadata about OTHER actors' draft perspectives
- *     (count, existence, progress).
- *   - Comparison mode (reading multiple perspectives side-by-side) requires
- *     at least 2 committed perspectives on the same case.
+ *   - A committed perspective is readable ONLY by its owning actor, but never writable.
+ *   - No actor may see metadata about OTHER actors' draft perspectives.
+ *   - Comparison mode is completely disabled by policy.
  */
 
 import type { PerspectiveRecord, PerspectiveCommittedRecord } from "./types.js";
