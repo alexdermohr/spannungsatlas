@@ -20,11 +20,10 @@ import type { PerspectiveRecord, PerspectiveCommittedRecord } from "./types.js";
 // ---------------------------------------------------------------------------
 
 /**
- * Configures the current access phase for perspectives.
- *
- * Phase 1 ("phase-1-strict-blind" / Modus A) dictates system-wide rules:
- *   - Read Access: strictly owner-only (no reading of other perspectives).
- *   - Comparison: completely disabled (not due to lack of data, but strict policy).
+ * Zentrale Steuerung der aktuellen Produktphase für Perspektiven.
+ * Phase 1 ("phase-1-strict-blind"):
+ * - Lesezugriff: streng auf den Autor begrenzt.
+ * - Vergleichsmodus: systemweit deaktiviert.
  */
 export const PERSPECTIVE_PHASE = "phase-1-strict-blind";
 

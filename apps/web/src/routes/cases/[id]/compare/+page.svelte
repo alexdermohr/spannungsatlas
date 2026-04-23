@@ -47,8 +47,7 @@
       <div class="card empty-state">
         <h2>Vergleichsmodus deaktiviert</h2>
         <p>
-          Der Spannungsatlas befindet sich in Phase 1 (Streng blind).
-          Der Vergleichsmodus ist momentan deaktiviert, um eine vollständige epistemische Unabhängigkeit zu gewährleisten.
+          Der Spannungsatlas befindet sich in der Phase der Blinddokumentation (Phase 1). Um eine unbeeinflusste Erfassung zu gewährleisten, ist der Vergleich von Perspektiven momentan abgeschaltet.
         </p>
         <!-- Don't show misleading perspectives.length count -->
         <a href="/cases/{caseId}" class="btn">Zurück zum Fall</a>

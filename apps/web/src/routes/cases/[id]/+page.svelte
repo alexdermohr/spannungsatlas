@@ -127,7 +127,7 @@
             <a href="/cases/{caseData.id}/compare?actor={demoActorId}" class="btn btn-primary">Zum Vergleich</a>
           {:else}
             <span style="font-size: 0.9rem; color: var(--color-success); display: inline-block; padding: 0.5rem 0;">
-              Ihre Perspektive wurde committed. (Der Vergleichsmodus ist in Phase 1 / Streng blind deaktiviert).
+              Ihre Perspektive wurde sicher gespeichert. In der aktuellen Phase (Streng blind) ist der Vergleichsmodus absichtlich deaktiviert, um unabhängige Beobachtungen zu gewährleisten.
             </span>
           {/if}
         {:else}
