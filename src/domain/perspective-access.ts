@@ -4,16 +4,26 @@
  * These functions enforce the epistemic isolation invariants at the data layer,
  * independent of any UI logic. They must be called on every read/write path.
  *
- * Invariants:
+ * Invariants (Phase 1 / Streng blind):
  *   - A draft perspective is readable and writable ONLY by its owning actor.
- *   - A committed perspective is readable by any actor, but never writable.
- *   - No actor may see metadata about OTHER actors' draft perspectives
- *     (count, existence, progress).
- *   - Comparison mode (reading multiple perspectives side-by-side) requires
- *     at least 2 committed perspectives on the same case.
+ *   - A committed perspective is readable ONLY by its owning actor, but never writable.
+ *   - No actor may see metadata about OTHER actors' draft perspectives.
+ *   - Comparison mode is completely disabled by policy.
  */
 
 import type { PerspectiveRecord, PerspectiveCommittedRecord } from "./types.js";
+
+// ---------------------------------------------------------------------------
+// Central Phase Policy
+// ---------------------------------------------------------------------------
+
+/**
+ * Zentrale Steuerung der aktuellen Produktphase für Perspektiven.
+ * Phase 1 ("phase-1-strict-blind"):
+ * - Lesezugriff: streng auf den Autor begrenzt.
+ * - Vergleichsmodus: systemweit deaktiviert.
+ */
+export const PERSPECTIVE_PHASE = "phase-1-strict-blind";
 
 // ---------------------------------------------------------------------------
 // Read access
@@ -24,16 +34,19 @@ import type { PerspectiveRecord, PerspectiveCommittedRecord } from "./types.js";
  *
  * Rules:
  *   - Draft → only the owning actor.
- *   - Committed → any actor.
+ *   - Committed → only the owning actor.
  */
 export function canReadPerspective(
   perspective: PerspectiveRecord,
   requestingActorId: string,
 ): boolean {
+  if (PERSPECTIVE_PHASE === "phase-1-strict-blind") {
+    return perspective.actorId === requestingActorId;
+  }
+  // Future phases:
   if (perspective.status === "draft") {
     return perspective.actorId === requestingActorId;
   }
-  // committed → readable by anyone
   return true;
 }
 
@@ -74,6 +87,10 @@ export function getComparablePerspectives(
   perspectives: readonly PerspectiveRecord[],
   minRequired: number = 2,
 ): readonly PerspectiveCommittedRecord[] {
+  if (PERSPECTIVE_PHASE === "phase-1-strict-blind") {
+    // Compare logic is explicitly disabled in Phase 1 / Modus A (streng blind)
+    return [];
+  }
   const committed = perspectives.filter(
     (p): p is PerspectiveCommittedRecord => p.status === "committed"
   );
@@ -90,11 +107,14 @@ export function canComparePerspectives(
   requestingActorId: string,
   minRequired: number = 2,
 ): boolean {
+  if (PERSPECTIVE_PHASE === "phase-1-strict-blind") {
+    // Compare logic is explicitly disabled in Phase 1 / Modus A (streng blind)
+    return false;
+  }
   const committed = perspectives.filter((p) => p.status === "committed");
   if (committed.length < minRequired) return false;
 
-  const actorHasCommitted = committed.some((p) => p.actorId === requestingActorId);
-  return actorHasCommitted;
+  return committed.some((p) => p.actorId === requestingActorId);
 }
 
 // ---------------------------------------------------------------------------
@@ -108,7 +128,7 @@ export function canComparePerspectives(
  *
  * Returns:
  *   - The actor's own draft (if any).
- *   - All committed perspectives.
+ *   - The actor's own committed perspective.
  *   - NEVER another actor's draft.
  */
 export function filterVisiblePerspectives(

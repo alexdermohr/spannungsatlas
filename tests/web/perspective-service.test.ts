@@ -323,7 +323,7 @@ describe('case-service - perspective management', () => {
       expect(result).toEqual([]);
     });
 
-    it('returns array of committed perspectives when all conditions met', () => {
+    it('returns empty array even when conditions met (Phase 1 rule)', () => {
       addDraftPerspective('case-test', DUMMY_INPUT, 'actor-1');
       commitPerspective('case-test', 'p-1', 'actor-1');
 
@@ -331,8 +331,7 @@ describe('case-service - perspective management', () => {
       commitPerspective('case-test', 'p-2', 'actor-2');
 
       const result = getComparablePerspectivesForCase('case-test', 'actor-1');
-      expect(result).toHaveLength(2);
-      expect(result.every(p => p.status === 'committed')).toBe(true);
+      expect(result).toEqual([]);
     });
   });
 

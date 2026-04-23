@@ -1,7 +1,7 @@
 <script lang="ts">
   import { page } from '$app/state';
   import { onMount } from 'svelte';
-  import { getCase, getCommittedPerspectiveCount } from '$lib/services/case-service.js';
+  import { getCase, getCommittedPerspectiveCount, getComparablePerspectivesForCase } from '$lib/services/case-service.js';
   import { roleLabels, evidenceLabels } from '$lib/ui/labels.js';
   import { renderCaseAsMarkdown } from '$lib/services/case-report.js';
   import type { Case, EvidenceType } from '$domain/types.js';
@@ -57,10 +57,8 @@
 
     actorHasCommitted = perspectives.some(p => p.actorId === demoActorId && p.status === 'committed');
     actorHasDraft = perspectives.some(p => p.actorId === demoActorId && p.status === 'draft');
-
-    const committedCountTotal = perspectives.filter(p => p.status === 'committed').length;
-    // Compare is available if the actor has committed AND there are at least 2 total commits.
-    isComparable = actorHasCommitted && committedCountTotal >= 2;
+    // Compare is available if the service layer allows it for the current phase
+    isComparable = getComparablePerspectivesForCase(caseData.id, demoActorId).length > 0;
   }
 
   onMount(() => {
@@ -129,7 +127,7 @@
             <a href="/cases/{caseData.id}/compare?actor={demoActorId}" class="btn btn-primary">Zum Vergleich</a>
           {:else}
             <span style="font-size: 0.9rem; color: var(--color-success); display: inline-block; padding: 0.5rem 0;">
-              Ihre Perspektive wurde bereits committed. Ein Vergleich wird verfügbar, sobald mindestens zwei Perspektiven committed wurden.
+              Ihre Perspektive wurde sicher gespeichert. In der aktuellen Phase (Streng blind) ist der Vergleichsmodus absichtlich deaktiviert, um unabhängige Beobachtungen zu gewährleisten.
             </span>
           {/if}
         {:else}

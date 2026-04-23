@@ -47,7 +47,7 @@ function committedPerspective(actorId: string, id: string = "p-committed"): Pers
 // canReadPerspective
 // ---------------------------------------------------------------------------
 
-describe("canReadPerspective", () => {
+describe("canReadPerspective (Phase 1 Policy: STRICT BLIND)", () => {
   it("allows owner to read their own draft", () => {
     expect(canReadPerspective(draftPerspective("actor-1"), "actor-1")).toBe(true);
   });
@@ -56,8 +56,8 @@ describe("canReadPerspective", () => {
     expect(canReadPerspective(draftPerspective("actor-1"), "actor-2")).toBe(false);
   });
 
-  it("allows anyone to read a committed perspective", () => {
-    expect(canReadPerspective(committedPerspective("actor-1"), "actor-2")).toBe(true);
+  it("denies non-owner from reading a committed perspective", () => {
+    expect(canReadPerspective(committedPerspective("actor-1"), "actor-2")).toBe(false);
   });
 
   it("allows owner to read their own committed perspective", () => {
@@ -96,7 +96,7 @@ describe("canWritePerspective", () => {
 // canComparePerspectives
 // ---------------------------------------------------------------------------
 
-describe("canComparePerspectives", () => {
+describe("canComparePerspectives (Phase 1 Policy: DISABLED)", () => {
   it("denies if total committed is less than 2, even if actor has committed", () => {
     const perspectives = [committedPerspective("actor-1")];
     expect(canComparePerspectives(perspectives, "actor-1")).toBe(false);
@@ -111,61 +111,23 @@ describe("canComparePerspectives", () => {
     expect(canComparePerspectives(perspectives, "actor-1")).toBe(false);
   });
 
-  it("allows if actor has committed and total >= 2", () => {
+  it("denies even if actor has committed and total >= 2 (Phase 1 rule)", () => {
     const perspectives = [
       committedPerspective("actor-1", "p-1"),
       committedPerspective("actor-2", "p-2"),
     ];
-    expect(canComparePerspectives(perspectives, "actor-1")).toBe(true);
+    expect(canComparePerspectives(perspectives, "actor-1")).toBe(false);
   });
 });
 
-describe("getComparablePerspectives", () => {
-  it("returns empty when no perspectives exist", () => {
+describe("getComparablePerspectives (Phase 1 Policy: DISABLED)", () => {
+  it("returns empty unconditionally in Phase 1 (streng blind)", () => {
     expect(getComparablePerspectives([])).toEqual([]);
-  });
-
-  it("returns empty when only one committed perspective exists", () => {
-    const perspectives = [committedPerspective("actor-1")];
-    expect(getComparablePerspectives(perspectives)).toEqual([]);
-  });
-
-  it("returns all committed when >= 2 exist", () => {
     const perspectives = [
       committedPerspective("actor-1", "p-1"),
       committedPerspective("actor-2", "p-2"),
-    ];
-    const result = getComparablePerspectives(perspectives);
-    expect(result).toHaveLength(2);
-  });
-
-  it("ignores draft perspectives in the count", () => {
-    const perspectives = [
-      committedPerspective("actor-1", "p-1"),
-      draftPerspective("actor-2", "p-2"),
     ];
     expect(getComparablePerspectives(perspectives)).toEqual([]);
-  });
-
-  it("returns only committed perspectives (excludes drafts)", () => {
-    const perspectives = [
-      committedPerspective("actor-1", "p-1"),
-      committedPerspective("actor-2", "p-2"),
-      draftPerspective("actor-3", "p-3"),
-    ];
-    const result = getComparablePerspectives(perspectives);
-    expect(result).toHaveLength(2);
-    expect(result.every((p) => p.status === "committed")).toBe(true);
-  });
-
-  it("respects custom minRequired threshold", () => {
-    const perspectives = [
-      committedPerspective("actor-1", "p-1"),
-      committedPerspective("actor-2", "p-2"),
-    ];
-    expect(getComparablePerspectives(perspectives, 3)).toEqual([]);
-    expect(getComparablePerspectives(perspectives, 2)).toHaveLength(2);
-    expect(getComparablePerspectives(perspectives, 1)).toHaveLength(2);
   });
 });
 
@@ -173,8 +135,8 @@ describe("getComparablePerspectives", () => {
 // filterVisiblePerspectives
 // ---------------------------------------------------------------------------
 
-describe("filterVisiblePerspectives", () => {
-  it("returns own draft + all committed", () => {
+describe("filterVisiblePerspectives (Phase 1 Policy: STRICT BLIND)", () => {
+  it("returns own draft + own committed", () => {
     const perspectives = [
       draftPerspective("actor-1", "p-1"),
       draftPerspective("actor-2", "p-2"),
@@ -182,8 +144,8 @@ describe("filterVisiblePerspectives", () => {
     ];
 
     const visible = filterVisiblePerspectives(perspectives, "actor-1");
-    expect(visible).toHaveLength(2);
-    expect(visible.map((p) => p.id).sort()).toEqual(["p-1", "p-3"]);
+    expect(visible).toHaveLength(1);
+    expect(visible[0].id).toBe("p-1");
   });
 
   it("never shows another actor's draft", () => {
@@ -198,14 +160,14 @@ describe("filterVisiblePerspectives", () => {
     expect(visible[0].id).toBe("p-2");
   });
 
-  it("returns all committed perspectives to any actor", () => {
+  it("never shows another actor's committed perspective", () => {
     const perspectives = [
       committedPerspective("actor-1", "p-1"),
       committedPerspective("actor-2", "p-2"),
     ];
 
     const visible = filterVisiblePerspectives(perspectives, "actor-99");
-    expect(visible).toHaveLength(2);
+    expect(visible).toHaveLength(0);
   });
 
   it("returns empty if no perspectives match", () => {
