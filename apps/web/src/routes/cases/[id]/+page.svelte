@@ -121,6 +121,7 @@
 
       <p>Committed: <strong>{committedCount}</strong> / {caseData.participants.length}</p>
       <div class="actions" style="margin-top: 1rem; margin-bottom: 0;">
+        <a href="/cases/{caseData.id}/perspectives?actor={demoActorId}" class="btn btn-secondary">Perspektiven ansehen</a>
         {#if actorHasCommitted}
           {#if isComparable}
             <span style="font-size: 0.9rem; color: var(--color-success); display: inline-block; padding: 0.5rem 1rem 0.5rem 0;">Ihre Perspektive wurde bereits committed.</span>
