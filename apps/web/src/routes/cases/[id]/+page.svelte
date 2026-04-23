@@ -57,9 +57,6 @@
 
     actorHasCommitted = perspectives.some(p => p.actorId === demoActorId && p.status === 'committed');
     actorHasDraft = perspectives.some(p => p.actorId === demoActorId && p.status === 'draft');
-
-    const committedCountTotal = perspectives.filter(p => p.status === 'committed').length;
-
     // Compare is available if the service layer allows it for the current phase
     isComparable = getComparablePerspectivesForCase(caseData.id, demoActorId).length > 0;
   }
@@ -130,7 +127,7 @@
             <a href="/cases/{caseData.id}/compare?actor={demoActorId}" class="btn btn-primary">Zum Vergleich</a>
           {:else}
             <span style="font-size: 0.9rem; color: var(--color-success); display: inline-block; padding: 0.5rem 0;">
-              Ihre Perspektive wurde bereits committed. Ein Vergleich wird verfügbar, sobald mindestens zwei Perspektiven committed wurden (sofern in dieser Phase aktiv).
+              Ihre Perspektive wurde committed. (Der Vergleichsmodus ist in Phase 1 / Streng blind deaktiviert).
             </span>
           {/if}
         {:else}
