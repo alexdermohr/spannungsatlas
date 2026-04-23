@@ -1,7 +1,10 @@
 import type { CatalogItem } from './catalog-data.js';
 
-export type ClusterFocusId = 'cluster_basic' | 'cluster_social' | 'cluster_develop';
 export type ClusterFocusItemType = 'need' | 'determinant';
+type ClusterFocusMappingShape = Record<string, {
+  needs: readonly string[];
+  determinants: readonly string[];
+}>;
 
 /**
  * Phase-2b UI focus mapping for the exploration selection screen.
@@ -51,10 +54,7 @@ export type ClusterFocusItemType = 'need' | 'determinant';
  * gespeichert werden. Einträge, die im aktuellen Cluster-Fokus nicht sichtbar sind,
  * bleiben selektiert und persistent.
  */
-export const CLUSTER_FOCUS_ITEMS: Readonly<Record<ClusterFocusId, {
-  needs: readonly string[];
-  determinants: readonly string[];
-}>> = {
+export const CLUSTER_FOCUS_ITEMS = {
   cluster_basic: {
     needs: ['need_phys', 'need_sec'],
     determinants: ['det_env', 'det_time']
@@ -67,10 +67,12 @@ export const CLUSTER_FOCUS_ITEMS: Readonly<Record<ClusterFocusId, {
     needs: ['need_aut', 'need_rec'],
     determinants: ['det_inst']
   }
-};
+} as const satisfies ClusterFocusMappingShape;
+
+export type ClusterFocusId = keyof typeof CLUSTER_FOCUS_ITEMS;
 
 export function isClusterFocusId(value: string): value is ClusterFocusId {
-  return value === 'cluster_basic' || value === 'cluster_social' || value === 'cluster_develop';
+  return Object.prototype.hasOwnProperty.call(CLUSTER_FOCUS_ITEMS, value);
 }
 
 export function getClusterFocusItemIds(clusterId: string): {

@@ -266,10 +266,13 @@
             <button
               type="button"
               class:active={activeClusterId === cluster.id}
+              aria-pressed={activeClusterId === cluster.id}
               onclick={() => activeClusterId = cluster.id}
             >
               <span>{cluster.short}</span>
-              <small>{selectedNeedCountForCluster(cluster.id)} B / {selectedDeterminantCountForCluster(cluster.id)} D</small>
+              <small aria-label={`Bedürfnisse ${selectedNeedCountForCluster(cluster.id)}, Determinanten ${selectedDeterminantCountForCluster(cluster.id)}`}>
+                {selectedNeedCountForCluster(cluster.id)} B / {selectedDeterminantCountForCluster(cluster.id)} D
+              </small>
             </button>
           {/each}
         </div>
