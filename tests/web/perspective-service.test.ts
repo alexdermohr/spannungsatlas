@@ -214,6 +214,22 @@ describe('case-service - perspective management', () => {
       expect(() => addDraftPerspective('case-test', DUMMY_INPUT, 'actor-2'))
         .toThrow("Access denied: You can only create drafts for yourself.");
     });
+
+    it('persists selected needs and determinants on draft save', () => {
+      const inputWithSelections: CreatePerspectiveDraftInput = {
+        ...DUMMY_INPUT,
+        id: 'p-sel-1',
+        selectedNeeds: [{ id: 'need-safety' }, { id: 'need-autonomy' }],
+        selectedDeterminants: [{ id: 'det-noise' }]
+      };
+
+      const updatedCase = addDraftPerspective('case-test', inputWithSelections, 'actor-1');
+      const saved = updatedCase.perspectives?.find(p => p.id === 'p-sel-1');
+
+      expect(saved?.status).toBe('draft');
+      expect(saved?.content.selectedNeeds).toEqual([{ id: 'need-safety' }, { id: 'need-autonomy' }]);
+      expect(saved?.content.selectedDeterminants).toEqual([{ id: 'det-noise' }]);
+    });
   });
 
 
@@ -297,6 +313,26 @@ describe('case-service - perspective management', () => {
       addDraftPerspective('case-test', DUMMY_INPUT, 'actor-1');
       expect(() => commitPerspective('case-test', 'unknown-id', 'actor-1'))
         .toThrow("Perspective not found");
+    });
+
+    it('keeps selected needs and determinants after commit', () => {
+      const inputWithSelections: CreatePerspectiveDraftInput = {
+        ...DUMMY_INPUT,
+        id: 'p-sel-2',
+        selectedNeeds: [{ id: 'need-belonging' }],
+        selectedDeterminants: [{ id: 'det-group-dynamics' }, { id: 'det-transition' }]
+      };
+
+      addDraftPerspective('case-test', inputWithSelections, 'actor-1');
+      const updatedCase = commitPerspective('case-test', 'p-sel-2', 'actor-1');
+      const committed = updatedCase.perspectives?.find(p => p.id === 'p-sel-2');
+
+      expect(committed?.status).toBe('committed');
+      expect(committed?.content.selectedNeeds).toEqual([{ id: 'need-belonging' }]);
+      expect(committed?.content.selectedDeterminants).toEqual([
+        { id: 'det-group-dynamics' },
+        { id: 'det-transition' }
+      ]);
     });
   });
 

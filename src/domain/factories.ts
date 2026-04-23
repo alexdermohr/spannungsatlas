@@ -266,6 +266,8 @@ export interface CreatePerspectiveDraftInput {
   interpretation?: PerspectiveDraftInterpretation;
   counterInterpretations?: readonly PerspectiveDraftInterpretation[];
   uncertainties?: readonly PerspectiveDraftUncertainty[];
+  selectedNeeds?: readonly { id: string }[];
+  selectedDeterminants?: readonly { id: string }[];
   createdAt: string;
 }
 
@@ -279,6 +281,8 @@ export function createPerspectiveDraftRecord(
     interpretation: input.interpretation,
     counterInterpretations: input.counterInterpretations,
     uncertainties: input.uncertainties,
+    selectedNeeds: input.selectedNeeds,
+    selectedDeterminants: input.selectedDeterminants,
   };
 
   const record: PerspectiveDraftRecord = {
@@ -375,6 +379,8 @@ export function commitPerspectiveRecord(record: PerspectiveDraftRecord, committe
     interpretation,
     counterInterpretations,
     uncertainties,
+    selectedNeeds: c.selectedNeeds,
+    selectedDeterminants: c.selectedDeterminants,
   };
 
   const committedRecord: PerspectiveCommittedRecord = {

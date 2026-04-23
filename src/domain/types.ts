@@ -137,6 +137,14 @@ export interface Revision {
 
 export type PerspectiveStatus = "draft" | "committed";
 
+/**
+ * Phase 2b selection marker for the exploration layer.
+ * This stores a user-picked catalog entry id without inference.
+ */
+export interface CatalogSelection {
+  readonly id: string;
+}
+
 export interface PerspectiveDraftObservation {
   readonly text?: string;
   readonly isCameraDescribable?: boolean;
@@ -159,6 +167,8 @@ export interface PerspectiveDraftContent {
   readonly interpretation?: PerspectiveDraftInterpretation;
   readonly counterInterpretations?: readonly PerspectiveDraftInterpretation[];
   readonly uncertainties?: readonly PerspectiveDraftUncertainty[];
+  readonly selectedNeeds?: readonly CatalogSelection[];
+  readonly selectedDeterminants?: readonly CatalogSelection[];
 }
 
 export interface PerspectiveCommittedContent {
@@ -166,6 +176,8 @@ export interface PerspectiveCommittedContent {
   readonly interpretation: Interpretation;
   readonly counterInterpretations: readonly Interpretation[];
   readonly uncertainties: readonly Uncertainty[];
+  readonly selectedNeeds?: readonly CatalogSelection[];
+  readonly selectedDeterminants?: readonly CatalogSelection[];
 }
 
 export interface PerspectiveDraftRecord {

@@ -470,6 +470,30 @@ export function guardReflectionSnapshot(
 export function guardPerspectiveDraftContent(content: unknown): readonly string[] {
   const errors: string[] = [];
 
+  const validateCatalogSelections = (value: unknown, fieldName: string): void => {
+    if (!Array.isArray(value)) {
+      errors.push(`${fieldName} must be an array if present.`);
+      return;
+    }
+
+    const seenIds = new Set<string>();
+    for (const selection of value) {
+      if (typeof selection !== 'object' || selection === null || Array.isArray(selection)) {
+        errors.push(`${fieldName} entries must be objects.`);
+        continue;
+      }
+      const entry = selection as Record<string, unknown>;
+      if (!isNonEmptyString(entry.id)) {
+        errors.push(`${fieldName} entries must contain a non-empty string id.`);
+        continue;
+      }
+      if (seenIds.has(entry.id)) {
+        errors.push(`${fieldName} entries must not contain duplicate ids.`);
+      }
+      seenIds.add(entry.id);
+    }
+  };
+
   if (typeof content !== 'object' || content === null || Array.isArray(content)) {
     return ["PerspectiveDraftContent must be an object."];
   }
@@ -564,12 +588,43 @@ export function guardPerspectiveDraftContent(content: unknown): readonly string[
     }
   }
 
+  if (c.selectedNeeds !== undefined) {
+    validateCatalogSelections(c.selectedNeeds, "PerspectiveDraftContent.selectedNeeds");
+  }
+
+  if (c.selectedDeterminants !== undefined) {
+    validateCatalogSelections(c.selectedDeterminants, "PerspectiveDraftContent.selectedDeterminants");
+  }
+
   return errors;
 }
 
 export function guardPerspectiveCommittedContent(content: unknown): readonly string[] {
   const errors: string[] = [];
   const push = (r: GuardResult) => { if (r) errors.push(r); };
+  const validateCatalogSelections = (value: unknown, fieldName: string): void => {
+    if (!Array.isArray(value)) {
+      errors.push(`${fieldName} must be an array if present.`);
+      return;
+    }
+
+    const seenIds = new Set<string>();
+    for (const selection of value) {
+      if (typeof selection !== 'object' || selection === null || Array.isArray(selection)) {
+        errors.push(`${fieldName} entries must be objects.`);
+        continue;
+      }
+      const entry = selection as Record<string, unknown>;
+      if (!isNonEmptyString(entry.id)) {
+        errors.push(`${fieldName} entries must contain a non-empty string id.`);
+        continue;
+      }
+      if (seenIds.has(entry.id)) {
+        errors.push(`${fieldName} entries must not contain duplicate ids.`);
+      }
+      seenIds.add(entry.id);
+    }
+  };
 
   if (typeof content !== 'object' || content === null || Array.isArray(content)) {
     return ["PerspectiveCommittedContent must be an object."];
@@ -647,6 +702,14 @@ export function guardPerspectiveCommittedContent(content: unknown): readonly str
         push(guardUncertaintyRationale(unc.rationale as string));
       }
     }
+  }
+
+  if (c.selectedNeeds !== undefined) {
+    validateCatalogSelections(c.selectedNeeds, "PerspectiveCommittedContent.selectedNeeds");
+  }
+
+  if (c.selectedDeterminants !== undefined) {
+    validateCatalogSelections(c.selectedDeterminants, "PerspectiveCommittedContent.selectedDeterminants");
   }
 
   return errors;
