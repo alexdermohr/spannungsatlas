@@ -285,7 +285,6 @@
 
       <div class="form-actions">
         <button type="submit" class="btn btn-primary">Perspektive committen</button>
-        <a href="/cases/{caseId}/perspectives?actor={currentActorId}" class="btn">Perspektiven ansehen</a>
         <a href="/cases/{caseId}" class="btn">Abbrechen</a>
       </div>
     </form>
