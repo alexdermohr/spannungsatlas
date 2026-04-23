@@ -47,7 +47,7 @@ function committedPerspective(actorId: string, id: string = "p-committed"): Pers
 // canReadPerspective
 // ---------------------------------------------------------------------------
 
-describe("canReadPerspective", () => {
+describe("canReadPerspective (Phase 1 Policy: STRICT BLIND)", () => {
   it("allows owner to read their own draft", () => {
     expect(canReadPerspective(draftPerspective("actor-1"), "actor-1")).toBe(true);
   });
@@ -96,7 +96,7 @@ describe("canWritePerspective", () => {
 // canComparePerspectives
 // ---------------------------------------------------------------------------
 
-describe("canComparePerspectives", () => {
+describe("canComparePerspectives (Phase 1 Policy: DISABLED)", () => {
   it("denies if total committed is less than 2, even if actor has committed", () => {
     const perspectives = [committedPerspective("actor-1")];
     expect(canComparePerspectives(perspectives, "actor-1")).toBe(false);
@@ -120,7 +120,7 @@ describe("canComparePerspectives", () => {
   });
 });
 
-describe("getComparablePerspectives", () => {
+describe("getComparablePerspectives (Phase 1 Policy: DISABLED)", () => {
   it("returns empty unconditionally in Phase 1 (streng blind)", () => {
     expect(getComparablePerspectives([])).toEqual([]);
     const perspectives = [
@@ -135,7 +135,7 @@ describe("getComparablePerspectives", () => {
 // filterVisiblePerspectives
 // ---------------------------------------------------------------------------
 
-describe("filterVisiblePerspectives", () => {
+describe("filterVisiblePerspectives (Phase 1 Policy: STRICT BLIND)", () => {
   it("returns own draft + own committed", () => {
     const perspectives = [
       draftPerspective("actor-1", "p-1"),

@@ -16,6 +16,16 @@
 import type { PerspectiveRecord, PerspectiveCommittedRecord } from "./types.js";
 
 // ---------------------------------------------------------------------------
+// Central Phase Policy
+// ---------------------------------------------------------------------------
+
+/**
+ * Configures the current access phase for perspectives.
+ * Phase 1 is "Modus A - streng blind": strictly no reading of other perspectives.
+ */
+export const PERSPECTIVE_PHASE = "phase-1-strict-blind";
+
+// ---------------------------------------------------------------------------
 // Read access
 // ---------------------------------------------------------------------------
 
@@ -30,7 +40,14 @@ export function canReadPerspective(
   perspective: PerspectiveRecord,
   requestingActorId: string,
 ): boolean {
-  return perspective.actorId === requestingActorId;
+  if (PERSPECTIVE_PHASE === "phase-1-strict-blind") {
+    return perspective.actorId === requestingActorId;
+  }
+  // Future phases:
+  if (perspective.status === "draft") {
+    return perspective.actorId === requestingActorId;
+  }
+  return true;
 }
 
 // ---------------------------------------------------------------------------
@@ -70,8 +87,14 @@ export function getComparablePerspectives(
   perspectives: readonly PerspectiveRecord[],
   minRequired: number = 2,
 ): readonly PerspectiveCommittedRecord[] {
-  // Compare logic is explicitly disabled in Phase 1 / Modus A (streng blind)
-  return [];
+  if (PERSPECTIVE_PHASE === "phase-1-strict-blind") {
+    // Compare logic is explicitly disabled in Phase 1 / Modus A (streng blind)
+    return [];
+  }
+  const committed = perspectives.filter(
+    (p): p is PerspectiveCommittedRecord => p.status === "committed"
+  );
+  return committed.length >= minRequired ? committed : [];
 }
 
 /**
@@ -84,8 +107,14 @@ export function canComparePerspectives(
   requestingActorId: string,
   minRequired: number = 2,
 ): boolean {
-  // Compare logic is explicitly disabled in Phase 1 / Modus A (streng blind)
-  return false;
+  if (PERSPECTIVE_PHASE === "phase-1-strict-blind") {
+    // Compare logic is explicitly disabled in Phase 1 / Modus A (streng blind)
+    return false;
+  }
+  const committed = perspectives.filter((p) => p.status === "committed");
+  if (committed.length < minRequired) return false;
+
+  return committed.some((p) => p.actorId === requestingActorId);
 }
 
 // ---------------------------------------------------------------------------
