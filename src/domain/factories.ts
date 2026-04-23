@@ -84,7 +84,7 @@ function throwIfError(result: string | undefined): void {
 export interface CreateObservationInput {
   text: string;
   isCameraDescribable?: boolean;
-  recurringAspects?: string[];
+  recurringAspects?: readonly string[];
 }
 
 export function createObservation(input: CreateObservationInput): Observation {
@@ -177,9 +177,9 @@ export function createTensionEdge(input: CreateTensionEdgeInput): TensionEdge {
 export interface CreateReflectionSnapshotInput {
   reflectedAt: string;
   interpretation: CreateInterpretationInput;
-  counterInterpretations: CreateInterpretationInput[];
-  uncertainties: CreateUncertaintyInput[];
-  tensions?: CreateTensionEdgeInput[];
+  counterInterpretations: readonly CreateInterpretationInput[];
+  uncertainties: readonly CreateUncertaintyInput[];
+  tensions?: readonly CreateTensionEdgeInput[];
 }
 
 export function createReflectionSnapshot(
@@ -404,14 +404,14 @@ export function commitPerspectiveRecord(record: PerspectiveDraftRecord, committe
 
 export interface CreateCaseInput {
   id: string;
-  participants: CaseParticipant[];
+  participants: readonly CaseParticipant[];
   context: string;
   observedAt?: string;
   observation: CreateObservationInput;
   currentReflection: CreateReflectionSnapshotInput;
-  revisions?: CreateRevisionInput[];
-  sources?: CaseSource[];
-  perspectives?: PerspectiveRecord[];
+  revisions?: readonly CreateRevisionInput[];
+  sources?: readonly CaseSource[];
+  perspectives?: readonly PerspectiveRecord[];
 }
 
 export function createCase(input: CreateCaseInput): Case {

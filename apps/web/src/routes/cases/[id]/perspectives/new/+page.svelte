@@ -4,6 +4,11 @@
   import { onMount } from 'svelte';
   import { getCase, addDraftPerspective, commitPerspective, getDraftPerspectiveForActor } from '$lib/services/case-service.js';
   import { needs, determinants } from '$lib/catalog/catalog-data.js';
+  import {
+    selectedIdsFromCatalogSelections,
+    toCatalogSelections,
+    toggleSelectionId,
+  } from '$lib/forms/perspective-exploration-form.js';
   import { mapCameraStateToFormValue } from '$domain/form-mappers.js';
   import { roleLabels, evidenceLabels, uncertaintyLabels } from '$lib/ui/labels.js';
   import type { Case, EvidenceType, UncertaintyLevel } from '$domain/types.js';
@@ -25,6 +30,7 @@
   let uncertaintyRows = $state<{ level: UncertaintyLevel; rationale: string }[]>([{ level: 2, rationale: '' }]);
   let selectedNeedIds = $state<string[]>([]);
   let selectedDeterminantIds = $state<string[]>([]);
+  const uncertaintyLevelOptions: UncertaintyLevel[] = [0, 1, 2, 3, 4, 5];
 
   let draftId = $state<string | null>(null);
   let draftCreatedAt = $state<string | null>(null);
@@ -69,8 +75,8 @@
         uncertaintyRows = [{ level: 2, rationale: '' }];
       }
 
-      selectedNeedIds = (draft.content.selectedNeeds ?? []).map(entry => entry.id);
-      selectedDeterminantIds = (draft.content.selectedDeterminants ?? []).map(entry => entry.id);
+  selectedNeedIds = selectedIdsFromCatalogSelections(draft.content.selectedNeeds);
+  selectedDeterminantIds = selectedIdsFromCatalogSelections(draft.content.selectedDeterminants);
       errorMsg = '';
     } else {
       draftId = crypto.randomUUID();
@@ -88,18 +94,12 @@
   }
 
   function toggleNeedSelection(needId: string) {
-    const alreadySelected = selectedNeedIds.includes(needId);
-    selectedNeedIds = alreadySelected
-      ? selectedNeedIds.filter(id => id !== needId)
-      : [...selectedNeedIds, needId];
+    selectedNeedIds = toggleSelectionId(selectedNeedIds, needId);
     saveDraft();
   }
 
   function toggleDeterminantSelection(determinantId: string) {
-    const alreadySelected = selectedDeterminantIds.includes(determinantId);
-    selectedDeterminantIds = alreadySelected
-      ? selectedDeterminantIds.filter(id => id !== determinantId)
-      : [...selectedDeterminantIds, determinantId];
+    selectedDeterminantIds = toggleSelectionId(selectedDeterminantIds, determinantId);
     saveDraft();
   }
 
@@ -149,8 +149,8 @@
         interpretation: interpretationText.trim() ? { text: interpretationText, evidenceType: interpretationEvidence } : undefined,
         counterInterpretations: counters.length > 0 ? counters : undefined,
         uncertainties: uncerts.length > 0 ? uncerts : undefined,
-        selectedNeeds: selectedNeedIds.length > 0 ? selectedNeedIds.map(id => ({ id })) : undefined,
-        selectedDeterminants: selectedDeterminantIds.length > 0 ? selectedDeterminantIds.map(id => ({ id })) : undefined
+        selectedNeeds: toCatalogSelections(selectedNeedIds),
+        selectedDeterminants: toCatalogSelections(selectedDeterminantIds)
       }, currentActorId);
 
       errorMsg = ''; // clear on success
@@ -327,7 +327,7 @@
             <label class="field">
               <span class="field-label">Stufe</span>
               <select bind:value={row.level} onchange={saveDraft}>
-                {#each [0, 1, 2, 3, 4, 5] as lvl}
+                {#each uncertaintyLevelOptions as lvl}
                   <option value={lvl}>{uncertaintyLabels[lvl]}</option>
                 {/each}
               </select>
@@ -364,8 +364,6 @@
   .field-label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.3rem; }
   textarea, select { width: 100%; padding: 0.5rem 0.65rem; border: 1px solid var(--color-border); border-radius: var(--radius); font-family: inherit; font-size: 0.9rem; background: var(--color-bg); color: var(--color-text); }
   textarea:focus, select:focus { outline: 2px solid var(--color-accent); outline-offset: -1px; border-color: var(--color-accent); }
-  .checkbox-field { display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; cursor: pointer; }
-  .checkbox-field input { width: auto; }
   .form-actions { display: flex; gap: 0.75rem; margin-top: 0.5rem; margin-bottom: 2rem; }
   .counter-block, .uncertainty-block { margin-bottom: 0.75rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--color-border); }
   .counter-block-footer, .uncertainty-block-footer { display: flex; align-items: center; gap: 0.5rem; justify-content: space-between;}

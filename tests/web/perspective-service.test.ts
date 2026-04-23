@@ -219,16 +219,34 @@ describe('case-service - perspective management', () => {
       const inputWithSelections: CreatePerspectiveDraftInput = {
         ...DUMMY_INPUT,
         id: 'p-sel-1',
-        selectedNeeds: [{ id: 'need-safety' }, { id: 'need-autonomy' }],
-        selectedDeterminants: [{ id: 'det-noise' }]
+        selectedNeeds: [{ id: 'need_sec' }, { id: 'need_aut' }],
+        selectedDeterminants: [{ id: 'det_env' }]
       };
 
       const updatedCase = addDraftPerspective('case-test', inputWithSelections, 'actor-1');
       const saved = updatedCase.perspectives?.find(p => p.id === 'p-sel-1');
 
       expect(saved?.status).toBe('draft');
-      expect(saved?.content.selectedNeeds).toEqual([{ id: 'need-safety' }, { id: 'need-autonomy' }]);
-      expect(saved?.content.selectedDeterminants).toEqual([{ id: 'det-noise' }]);
+      expect(saved?.content.selectedNeeds).toEqual([{ id: 'need_sec' }, { id: 'need_aut' }]);
+      expect(saved?.content.selectedDeterminants).toEqual([{ id: 'det_env' }]);
+    });
+
+    it('stores selections as anchors only and does not create interpretation automatically', () => {
+      const inputWithSelectionsOnly: CreatePerspectiveDraftInput = {
+        id: 'p-sel-anchor',
+        caseId: 'case-test',
+        actorId: 'actor-1',
+        createdAt: '2026-03-28T10:00:00Z',
+        selectedNeeds: [{ id: 'need_sec' }],
+        selectedDeterminants: [{ id: 'det_group' }]
+      };
+
+      const updatedCase = addDraftPerspective('case-test', inputWithSelectionsOnly, 'actor-1');
+      const saved = updatedCase.perspectives?.find(p => p.id === 'p-sel-anchor');
+
+      expect(saved?.content.selectedNeeds).toEqual([{ id: 'need_sec' }]);
+      expect(saved?.content.selectedDeterminants).toEqual([{ id: 'det_group' }]);
+      expect(saved?.content.interpretation).toBeUndefined();
     });
   });
 
@@ -319,8 +337,8 @@ describe('case-service - perspective management', () => {
       const inputWithSelections: CreatePerspectiveDraftInput = {
         ...DUMMY_INPUT,
         id: 'p-sel-2',
-        selectedNeeds: [{ id: 'need-belonging' }],
-        selectedDeterminants: [{ id: 'det-group-dynamics' }, { id: 'det-transition' }]
+        selectedNeeds: [{ id: 'need_soc' }],
+        selectedDeterminants: [{ id: 'det_group' }, { id: 'det_time' }]
       };
 
       addDraftPerspective('case-test', inputWithSelections, 'actor-1');
@@ -328,10 +346,10 @@ describe('case-service - perspective management', () => {
       const committed = updatedCase.perspectives?.find(p => p.id === 'p-sel-2');
 
       expect(committed?.status).toBe('committed');
-      expect(committed?.content.selectedNeeds).toEqual([{ id: 'need-belonging' }]);
+      expect(committed?.content.selectedNeeds).toEqual([{ id: 'need_soc' }]);
       expect(committed?.content.selectedDeterminants).toEqual([
-        { id: 'det-group-dynamics' },
-        { id: 'det-transition' }
+        { id: 'det_group' },
+        { id: 'det_time' }
       ]);
     });
   });

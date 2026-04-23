@@ -45,6 +45,7 @@ import type {
   Revision,
   TensionEdge,
 } from "./types.js";
+import { isKnownDeterminantId, isKnownNeedId } from "./exploration-catalog.js";
 
 // ---------------------------------------------------------------------------
 // Result type
@@ -470,7 +471,12 @@ export function guardReflectionSnapshot(
 export function guardPerspectiveDraftContent(content: unknown): readonly string[] {
   const errors: string[] = [];
 
-  const validateCatalogSelections = (value: unknown, fieldName: string): void => {
+  const validateCatalogSelections = (
+    value: unknown,
+    fieldName: string,
+    isKnownId: (id: string) => boolean,
+    label: string,
+  ): void => {
     if (!Array.isArray(value)) {
       errors.push(`${fieldName} must be an array if present.`);
       return;
@@ -489,6 +495,9 @@ export function guardPerspectiveDraftContent(content: unknown): readonly string[
       }
       if (seenIds.has(entry.id)) {
         errors.push(`${fieldName} entries must not contain duplicate ids.`);
+      }
+      if (!seenIds.has(entry.id) && !isKnownId(entry.id)) {
+        errors.push(`${fieldName} contains unknown ${label} id "${entry.id}".`);
       }
       seenIds.add(entry.id);
     }
@@ -589,11 +598,11 @@ export function guardPerspectiveDraftContent(content: unknown): readonly string[
   }
 
   if (c.selectedNeeds !== undefined) {
-    validateCatalogSelections(c.selectedNeeds, "PerspectiveDraftContent.selectedNeeds");
+    validateCatalogSelections(c.selectedNeeds, "PerspectiveDraftContent.selectedNeeds", isKnownNeedId, "need");
   }
 
   if (c.selectedDeterminants !== undefined) {
-    validateCatalogSelections(c.selectedDeterminants, "PerspectiveDraftContent.selectedDeterminants");
+    validateCatalogSelections(c.selectedDeterminants, "PerspectiveDraftContent.selectedDeterminants", isKnownDeterminantId, "determinant");
   }
 
   return errors;
@@ -602,7 +611,12 @@ export function guardPerspectiveDraftContent(content: unknown): readonly string[
 export function guardPerspectiveCommittedContent(content: unknown): readonly string[] {
   const errors: string[] = [];
   const push = (r: GuardResult) => { if (r) errors.push(r); };
-  const validateCatalogSelections = (value: unknown, fieldName: string): void => {
+  const validateCatalogSelections = (
+    value: unknown,
+    fieldName: string,
+    isKnownId: (id: string) => boolean,
+    label: string,
+  ): void => {
     if (!Array.isArray(value)) {
       errors.push(`${fieldName} must be an array if present.`);
       return;
@@ -621,6 +635,9 @@ export function guardPerspectiveCommittedContent(content: unknown): readonly str
       }
       if (seenIds.has(entry.id)) {
         errors.push(`${fieldName} entries must not contain duplicate ids.`);
+      }
+      if (!seenIds.has(entry.id) && !isKnownId(entry.id)) {
+        errors.push(`${fieldName} contains unknown ${label} id "${entry.id}".`);
       }
       seenIds.add(entry.id);
     }
@@ -705,11 +722,11 @@ export function guardPerspectiveCommittedContent(content: unknown): readonly str
   }
 
   if (c.selectedNeeds !== undefined) {
-    validateCatalogSelections(c.selectedNeeds, "PerspectiveCommittedContent.selectedNeeds");
+    validateCatalogSelections(c.selectedNeeds, "PerspectiveCommittedContent.selectedNeeds", isKnownNeedId, "need");
   }
 
   if (c.selectedDeterminants !== undefined) {
-    validateCatalogSelections(c.selectedDeterminants, "PerspectiveCommittedContent.selectedDeterminants");
+    validateCatalogSelections(c.selectedDeterminants, "PerspectiveCommittedContent.selectedDeterminants", isKnownDeterminantId, "determinant");
   }
 
   return errors;

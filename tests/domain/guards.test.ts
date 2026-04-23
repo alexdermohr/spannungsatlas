@@ -961,4 +961,44 @@ describe("guardPerspectiveDraftContent Explicit Negative Testing", () => {
     expect(guardPerspectiveDraftContent({ uncertainties: [{ level: "hoch" }] }).length).toBeGreaterThan(0);
     expect(guardPerspectiveDraftContent({ uncertainties: [{ rationale: 123 }] })).toContain("uncertainties rationale must be a string if present.");
   });
+
+  it("rejects empty, duplicate, and unknown selected need ids", () => {
+    expect(guardPerspectiveDraftContent({ selectedNeeds: [{ id: '' }] })).toContain(
+      'PerspectiveDraftContent.selectedNeeds entries must contain a non-empty string id.',
+    );
+    expect(guardPerspectiveDraftContent({ selectedNeeds: [{ id: 'need_sec' }, { id: 'need_sec' }] })).toContain(
+      'PerspectiveDraftContent.selectedNeeds entries must not contain duplicate ids.',
+    );
+    expect(guardPerspectiveDraftContent({ selectedNeeds: [{ id: 'need_unknown' }] })).toContain(
+      'PerspectiveDraftContent.selectedNeeds contains unknown need id "need_unknown".',
+    );
+  });
+
+  it("rejects empty, duplicate, and unknown selected determinant ids", () => {
+    expect(guardPerspectiveDraftContent({ selectedDeterminants: [{ id: '' }] })).toContain(
+      'PerspectiveDraftContent.selectedDeterminants entries must contain a non-empty string id.',
+    );
+    expect(guardPerspectiveDraftContent({ selectedDeterminants: [{ id: 'det_env' }, { id: 'det_env' }] })).toContain(
+      'PerspectiveDraftContent.selectedDeterminants entries must not contain duplicate ids.',
+    );
+    expect(guardPerspectiveDraftContent({ selectedDeterminants: [{ id: 'det_unknown' }] })).toContain(
+      'PerspectiveDraftContent.selectedDeterminants contains unknown determinant id "det_unknown".',
+    );
+  });
+});
+
+describe("guardPerspectiveCommittedContent exploration selection validation", () => {
+  it("rejects unknown selected ids in committed content", () => {
+    const errors = guardPerspectiveCommittedContent({
+      observation: { text: 'obs', isCameraDescribable: true },
+      interpretation: { text: 'int', evidenceType: 'observational' },
+      counterInterpretations: [{ text: 'counter', evidenceType: 'derived' }],
+      uncertainties: [{ level: 2, rationale: 'unc' }],
+      selectedNeeds: [{ id: 'need_unknown' }],
+      selectedDeterminants: [{ id: 'det_unknown' }],
+    });
+
+    expect(errors).toContain('PerspectiveCommittedContent.selectedNeeds contains unknown need id "need_unknown".');
+    expect(errors).toContain('PerspectiveCommittedContent.selectedDeterminants contains unknown determinant id "det_unknown".');
+  });
 });

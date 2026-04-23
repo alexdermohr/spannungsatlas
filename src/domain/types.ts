@@ -5,12 +5,15 @@
  *   - docs/ux-ui-blaupause.md §7 "Minimal sinnvolles Datenmodell"
  *   - MASTERPLAN.md §2 Produktinvarianten
  *
- * SCOPE NOTE — deliberate phase cut:
+ * SCOPE NOTE — explicit phase cut after Phase 2b start:
  * The UX-Blaupause §7 data model also defines types for the exploration layer:
  * Need, Determinant, NeedSelection, DeterminantSelection.
- * These are intentionally NOT included here. They belong to a later phase
- * (Explorationsraum, UX-Blaupause §2 "Ebene A") and depend on a separate
- * catalog structure. Absence is intentional, not accidental.
+ * Phase 2b now introduces the minimal exploration selections for perspectives:
+ * `CatalogSelection`, `selectedNeeds`, and `selectedDeterminants`.
+ * This is a deliberate widening of the former Phase-1-only cut.
+ * The broader exploration catalog model itself is still not made canonical here
+ * as top-level domain objects. Only user-picked references into the catalog are
+ * stored, without automatic inference or interpretation.
  *
  * What is enforced by the accompanying guards (guards.ts):
  *   - Structural/formal constraints: non-empty required fields, value ranges,
