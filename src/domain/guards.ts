@@ -467,6 +467,45 @@ export function guardReflectionSnapshot(
 // PerspectiveRecord Guards
 // ---------------------------------------------------------------------------
 
+/**
+ * Structural guard for catalog selection arrays.
+ * Validates that the value is an array of objects with non-empty, unique string ids.
+ *
+ * DESIGN NOTE — write-time strict / read-time tolerant:
+ * This guard does NOT check whether ids are members of the current catalog.
+ * Catalog-membership validation is intentionally omitted here so that
+ * historically persisted cases survive catalog evolution without silent data loss.
+ * See `exploration-catalog.ts` → `validateNewPerspectiveCatalogIds` for the
+ * write-time-only catalog membership check applied when new data is submitted.
+ */
+function validateCatalogSelectionsStructural(
+  errors: string[],
+  value: unknown,
+  fieldName: string,
+): void {
+  if (!Array.isArray(value)) {
+    errors.push(`${fieldName} must be an array if present.`);
+    return;
+  }
+
+  const seenIds = new Set<string>();
+  for (const selection of value) {
+    if (typeof selection !== 'object' || selection === null || Array.isArray(selection)) {
+      errors.push(`${fieldName} entries must be objects.`);
+      continue;
+    }
+    const entry = selection as Record<string, unknown>;
+    if (!isNonEmptyString(entry.id)) {
+      errors.push(`${fieldName} entries must contain a non-empty string id.`);
+      continue;
+    }
+    if (seenIds.has(entry.id)) {
+      errors.push(`${fieldName} entries must not contain duplicate ids.`);
+    }
+    seenIds.add(entry.id);
+  }
+}
+
 export function guardPerspectiveDraftContent(content: unknown): readonly string[] {
   const errors: string[] = [];
 
@@ -564,6 +603,14 @@ export function guardPerspectiveDraftContent(content: unknown): readonly string[
     }
   }
 
+  if (c.selectedNeeds !== undefined) {
+    validateCatalogSelectionsStructural(errors, c.selectedNeeds, "PerspectiveDraftContent.selectedNeeds");
+  }
+
+  if (c.selectedDeterminants !== undefined) {
+    validateCatalogSelectionsStructural(errors, c.selectedDeterminants, "PerspectiveDraftContent.selectedDeterminants");
+  }
+
   return errors;
 }
 
@@ -647,6 +694,14 @@ export function guardPerspectiveCommittedContent(content: unknown): readonly str
         push(guardUncertaintyRationale(unc.rationale as string));
       }
     }
+  }
+
+  if (c.selectedNeeds !== undefined) {
+    validateCatalogSelectionsStructural(errors, c.selectedNeeds, "PerspectiveCommittedContent.selectedNeeds");
+  }
+
+  if (c.selectedDeterminants !== undefined) {
+    validateCatalogSelectionsStructural(errors, c.selectedDeterminants, "PerspectiveCommittedContent.selectedDeterminants");
   }
 
   return errors;

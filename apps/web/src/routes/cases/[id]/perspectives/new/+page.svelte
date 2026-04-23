@@ -3,6 +3,12 @@
   import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
   import { getCase, addDraftPerspective, commitPerspective, getDraftPerspectiveForActor } from '$lib/services/case-service.js';
+  import { needs, determinants } from '$lib/catalog/catalog-data.js';
+  import {
+    selectedIdsFromCatalogSelections,
+    toCatalogSelections,
+    toggleSelectionId,
+  } from '$lib/forms/perspective-exploration-form.js';
   import { mapCameraStateToFormValue } from '$domain/form-mappers.js';
   import { roleLabels, evidenceLabels, uncertaintyLabels } from '$lib/ui/labels.js';
   import type { Case, EvidenceType, UncertaintyLevel } from '$domain/types.js';
@@ -22,6 +28,9 @@
 
   let counterRows = $state<{ text: string; evidence: EvidenceType }[]>([{ text: '', evidence: 'observational' }]);
   let uncertaintyRows = $state<{ level: UncertaintyLevel; rationale: string }[]>([{ level: 2, rationale: '' }]);
+  let selectedNeedIds = $state<string[]>([]);
+  let selectedDeterminantIds = $state<string[]>([]);
+  const uncertaintyLevelOptions: UncertaintyLevel[] = [0, 1, 2, 3, 4, 5];
 
   let draftId = $state<string | null>(null);
   let draftCreatedAt = $state<string | null>(null);
@@ -65,6 +74,9 @@
       } else {
         uncertaintyRows = [{ level: 2, rationale: '' }];
       }
+
+  selectedNeedIds = selectedIdsFromCatalogSelections(draft.content.selectedNeeds);
+  selectedDeterminantIds = selectedIdsFromCatalogSelections(draft.content.selectedDeterminants);
       errorMsg = '';
     } else {
       draftId = crypto.randomUUID();
@@ -75,8 +87,20 @@
       interpretationEvidence = 'observational';
       counterRows = [{ text: '', evidence: 'observational' }];
       uncertaintyRows = [{ level: 2, rationale: '' }];
+      selectedNeedIds = [];
+      selectedDeterminantIds = [];
       errorMsg = '';
     }
+  }
+
+  function toggleNeedSelection(needId: string) {
+    selectedNeedIds = toggleSelectionId(selectedNeedIds, needId);
+    saveDraft();
+  }
+
+  function toggleDeterminantSelection(determinantId: string) {
+    selectedDeterminantIds = toggleSelectionId(selectedDeterminantIds, determinantId);
+    saveDraft();
   }
 
   function handleActorChange(e: Event) {
@@ -124,7 +148,9 @@
         } : undefined,
         interpretation: interpretationText.trim() ? { text: interpretationText, evidenceType: interpretationEvidence } : undefined,
         counterInterpretations: counters.length > 0 ? counters : undefined,
-        uncertainties: uncerts.length > 0 ? uncerts : undefined
+        uncertainties: uncerts.length > 0 ? uncerts : undefined,
+        selectedNeeds: toCatalogSelections(selectedNeedIds),
+        selectedDeterminants: toCatalogSelections(selectedDeterminantIds)
       }, currentActorId);
 
       errorMsg = ''; // clear on success
@@ -214,7 +240,44 @@
       </section>
 
       <section class="card form-section">
-        <h2>2. Deutung</h2>
+        <h2>2. Explorationsraum</h2>
+        <p class="helper">Markieren Sie relevante Bedürfnisse und Determinanten als Reflexionsanker. Es erfolgt keine automatische Deutung.</p>
+
+        <div class="selection-group">
+          <h3>Bedürfnisse ({selectedNeedIds.length} ausgewählt)</h3>
+          <div class="selection-grid">
+            {#each needs as need (need.id)}
+              <label class="selection-item">
+                <input
+                  type="checkbox"
+                  checked={selectedNeedIds.includes(need.id)}
+                  onchange={() => toggleNeedSelection(need.id)}
+                />
+                <span>{need.label}</span>
+              </label>
+            {/each}
+          </div>
+        </div>
+
+        <div class="selection-group">
+          <h3>Determinanten ({selectedDeterminantIds.length} ausgewählt)</h3>
+          <div class="selection-grid">
+            {#each determinants as determinant (determinant.id)}
+              <label class="selection-item">
+                <input
+                  type="checkbox"
+                  checked={selectedDeterminantIds.includes(determinant.id)}
+                  onchange={() => toggleDeterminantSelection(determinant.id)}
+                />
+                <span>{determinant.label}</span>
+              </label>
+            {/each}
+          </div>
+        </div>
+      </section>
+
+      <section class="card form-section">
+        <h2>3. Deutung</h2>
         <p class="helper">Wie deuten Sie die Beobachtung?</p>
         <label class="field">
           <textarea bind:value={interpretationText} oninput={saveDraft} rows="4"></textarea>
@@ -230,7 +293,7 @@
       </section>
 
       <section class="card form-section">
-        <h2>3. Gegen-Deutungen</h2>
+        <h2>4. Gegen-Deutungen</h2>
         <p class="helper">Welche alternative Erklärung wäre denkbar?</p>
         {#each counterRows as row, i}
           <div class="counter-block">
@@ -256,7 +319,7 @@
       </section>
 
       <section class="card form-section">
-        <h2>4. Unsicherheit</h2>
+        <h2>5. Unsicherheit</h2>
         <p class="helper">Wie sicher sind Sie sich?</p>
         {#each uncertaintyRows as row, i}
           <div class="uncertainty-block">
@@ -264,7 +327,7 @@
             <label class="field">
               <span class="field-label">Stufe</span>
               <select bind:value={row.level} onchange={saveDraft}>
-                {#each [0, 1, 2, 3, 4, 5] as lvl}
+                {#each uncertaintyLevelOptions as lvl}
                   <option value={lvl}>{uncertaintyLabels[lvl]}</option>
                 {/each}
               </select>
@@ -301,12 +364,28 @@
   .field-label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.3rem; }
   textarea, select { width: 100%; padding: 0.5rem 0.65rem; border: 1px solid var(--color-border); border-radius: var(--radius); font-family: inherit; font-size: 0.9rem; background: var(--color-bg); color: var(--color-text); }
   textarea:focus, select:focus { outline: 2px solid var(--color-accent); outline-offset: -1px; border-color: var(--color-accent); }
-  .checkbox-field { display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; cursor: pointer; }
-  .checkbox-field input { width: auto; }
   .form-actions { display: flex; gap: 0.75rem; margin-top: 0.5rem; margin-bottom: 2rem; }
   .counter-block, .uncertainty-block { margin-bottom: 0.75rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--color-border); }
   .counter-block-footer, .uncertainty-block-footer { display: flex; align-items: center; gap: 0.5rem; justify-content: space-between;}
   .field-counter-evidence { flex: 1; margin-bottom: 0; }
+  .selection-group { margin-bottom: 1rem; }
+  .selection-group h3 { margin: 0 0 0.5rem 0; font-size: 0.9rem; color: var(--color-text); }
+  .selection-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 0.5rem;
+  }
+  .selection-item {
+    display: flex;
+    gap: 0.5rem;
+    align-items: flex-start;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: 0.5rem 0.65rem;
+    background: var(--color-bg);
+    font-size: 0.85rem;
+  }
+  .selection-item input { margin-top: 0.15rem; width: auto; }
   .block-sub-heading { display: block; font-size: 0.82rem; font-weight: 600; color: var(--color-text-muted); margin-bottom: 0.3rem; }
   .btn-remove { background: none; border: 1px solid var(--color-border); border-radius: var(--radius); cursor: pointer; font-size: 1.1rem; line-height: 1; padding: 0.45rem 0.6rem; color: var(--color-text-muted); }
   .btn-remove:hover { color: var(--color-danger); border-color: var(--color-danger); }

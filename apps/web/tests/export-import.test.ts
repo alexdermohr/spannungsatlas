@@ -58,12 +58,12 @@ describe('export/import', () => {
   });
 
   it('new mode assigns new IDs and keeps existing unchanged', () => {
-    vi.spyOn(globalThis.crypto, 'randomUUID').mockReturnValueOnce('new-id-1');
+    vi.spyOn(globalThis.crypto, 'randomUUID').mockReturnValueOnce('11111111-1111-4111-8111-111111111111');
     const existing = [buildCase('existing-id')];
     const imported = importCases(serializeCases([buildCase('incoming-id')], '0.1.0'), existing, 'new');
     expect(imported).toHaveLength(2);
     expect(imported.some((c) => c.id === 'existing-id')).toBe(true);
-    expect(imported.some((c) => c.id === 'new-id-1')).toBe(true);
+    expect(imported.some((c) => c.id === '11111111-1111-4111-8111-111111111111')).toBe(true);
   });
 
   it('fails on schema validation errors', () => {

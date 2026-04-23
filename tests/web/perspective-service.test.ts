@@ -214,6 +214,68 @@ describe('case-service - perspective management', () => {
       expect(() => addDraftPerspective('case-test', DUMMY_INPUT, 'actor-2'))
         .toThrow("Access denied: You can only create drafts for yourself.");
     });
+
+    it('persists selected needs and determinants on draft save', () => {
+      const inputWithSelections: CreatePerspectiveDraftInput = {
+        ...DUMMY_INPUT,
+        id: 'p-sel-1',
+        selectedNeeds: [{ id: 'need_sec' }, { id: 'need_aut' }],
+        selectedDeterminants: [{ id: 'det_env' }]
+      };
+
+      const updatedCase = addDraftPerspective('case-test', inputWithSelections, 'actor-1');
+      const saved = updatedCase.perspectives?.find(p => p.id === 'p-sel-1');
+
+      expect(saved?.status).toBe('draft');
+      expect(saved?.content.selectedNeeds).toEqual([{ id: 'need_sec' }, { id: 'need_aut' }]);
+      expect(saved?.content.selectedDeterminants).toEqual([{ id: 'det_env' }]);
+    });
+
+    it('stores selections as anchors only and does not create interpretation automatically', () => {
+      const inputWithSelectionsOnly: CreatePerspectiveDraftInput = {
+        id: 'p-sel-anchor',
+        caseId: 'case-test',
+        actorId: 'actor-1',
+        createdAt: '2026-03-28T10:00:00Z',
+        selectedNeeds: [{ id: 'need_sec' }],
+        selectedDeterminants: [{ id: 'det_group' }]
+      };
+
+      const updatedCase = addDraftPerspective('case-test', inputWithSelectionsOnly, 'actor-1');
+      const saved = updatedCase.perspectives?.find(p => p.id === 'p-sel-anchor');
+
+      expect(saved?.content.selectedNeeds).toEqual([{ id: 'need_sec' }]);
+      expect(saved?.content.selectedDeterminants).toEqual([{ id: 'det_group' }]);
+      expect(saved?.content.interpretation).toBeUndefined();
+    });
+
+    it('rejects draft creation with an unknown need id at write time', () => {
+      // Write-time catalog membership check: unknown ids must be rejected when
+      // submitting NEW data, even though guards tolerate them for historical data.
+      const inputWithUnknownNeed: CreatePerspectiveDraftInput = {
+        id: 'p-bad-need',
+        caseId: 'case-test',
+        actorId: 'actor-1',
+        createdAt: '2026-03-28T10:00:00Z',
+        selectedNeeds: [{ id: 'need_does_not_exist' }]
+      };
+
+      expect(() => addDraftPerspective('case-test', inputWithUnknownNeed, 'actor-1'))
+        .toThrow('Invalid catalog selections');
+    });
+
+    it('rejects draft creation with an unknown determinant id at write time', () => {
+      const inputWithUnknownDet: CreatePerspectiveDraftInput = {
+        id: 'p-bad-det',
+        caseId: 'case-test',
+        actorId: 'actor-1',
+        createdAt: '2026-03-28T10:00:00Z',
+        selectedDeterminants: [{ id: 'det_does_not_exist' }]
+      };
+
+      expect(() => addDraftPerspective('case-test', inputWithUnknownDet, 'actor-1'))
+        .toThrow('Invalid catalog selections');
+    });
   });
 
 
@@ -297,6 +359,26 @@ describe('case-service - perspective management', () => {
       addDraftPerspective('case-test', DUMMY_INPUT, 'actor-1');
       expect(() => commitPerspective('case-test', 'unknown-id', 'actor-1'))
         .toThrow("Perspective not found");
+    });
+
+    it('keeps selected needs and determinants after commit', () => {
+      const inputWithSelections: CreatePerspectiveDraftInput = {
+        ...DUMMY_INPUT,
+        id: 'p-sel-2',
+        selectedNeeds: [{ id: 'need_soc' }],
+        selectedDeterminants: [{ id: 'det_group' }, { id: 'det_time' }]
+      };
+
+      addDraftPerspective('case-test', inputWithSelections, 'actor-1');
+      const updatedCase = commitPerspective('case-test', 'p-sel-2', 'actor-1');
+      const committed = updatedCase.perspectives?.find(p => p.id === 'p-sel-2');
+
+      expect(committed?.status).toBe('committed');
+      expect(committed?.content.selectedNeeds).toEqual([{ id: 'need_soc' }]);
+      expect(committed?.content.selectedDeterminants).toEqual([
+        { id: 'det_group' },
+        { id: 'det_time' }
+      ]);
     });
   });
 
