@@ -4,6 +4,7 @@
   import { getCase, getCommittedPerspectiveCount, getComparablePerspectivesForCase } from '$lib/services/case-service.js';
   import { roleLabels, evidenceLabels } from '$lib/ui/labels.js';
   import { renderCaseAsMarkdown } from '$lib/services/case-report.js';
+  import { formatSelectionsForDisplay } from '$lib/services/selection-display.js';
   import type { Case, EvidenceType } from '$domain/types.js';
 
   let caseData: Case | null = $state(null);
@@ -144,6 +145,45 @@
         <span class="badge badge-observational">📷 Kamerabeschreibbar</span>
       {/if}
     </section>
+
+    <!-- Explorations-Selektionen -->
+    {#if caseData.currentReflection?.selectedNeeds || caseData.currentReflection?.selectedDeterminants}
+      {@const selections = formatSelectionsForDisplay(caseData.currentReflection?.selectedNeeds, caseData.currentReflection?.selectedDeterminants)}
+      {#if !selections.isEmpty}
+        <section class="card section">
+          <h2>Explorationsraum-Markierungen</h2>
+          <p class="helper">Bedürfnisse und Determinanten, die als Reflexionsanker markiert wurden.</p>
+
+          {#if selections.needs.length > 0}
+            <div class="selection-category">
+              <h3>Bedürfnisse ({selections.needs.length})</h3>
+              <div class="selection-list">
+                {#each selections.needs as need}
+                  <div class="selection-item">
+                    <strong>{need.label}</strong>
+                    <p class="selection-desc">{need.description}</p>
+                  </div>
+                {/each}
+              </div>
+            </div>
+          {/if}
+
+          {#if selections.determinants.length > 0}
+            <div class="selection-category">
+              <h3>Determinanten ({selections.determinants.length})</h3>
+              <div class="selection-list">
+                {#each selections.determinants as determinant}
+                  <div class="selection-item">
+                    <strong>{determinant.label}</strong>
+                    <p class="selection-desc">{determinant.description}</p>
+                  </div>
+                {/each}
+              </div>
+            </div>
+          {/if}
+        </section>
+      {/if}
+    {/if}
 
     <!-- Deutung -->
     {#if caseData.currentReflection?.interpretation}
@@ -366,5 +406,40 @@
     font-size: 0.82rem;
     color: var(--color-text-muted);
     margin-bottom: 0.15rem;
+  }
+  .helper {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    margin-bottom: 1rem;
+  }
+  .selection-category {
+    margin-bottom: 1.25rem;
+  }
+  .selection-category h3 {
+    font-size: 0.9rem;
+    color: var(--color-accent);
+    margin: 0 0 0.5rem 0;
+  }
+  .selection-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .selection-item {
+    border-left: 3px solid var(--color-border);
+    padding-left: 0.75rem;
+    background: var(--color-bg-secondary, rgba(0, 0, 0, 0.02));
+    padding: 0.5rem 0.75rem;
+    border-radius: 3px;
+  }
+  .selection-item strong {
+    display: block;
+    font-size: 0.95rem;
+    margin-bottom: 0.15rem;
+  }
+  .selection-desc {
+    font-size: 0.82rem;
+    color: var(--color-text-muted);
+    margin: 0;
   }
 </style>
