@@ -4,15 +4,57 @@ export type ClusterFocusId = 'cluster_basic' | 'cluster_social' | 'cluster_devel
 export type ClusterFocusItemType = 'need' | 'determinant';
 
 /**
- * Phase-2b UI focus mapping for the selection screen.
+ * Phase-2b UI focus mapping for the exploration selection screen.
  *
- * This mapping is intentionally UI-local: it supports cluster-based navigation
- * in the exploration form and does not alter persisted domain semantics.
+ * # Architekturentscheidung: UI-lokale Heuristik
+ *
+ * Diese Tabelle ist bewusst UI-lokal. Die kanonischen Katalogdaten
+ * (`data/catalog/needs.json`, `data/catalog/determinants.json`) enthalten
+ * kein `clusterId`-Feld — das Phase-2b-Minimal-Schema (`catalog-data.ts`)
+ * erzwingt explizit `{id, label, short, description}` und weist weitere
+ * Felder mit einem Fehler zurück. Eine programmatische Ableitung aus den
+ * JSON-Daten ist daher ohne Schema-Änderung nicht möglich.
+ *
+ * # Begründung der konkreten Zuordnungen
+ *
+ * Die Zuordnungen sind **aus den Cluster-Beschreibungen in `data/catalog/clusters.json`
+ * abgeleitet** — die Beschreibungstexte nennen die zugehörigen Konzepte direkt:
+ *
+ * - `cluster_basic` ("Basisversorgung und Struktur"):
+ *   Beschreibung: „grundlegenden physiologischen Bedürfnissen und den sie rahmenden
+ *   Raum- und Zeitstrukturen"
+ *   → Needs: `need_phys` (Physiologisch), `need_sec` (Sicherheit)
+ *   → Determinants: `det_env` (Räumlich-materiell), `det_time` (Zeitstrukturen)
+ *
+ * - `cluster_social` ("Soziales Gefüge"):
+ *   Beschreibung: „Zugehörigkeitsbedürfnissen, Gruppendynamik und personeller Präsenz"
+ *   → Needs: `need_soc` (Soziale Zugehörigkeit)
+ *   → Determinants: `det_group` (Gruppendynamik), `det_staff` (Personal)
+ *
+ * - `cluster_develop` ("Entwicklungs- und Wirkungsraum"):
+ *   Beschreibung: „Autonomie- und Anerkennungsbedürfnissen im Kontext institutioneller
+ *   Grenzen und Vorgaben"
+ *   → Needs: `need_aut` (Autonomie), `need_rec` (Anerkennung)
+ *   → Determinants: `det_inst` (Institutionelle Vorgaben)
+ *
+ * # Drift-Risiko
+ *
+ * Wenn Needs oder Determinants in den JSON-Dateien hinzugefügt oder umbenannt werden,
+ * muss diese Tabelle manuell synchronisiert werden. Das Drift-Risiko ist durch Tests
+ * in `cluster-focus.test.ts` abgesichert (alle gemappten IDs werden gegen den
+ * Live-Katalog geprüft).
+ *
+ * # Persistenz-Invariante
+ *
+ * Diese Tabelle steuert ausschließlich die **Sichtbarkeit** im Formular.
+ * Sie verändert nicht, welche IDs in `selectedNeedIds` / `selectedDeterminantIds`
+ * gespeichert werden. Einträge, die im aktuellen Cluster-Fokus nicht sichtbar sind,
+ * bleiben selektiert und persistent.
  */
-const CLUSTER_FOCUS_ITEMS: Record<ClusterFocusId, {
+export const CLUSTER_FOCUS_ITEMS: Readonly<Record<ClusterFocusId, {
   needs: readonly string[];
   determinants: readonly string[];
-}> = {
+}>> = {
   cluster_basic: {
     needs: ['need_phys', 'need_sec'],
     determinants: ['det_env', 'det_time']
