@@ -248,6 +248,34 @@ describe('case-service - perspective management', () => {
       expect(saved?.content.selectedDeterminants).toEqual([{ id: 'det_group' }]);
       expect(saved?.content.interpretation).toBeUndefined();
     });
+
+    it('rejects draft creation with an unknown need id at write time', () => {
+      // Write-time catalog membership check: unknown ids must be rejected when
+      // submitting NEW data, even though guards tolerate them for historical data.
+      const inputWithUnknownNeed: CreatePerspectiveDraftInput = {
+        id: 'p-bad-need',
+        caseId: 'case-test',
+        actorId: 'actor-1',
+        createdAt: '2026-03-28T10:00:00Z',
+        selectedNeeds: [{ id: 'need_does_not_exist' }]
+      };
+
+      expect(() => addDraftPerspective('case-test', inputWithUnknownNeed, 'actor-1'))
+        .toThrow('Invalid catalog selections');
+    });
+
+    it('rejects draft creation with an unknown determinant id at write time', () => {
+      const inputWithUnknownDet: CreatePerspectiveDraftInput = {
+        id: 'p-bad-det',
+        caseId: 'case-test',
+        actorId: 'actor-1',
+        createdAt: '2026-03-28T10:00:00Z',
+        selectedDeterminants: [{ id: 'det_does_not_exist' }]
+      };
+
+      expect(() => addDraftPerspective('case-test', inputWithUnknownDet, 'actor-1'))
+        .toThrow('Invalid catalog selections');
+    });
   });
 
 

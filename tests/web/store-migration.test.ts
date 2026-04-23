@@ -374,3 +374,132 @@ describe("store migration — draft handling", () => {
     expect(loaded).toHaveLength(0);
   });
 });
+
+describe("store migration — catalog evolution tolerance", () => {
+  // Guard: historical catalog ids (e.g. from a previous catalog version) in
+  // selectedNeeds / selectedDeterminants must NOT cause a case to be silently
+  // dropped from loadAllCases(). Guards are intentionally read-time tolerant
+  // for catalog membership; write-time validation lives in exploration-catalog.ts.
+
+  it("loads a case with a historical unknown need id in a draft perspective", () => {
+    const rawData = [
+      {
+        id: "case-hist-need",
+        context: "Historischer Fall",
+        participants: [{ id: "p-1" }],
+        observation: { text: "Kind läuft.", isCameraDescribable: true },
+        currentReflection: {
+          reflectedAt: "2025-01-01T10:00:00Z",
+          interpretation: { text: "Freude", evidenceType: "observational" },
+          counterInterpretations: [{ text: "Flucht", evidenceType: "speculative" }],
+          uncertainties: [{ level: 2, rationale: "Unsicher" }],
+          tensions: []
+        },
+        revisions: [],
+        perspectives: [
+          {
+            id: "draft-hist-need",
+            caseId: "case-hist-need",
+            actorId: "p-1",
+            status: "draft",
+            createdAt: "2025-01-01T11:00:00Z",
+            content: {
+              selectedNeeds: [{ id: "need_old_removed_from_catalog" }]
+            }
+          }
+        ]
+      }
+    ];
+
+    globalThis.localStorage.setItem(STORAGE_KEY, JSON.stringify(rawData));
+    const loaded = localStorageStore.loadAllCases();
+    expect(loaded).toHaveLength(1);
+    expect(loaded[0].id).toBe("case-hist-need");
+    expect(loaded[0].perspectives?.[0].content.selectedNeeds?.[0].id).toBe("need_old_removed_from_catalog");
+  });
+
+  it("loads a case with a historical unknown determinant id in a draft perspective", () => {
+    const rawData = [
+      {
+        id: "case-hist-det",
+        context: "Historischer Fall",
+        participants: [{ id: "p-1" }],
+        observation: { text: "Kind läuft.", isCameraDescribable: true },
+        currentReflection: {
+          reflectedAt: "2025-01-01T10:00:00Z",
+          interpretation: { text: "Freude", evidenceType: "observational" },
+          counterInterpretations: [{ text: "Flucht", evidenceType: "speculative" }],
+          uncertainties: [{ level: 2, rationale: "Unsicher" }],
+          tensions: []
+        },
+        revisions: [],
+        perspectives: [
+          {
+            id: "draft-hist-det",
+            caseId: "case-hist-det",
+            actorId: "p-1",
+            status: "draft",
+            createdAt: "2025-01-01T11:00:00Z",
+            content: {
+              selectedDeterminants: [{ id: "det_old_removed_from_catalog" }]
+            }
+          }
+        ]
+      }
+    ];
+
+    globalThis.localStorage.setItem(STORAGE_KEY, JSON.stringify(rawData));
+    const loaded = localStorageStore.loadAllCases();
+    expect(loaded).toHaveLength(1);
+    expect(loaded[0].id).toBe("case-hist-det");
+    expect(loaded[0].perspectives?.[0].content.selectedDeterminants?.[0].id).toBe("det_old_removed_from_catalog");
+  });
+
+  it("loads a case with historical unknown ids in both needs and determinants of a committed perspective", () => {
+    const rawData = [
+      {
+        id: "case-hist-committed",
+        context: "Historischer Fall",
+        participants: [{ id: "p-1" }],
+        observation: { text: "Kind läuft.", isCameraDescribable: true },
+        currentReflection: {
+          reflectedAt: "2025-01-01T10:00:00Z",
+          interpretation: { text: "Freude", evidenceType: "observational" },
+          counterInterpretations: [{ text: "Flucht", evidenceType: "speculative" }],
+          uncertainties: [{ level: 2, rationale: "Unsicher" }],
+          tensions: []
+        },
+        revisions: [],
+        perspectives: [
+          {
+            id: "committed-hist",
+            caseId: "case-hist-committed",
+            actorId: "p-1",
+            status: "committed",
+            createdAt: "2025-01-01T11:00:00Z",
+            committedAt: "2025-01-02T10:00:00Z",
+            content: {
+              observation: { text: "Beob.", isCameraDescribable: true },
+              interpretation: { text: "Int.", evidenceType: "observational" },
+              counterInterpretations: [{ text: "Gegenint.", evidenceType: "derived" }],
+              uncertainties: [{ level: 1, rationale: "Unc." }],
+              selectedNeeds: [{ id: "need_legacy_id" }],
+              selectedDeterminants: [{ id: "det_legacy_id" }]
+            }
+          }
+        ]
+      }
+    ];
+
+    globalThis.localStorage.setItem(STORAGE_KEY, JSON.stringify(rawData));
+    const loaded = localStorageStore.loadAllCases();
+    expect(loaded).toHaveLength(1);
+    expect(loaded[0].id).toBe("case-hist-committed");
+    const p = loaded[0].perspectives?.[0];
+    expect(p?.status).toBe("committed");
+    if (p?.status === "committed") {
+      expect(p.content.selectedNeeds?.[0].id).toBe("need_legacy_id");
+      expect(p.content.selectedDeterminants?.[0].id).toBe("det_legacy_id");
+    }
+  });
+});

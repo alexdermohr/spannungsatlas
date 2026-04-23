@@ -2,6 +2,7 @@ import type { Case, CaseParticipant, EvidenceType, UncertaintyLevel, Perspective
 import type { CreateCaseInput } from '$domain/factories.js';
 import { createCase, createPerspectiveDraftRecord, commitPerspectiveRecord, type CreatePerspectiveDraftInput } from '$domain/factories.js';
 import { canReadPerspective, canWritePerspective, canComparePerspectives, getComparablePerspectives, filterVisiblePerspectives } from '$domain/perspective-access.js';
+import { validateNewPerspectiveCatalogIds } from '$domain/exploration-catalog.js';
 import { localStorageStore, type PersistenceStore } from '$lib/persistence/store.js';
 
 export interface StartNewCaseInput {
@@ -80,6 +81,14 @@ export function addDraftPerspective(caseId: string, input: CreatePerspectiveDraf
   if (input.actorId !== requestingActorId) {
     throw new Error("Access denied: You can only create drafts for yourself.");
   }
+
+  // Write-time catalog membership check — must not be performed at read time.
+  // See exploration-catalog.ts → validateNewPerspectiveCatalogIds for design rationale.
+  const catalogErrors = validateNewPerspectiveCatalogIds(input.selectedNeeds, input.selectedDeterminants);
+  if (catalogErrors.length > 0) {
+    throw new Error(`Invalid catalog selections: ${catalogErrors.join('; ')}`);
+  }
+
   const c = getCase(caseId);
   if (!c) throw new Error("Case not found");
 

@@ -962,33 +962,40 @@ describe("guardPerspectiveDraftContent Explicit Negative Testing", () => {
     expect(guardPerspectiveDraftContent({ uncertainties: [{ rationale: 123 }] })).toContain("uncertainties rationale must be a string if present.");
   });
 
-  it("rejects empty, duplicate, and unknown selected need ids", () => {
+  it("rejects empty and duplicate selected need ids; tolerates unknown ids", () => {
     expect(guardPerspectiveDraftContent({ selectedNeeds: [{ id: '' }] })).toContain(
       'PerspectiveDraftContent.selectedNeeds entries must contain a non-empty string id.',
     );
     expect(guardPerspectiveDraftContent({ selectedNeeds: [{ id: 'need_sec' }, { id: 'need_sec' }] })).toContain(
       'PerspectiveDraftContent.selectedNeeds entries must not contain duplicate ids.',
     );
-    expect(guardPerspectiveDraftContent({ selectedNeeds: [{ id: 'need_unknown' }] })).toContain(
+    // Unknown ids are tolerated at read time to prevent silent data loss on catalog evolution.
+    // Write-time rejection is handled by validateNewPerspectiveCatalogIds (exploration-catalog.ts).
+    expect(guardPerspectiveDraftContent({ selectedNeeds: [{ id: 'need_unknown' }] })).not.toContain(
       'PerspectiveDraftContent.selectedNeeds contains unknown need id "need_unknown".',
     );
+    expect(guardPerspectiveDraftContent({ selectedNeeds: [{ id: 'need_unknown' }] }).length).toBe(0);
   });
 
-  it("rejects empty, duplicate, and unknown selected determinant ids", () => {
+  it("rejects empty and duplicate selected determinant ids; tolerates unknown ids", () => {
     expect(guardPerspectiveDraftContent({ selectedDeterminants: [{ id: '' }] })).toContain(
       'PerspectiveDraftContent.selectedDeterminants entries must contain a non-empty string id.',
     );
     expect(guardPerspectiveDraftContent({ selectedDeterminants: [{ id: 'det_env' }, { id: 'det_env' }] })).toContain(
       'PerspectiveDraftContent.selectedDeterminants entries must not contain duplicate ids.',
     );
-    expect(guardPerspectiveDraftContent({ selectedDeterminants: [{ id: 'det_unknown' }] })).toContain(
+    // Unknown ids are tolerated at read time to prevent silent data loss on catalog evolution.
+    expect(guardPerspectiveDraftContent({ selectedDeterminants: [{ id: 'det_unknown' }] })).not.toContain(
       'PerspectiveDraftContent.selectedDeterminants contains unknown determinant id "det_unknown".',
     );
+    expect(guardPerspectiveDraftContent({ selectedDeterminants: [{ id: 'det_unknown' }] }).length).toBe(0);
   });
 });
 
 describe("guardPerspectiveCommittedContent exploration selection validation", () => {
-  it("rejects unknown selected ids in committed content", () => {
+  it("tolerates unknown selected ids in committed content to preserve historical data", () => {
+    // Guards must NOT reject unknown catalog ids — catalog evolution must not silently
+    // destroy persisted cases. Write-time rejection lives in exploration-catalog.ts.
     const errors = guardPerspectiveCommittedContent({
       observation: { text: 'obs', isCameraDescribable: true },
       interpretation: { text: 'int', evidenceType: 'observational' },
@@ -998,7 +1005,28 @@ describe("guardPerspectiveCommittedContent exploration selection validation", ()
       selectedDeterminants: [{ id: 'det_unknown' }],
     });
 
-    expect(errors).toContain('PerspectiveCommittedContent.selectedNeeds contains unknown need id "need_unknown".');
-    expect(errors).toContain('PerspectiveCommittedContent.selectedDeterminants contains unknown determinant id "det_unknown".');
+    expect(errors).not.toContain('PerspectiveCommittedContent.selectedNeeds contains unknown need id "need_unknown".');
+    expect(errors).not.toContain('PerspectiveCommittedContent.selectedDeterminants contains unknown determinant id "det_unknown".');
+    expect(errors).toHaveLength(0);
+  });
+
+  it("still rejects structurally invalid selections in committed content", () => {
+    const errorsEmpty = guardPerspectiveCommittedContent({
+      observation: { text: 'obs', isCameraDescribable: true },
+      interpretation: { text: 'int', evidenceType: 'observational' },
+      counterInterpretations: [{ text: 'counter', evidenceType: 'derived' }],
+      uncertainties: [{ level: 2, rationale: 'unc' }],
+      selectedNeeds: [{ id: '' }],
+    });
+    expect(errorsEmpty).toContain('PerspectiveCommittedContent.selectedNeeds entries must contain a non-empty string id.');
+
+    const errorsDupe = guardPerspectiveCommittedContent({
+      observation: { text: 'obs', isCameraDescribable: true },
+      interpretation: { text: 'int', evidenceType: 'observational' },
+      counterInterpretations: [{ text: 'counter', evidenceType: 'derived' }],
+      uncertainties: [{ level: 2, rationale: 'unc' }],
+      selectedNeeds: [{ id: 'need_sec' }, { id: 'need_sec' }],
+    });
+    expect(errorsDupe).toContain('PerspectiveCommittedContent.selectedNeeds entries must not contain duplicate ids.');
   });
 });
