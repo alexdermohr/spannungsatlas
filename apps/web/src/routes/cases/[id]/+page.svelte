@@ -121,24 +121,15 @@
 
       <p>Committed: <strong>{committedCount}</strong> / {caseData.participants.length}</p>
       <div class="actions" style="margin-top: 1rem; margin-bottom: 0;">
-        <a href="/cases/{caseData.id}/perspectives?actor={demoActorId}" class="btn btn-secondary">Perspektiven ansehen</a>
         {#if actorHasCommitted}
-          {#if isComparable}
-            <span style="font-size: 0.9rem; color: var(--color-success); display: inline-block; padding: 0.5rem 1rem 0.5rem 0;">Ihre Perspektive wurde bereits committed.</span>
-            <a href="/cases/{caseData.id}/compare?actor={demoActorId}" class="btn btn-primary">Zum Vergleich</a>
-          {:else}
-            <span style="font-size: 0.9rem; color: var(--color-success); display: inline-block; padding: 0.5rem 0;">
-              Ihre Perspektive wurde sicher gespeichert. In der aktuellen Phase (Streng blind) ist der Vergleichsmodus absichtlich deaktiviert, um unabhängige Beobachtungen zu gewährleisten.
-            </span>
-          {/if}
+          <span style="font-size: 0.9rem; color: var(--color-success); display: inline-block; padding: 0.5rem 0;">
+            Ihre Perspektive wurde sicher gespeichert. In der aktuellen Phase (Streng blind) sind andere Perspektiven nicht einsehbar, um unabhängige Beobachtungen zu gewährleisten.
+          </span>
         {:else}
           {#if actorHasDraft}
             <a href="/cases/{caseData.id}/perspectives/new?actor={demoActorId}" class="btn btn-primary">Entwurf fortsetzen</a>
           {:else}
             <a href="/cases/{caseData.id}/perspectives/new?actor={demoActorId}" class="btn btn-primary">Perspektive erstellen</a>
-            <span style="font-size: 0.85rem; color: var(--color-text-muted); display: inline-block; margin-left: 1rem;">
-              Erst nach einem Commit kann Ihre Perspektive in den Vergleich eingehen.
-            </span>
           {/if}
         {/if}
       </div>
