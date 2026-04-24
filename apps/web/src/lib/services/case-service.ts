@@ -31,14 +31,20 @@ export interface StartNewCaseInput {
 const store: PersistenceStore = localStorageStore;
 
 /**
- * Creates a Case and — as part of the same epistemic act — its first PerspectiveRecord
- * for the primary actor. Exploration selections live exclusively on that perspective,
- * never on currentReflection.
+ * Creates a Case and, in the same capture flow, optionally seeds the first
+ * actor-attributed PerspectiveRecord.
  *
- * The case's currentReflection remains as the canonical reflection snapshot
- * (per MASTERPLAN §3.1), while the PerspectiveRecord carries the actor-attributed
- * view (observation/interpretation/counters/uncertainties + selections) for the
- * single-perspective-per-actor invariant.
+ * Transitional dual-model rule:
+ * - currentReflection remains on the Case because the domain model still expects
+ *   a case-level reflection snapshot and older read paths use it.
+ * - the first committed PerspectiveRecord stores the same epistemic core for the
+ *   primary actor so actor-attributed content starts at case creation time.
+ * - selectedNeeds and selectedDeterminants belong only to PerspectiveRecord.content;
+ *   they must never be copied onto currentReflection.
+ *
+ * Until the legacy case snapshot is retired, both structures intentionally start
+ * with matching observation/interpretation/counters/uncertainties. The PerspectiveRecord
+ * is the source of truth for actor-attributed content.
  */
 export function startNewCase(input: StartNewCaseInput): Case {
   const id = crypto.randomUUID();
@@ -67,8 +73,8 @@ export function startNewCase(input: StartNewCaseInput): Case {
 
   const created = createCase(caseInput);
 
-  // First-perspective persistence: if we have an actor, promote the freshly-created
-  // case into one that also carries an initial committed PerspectiveRecord.
+  // Seed the initial actor-attributed perspective while keeping the legacy
+  // case snapshot for existing read paths.
   let withFirstPerspective: Case = created;
   if (primaryActorId) {
     if (input.selectedNeeds || input.selectedDeterminants) {

@@ -49,6 +49,9 @@
     cancelHref: string;
     errorMsg?: string;
     onSubmit: () => void;
+    // Optional route-owned draft persistence hook. The existing-perspective route
+    // passes saveDraft for actor-specific autosave; the new-case route omits this
+    // because case creation currently has no persisted draft model.
     onChange?: () => void;
   }
 

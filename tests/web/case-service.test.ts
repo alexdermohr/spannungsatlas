@@ -141,6 +141,14 @@ describe('startNewCase', () => {
     expect(first.content.uncertainties?.[0]!.level).toBe(3);
     expect(first.content.selectedNeeds).toEqual([{ id: 'need_sec' }]);
     expect(first.content.selectedDeterminants).toEqual([{ id: 'det_env' }]);
+
+    expect(first.content.observation).toEqual({
+      text: created.observation.text,
+      isCameraDescribable: created.observation.isCameraDescribable
+    });
+    expect(first.content.interpretation).toEqual(created.currentReflection.interpretation);
+    expect(first.content.counterInterpretations).toEqual(created.currentReflection.counterInterpretations);
+    expect(first.content.uncertainties).toEqual(created.currentReflection.uncertainties);
   });
 
   it('keeps selections off currentReflection even when first perspective is created', () => {
