@@ -7,10 +7,14 @@
   import { filterCatalogItems } from '$lib/catalog/catalog-utils.js';
   import { filterItemsByClusterFocus, getClusterFocusItemIds } from '$lib/catalog/cluster-focus.js';
   import {
-    selectedIdsFromCatalogSelections,
+    fromCatalogSelections,
     toCatalogSelections,
     toggleSelectionId,
-  } from '$lib/forms/perspective-exploration-form.js';
+    type ExplorationPanelMode,
+  } from '$lib/forms/exploration-selection-model.js';
+  import {
+    buildPerspectiveDraftContent,
+  } from '$lib/forms/perspective-core-form.js';
   import { mapCameraStateToFormValue } from '$domain/form-mappers.js';
   import { roleLabels, evidenceLabels, uncertaintyLabels } from '$lib/ui/labels.js';
   import type { Case, EvidenceType, UncertaintyLevel } from '$domain/types.js';
@@ -32,6 +36,8 @@
   let uncertaintyRows = $state<{ level: UncertaintyLevel; rationale: string }[]>([{ level: 2, rationale: '' }]);
   let selectedNeedIds = $state<string[]>([]);
   let selectedDeterminantIds = $state<string[]>([]);
+  let explorationPanelMode = $state<ExplorationPanelMode>('inline');
+  let isExplorationOpen = $state(false);
   let activeClusterId = $state<string>(clusters[0]?.id ?? '');
   let selectionSearch = $state('');
   const uncertaintyLevelOptions: UncertaintyLevel[] = [0, 1, 2, 3, 4, 5];
@@ -83,8 +89,8 @@
         uncertaintyRows = [{ level: 2, rationale: '' }];
       }
 
-  selectedNeedIds = selectedIdsFromCatalogSelections(draft.content.selectedNeeds);
-  selectedDeterminantIds = selectedIdsFromCatalogSelections(draft.content.selectedDeterminants);
+      selectedNeedIds = fromCatalogSelections(draft.content.selectedNeeds);
+      selectedDeterminantIds = fromCatalogSelections(draft.content.selectedDeterminants);
       errorMsg = '';
     } else {
       draftId = crypto.randomUUID();
@@ -152,23 +158,28 @@
       if (!draftId) draftId = crypto.randomUUID();
       if (!draftCreatedAt) draftCreatedAt = new Date().toISOString();
 
-      const counters = counterRows.filter(r => r.text.trim() !== '').map(r => ({ text: r.text, evidenceType: r.evidence }));
-      const uncerts = uncertaintyRows.filter(r => r.rationale.trim() !== '').map(r => ({ level: r.level, rationale: r.rationale }));
+      const draftContent = buildPerspectiveDraftContent({
+        observationText,
+        cameraState: isCameraDescribableStr,
+        interpretationText,
+        interpretationEvidence,
+        counterRows,
+        uncertaintyRows,
+        selectedNeeds: toCatalogSelections(selectedNeedIds),
+        selectedDeterminants: toCatalogSelections(selectedDeterminantIds),
+      });
 
       addDraftPerspective(caseId, {
         id: draftId,
         caseId,
         actorId: currentActorId,
         createdAt: draftCreatedAt,
-        observation: (observationText.trim() !== '' || isCameraDescribableStr !== 'null') ? {
-          text: observationText,
-          ...(isCameraDescribableStr !== 'null' ? { isCameraDescribable: isCameraDescribableStr === 'true' } : {})
-        } : undefined,
-        interpretation: interpretationText.trim() ? { text: interpretationText, evidenceType: interpretationEvidence } : undefined,
-        counterInterpretations: counters.length > 0 ? counters : undefined,
-        uncertainties: uncerts.length > 0 ? uncerts : undefined,
-        selectedNeeds: toCatalogSelections(selectedNeedIds),
-        selectedDeterminants: toCatalogSelections(selectedDeterminantIds)
+        observation: draftContent.observation,
+        interpretation: draftContent.interpretation,
+        counterInterpretations: draftContent.counterInterpretations,
+        uncertainties: draftContent.uncertainties,
+        selectedNeeds: draftContent.selectedNeeds,
+        selectedDeterminants: draftContent.selectedDeterminants,
       }, currentActorId);
 
       errorMsg = ''; // clear on success
@@ -261,69 +272,82 @@
         <h2>2. Explorationsraum</h2>
         <p class="helper">Markieren Sie relevante Bedürfnisse und Determinanten als Reflexionsanker. Es erfolgt keine automatische Deutung.</p>
 
-        <div class="cluster-focus-controls" role="group" aria-label="Cluster-Fokus">
-          {#each clusters as cluster (cluster.id)}
-            <button
-              type="button"
-              class:active={activeClusterId === cluster.id}
-              aria-pressed={activeClusterId === cluster.id}
-              onclick={() => activeClusterId = cluster.id}
-            >
-              <span>{cluster.short}</span>
-              <small aria-label={`Bedürfnisse ${selectedNeedCountForCluster(cluster.id)}, Determinanten ${selectedDeterminantCountForCluster(cluster.id)}`}>
-                {selectedNeedCountForCluster(cluster.id)} B / {selectedDeterminantCountForCluster(cluster.id)} D
-              </small>
-            </button>
-          {/each}
+        <div class="exploration-header-actions">
+          <button type="button" class="btn" onclick={() => { isExplorationOpen = !isExplorationOpen; }}>
+            {isExplorationOpen ? 'Explorationsraum schließen' : 'Explorationsraum öffnen'}
+          </button>
+          <span class="helper exploration-selection-summary">
+            Ausgewählt: {selectedNeedIds.length} Bedürfnisse, {selectedDeterminantIds.length} Determinanten
+          </span>
         </div>
 
-        {#if activeCluster}
-          <div class="cluster-focus-card">
-            <h3>{activeCluster.label}</h3>
-            <p>{activeCluster.description}</p>
+        {#if explorationPanelMode === 'inline' && isExplorationOpen}
+          <div class="cluster-focus-controls" role="group" aria-label="Cluster-Fokus">
+            {#each clusters as cluster (cluster.id)}
+              <button
+                type="button"
+                class:active={activeClusterId === cluster.id}
+                aria-pressed={activeClusterId === cluster.id}
+                onclick={() => activeClusterId = cluster.id}
+              >
+                <span>{cluster.short}</span>
+                <small aria-label={`Bedürfnisse ${selectedNeedCountForCluster(cluster.id)}, Determinanten ${selectedDeterminantCountForCluster(cluster.id)}`}>
+                  {selectedNeedCountForCluster(cluster.id)} B / {selectedDeterminantCountForCluster(cluster.id)} D
+                </small>
+              </button>
+            {/each}
           </div>
+
+          {#if activeCluster}
+            <div class="cluster-focus-card">
+              <h3>{activeCluster.label}</h3>
+              <p>{activeCluster.description}</p>
+            </div>
+          {/if}
+
+          <label class="field selection-search">
+            <span class="field-label">Suche im aktuellen Cluster-Fokus</span>
+            <input
+              type="text"
+              bind:value={selectionSearch}
+              placeholder="z. B. Sicherheit, Gruppe, Raum"
+            />
+          </label>
+
+          <div class="selection-group">
+            <h3>Bedürfnisse ({selectedNeedIds.length} ausgewählt, {visibleNeeds.length} sichtbar)</h3>
+            <div class="selection-grid">
+              {#each visibleNeeds as need (need.id)}
+                <label class="selection-item">
+                  <input
+                    type="checkbox"
+                    checked={selectedNeedIds.includes(need.id)}
+                    onchange={() => toggleNeedSelection(need.id)}
+                  />
+                  <span>{need.label}</span>
+                </label>
+              {/each}
+            </div>
+          </div>
+
+          <div class="selection-group">
+            <h3>Determinanten ({selectedDeterminantIds.length} ausgewählt, {visibleDeterminants.length} sichtbar)</h3>
+            <div class="selection-grid">
+              {#each visibleDeterminants as determinant (determinant.id)}
+                <label class="selection-item">
+                  <input
+                    type="checkbox"
+                    checked={selectedDeterminantIds.includes(determinant.id)}
+                    onchange={() => toggleDeterminantSelection(determinant.id)}
+                  />
+                  <span>{determinant.label}</span>
+                </label>
+              {/each}
+            </div>
+          </div>
+        {:else}
+          <p class="helper">Explorationsraum ist vorbereitet. Aktuell bleibt die minimale Auswahlansicht aktiv (inline).</p>
         {/if}
-
-        <label class="field selection-search">
-          <span class="field-label">Suche im aktuellen Cluster-Fokus</span>
-          <input
-            type="text"
-            bind:value={selectionSearch}
-            placeholder="z. B. Sicherheit, Gruppe, Raum"
-          />
-        </label>
-
-        <div class="selection-group">
-          <h3>Bedürfnisse ({selectedNeedIds.length} ausgewählt, {visibleNeeds.length} sichtbar)</h3>
-          <div class="selection-grid">
-            {#each visibleNeeds as need (need.id)}
-              <label class="selection-item">
-                <input
-                  type="checkbox"
-                  checked={selectedNeedIds.includes(need.id)}
-                  onchange={() => toggleNeedSelection(need.id)}
-                />
-                <span>{need.label}</span>
-              </label>
-            {/each}
-          </div>
-        </div>
-
-        <div class="selection-group">
-          <h3>Determinanten ({selectedDeterminantIds.length} ausgewählt, {visibleDeterminants.length} sichtbar)</h3>
-          <div class="selection-grid">
-            {#each visibleDeterminants as determinant (determinant.id)}
-              <label class="selection-item">
-                <input
-                  type="checkbox"
-                  checked={selectedDeterminantIds.includes(determinant.id)}
-                  onchange={() => toggleDeterminantSelection(determinant.id)}
-                />
-                <span>{determinant.label}</span>
-              </label>
-            {/each}
-          </div>
-        </div>
       </section>
 
       <section class="card form-section">
@@ -418,6 +442,17 @@
   .counter-block, .uncertainty-block { margin-bottom: 0.75rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--color-border); }
   .counter-block-footer, .uncertainty-block-footer { display: flex; align-items: center; gap: 0.5rem; justify-content: space-between;}
   .field-counter-evidence { flex: 1; margin-bottom: 0; }
+  .exploration-header-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.75rem;
+  }
+  .exploration-selection-summary {
+    margin: 0;
+  }
   .selection-group { margin-bottom: 1rem; }
   .selection-group h3 { margin: 0 0 0.5rem 0; font-size: 0.9rem; color: var(--color-text); }
   .cluster-focus-controls {

@@ -92,7 +92,7 @@ export function filterItemsByClusterFocus(
 ): readonly CatalogItem[] {
   if (!isClusterFocusId(clusterId)) return items;
 
-  const allowedIds = new Set(type === 'need'
+  const allowedIds: ReadonlySet<string> = new Set(type === 'need'
     ? CLUSTER_FOCUS_ITEMS[clusterId].needs
     : CLUSTER_FOCUS_ITEMS[clusterId].determinants);
 

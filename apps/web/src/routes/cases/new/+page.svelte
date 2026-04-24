@@ -25,6 +25,14 @@
     shouldShowRemoveUncertaintyRow,
     DEFAULT_UNCERTAINTY_LEVEL
   } from '$lib/forms/new-case-form.js';
+  import {
+    normalizeObservationInput,
+    normalizeInterpretationInput,
+    normalizeCounterRows as normalizeCoreCounterRows,
+    normalizeUncertaintyRows as normalizeCoreUncertaintyRows,
+    type CounterInputRow,
+    type UncertaintyInputRow
+  } from '$lib/forms/perspective-core-form.js';
   import type { EvidenceType } from '$domain/types.js';
 
   let context = $state('');
@@ -195,24 +203,29 @@
 
     submitting = true;
     try {
+      const normalizedObservation = normalizeObservationInput({
+        observationText,
+        cameraState: isCameraDescribable
+      });
+      const normalizedInterpretation = normalizeInterpretationInput({
+        interpretationText,
+        interpretationEvidence
+      });
+      const normalizedCounters = normalizeCoreCounterRows(counterRows as CounterInputRow[]);
+      const normalizedUncertainties = normalizeCoreUncertaintyRows(uncertaintyRows as UncertaintyInputRow[]);
+
       const created = startNewCase({
         context: context.trim(),
         participants: filledParticipants(participants).map((p) => ({
           id: p.name,
           role: p.role
         })),
-        observationText: observationText.trim(),
-        isCameraDescribable,
-        interpretationText: interpretationText.trim(),
-        interpretationEvidenceType: interpretationEvidence,
-        counterInterpretations: filledCounterRows(counterRows).map((r) => ({
-          text: r.text,
-          evidenceType: r.evidence
-        })),
-        uncertainties: filledUncertaintyRows(uncertaintyRows).map((r) => ({
-          level: r.level,
-          rationale: r.rationale
-        }))
+        observationText: normalizedObservation?.text ?? '',
+        isCameraDescribable: normalizedObservation?.isCameraDescribable ?? false,
+        interpretationText: normalizedInterpretation?.text ?? '',
+        interpretationEvidenceType: normalizedInterpretation?.evidenceType ?? interpretationEvidence,
+        counterInterpretations: normalizedCounters,
+        uncertainties: normalizedUncertainties
       });
       goto(`/cases/${created.id}`);
     } catch (e: unknown) {
