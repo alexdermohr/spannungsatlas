@@ -23,12 +23,14 @@ describe('form convergence route wiring', () => {
     const sharedSlides = readFileSync(sharedSlidesFile, 'utf-8');
 
     expect(sharedSlides).toContain('2. Explorationsraum');
-    expect(sharedSlides).toContain('eigene Folie, kein Inline-Aufklappen');
+    expect(sharedSlides).toContain("import ExplorationSlide from '$lib/components/forms/perspective-core-slides/ExplorationSlide.svelte';");
 
     expect(newCaseRoute).not.toContain('isExplorationOpen');
     expect(newPerspectiveRoute).not.toContain('isExplorationOpen');
     expect(newCaseRoute).not.toContain('filterCatalogItems');
     expect(newPerspectiveRoute).not.toContain('filterCatalogItems');
+    expect(newCaseRoute).not.toContain('ExplorationSlide');
+    expect(newPerspectiveRoute).not.toContain('ExplorationSlide');
   });
 
   it('documents route-specific autosave behavior at the usage sites', () => {
