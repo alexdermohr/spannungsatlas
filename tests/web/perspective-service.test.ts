@@ -7,6 +7,7 @@ import {
   getComparablePerspectivesForCase,
   getDraftPerspectiveForActor,
   getSelectionDisplayForActor,
+  selectPerspectiveForSelectionDisplay,
 } from '../../apps/web/src/lib/services/case-service.js';
 import { localStorageStore } from '../../apps/web/src/lib/persistence/store.js';
 import type { Case } from '../../src/domain/types.js';
@@ -481,6 +482,84 @@ describe('case-service - perspective management', () => {
 
       const after = localStorageStore.loadCase('case-test')!;
       expect(after.currentReflection).toEqual(reflectionBefore);
+    });
+  });
+
+  describe('selectPerspectiveForSelectionDisplay (priority rule)', () => {
+    it('prefers draft over committed when both exist (defensive: historical/migrated data)', () => {
+      const draftPerspective = {
+        id: 'p-draft',
+        caseId: 'case-test',
+        actorId: 'actor-1',
+        status: 'draft' as const,
+        content: { selectedNeeds: [{ id: 'need_sec' }] },
+        createdAt: '2026-04-01T11:00:00Z'
+      };
+      const committedPerspective = {
+        id: 'p-committed',
+        caseId: 'case-test',
+        actorId: 'actor-1',
+        status: 'committed' as const,
+        content: {
+          observation: { text: 'obs', isCameraDescribable: true },
+          interpretation: { text: 'int', evidenceType: 'observational' as const },
+          counterInterpretations: [{ text: 'c', evidenceType: 'derived' as const }],
+          uncertainties: [{ level: 2 as const, rationale: 'u' }],
+          selectedNeeds: [{ id: 'need_aut' }]
+        },
+        createdAt: '2026-04-01T09:00:00Z',
+        committedAt: '2026-04-01T09:30:00Z'
+      };
+
+      const result = selectPerspectiveForSelectionDisplay([committedPerspective, draftPerspective]);
+      expect(result?.id).toBe('p-draft');
+    });
+
+    it('returns the committed perspective when no draft exists', () => {
+      const committedPerspective = {
+        id: 'p-only-committed',
+        caseId: 'case-test',
+        actorId: 'actor-1',
+        status: 'committed' as const,
+        content: {
+          observation: { text: 'obs', isCameraDescribable: true },
+          interpretation: { text: 'int', evidenceType: 'observational' as const },
+          counterInterpretations: [{ text: 'c', evidenceType: 'derived' as const }],
+          uncertainties: [{ level: 1 as const, rationale: 'u' }],
+          selectedNeeds: [{ id: 'need_sec' }]
+        },
+        createdAt: '2026-04-01T09:00:00Z',
+        committedAt: '2026-04-01T09:30:00Z'
+      };
+
+      const result = selectPerspectiveForSelectionDisplay([committedPerspective]);
+      expect(result?.id).toBe('p-only-committed');
+    });
+
+    it('returns the latest (by createdAt) when multiple same-status exist (defensive)', () => {
+      const older = {
+        id: 'p-older',
+        caseId: 'case-test',
+        actorId: 'actor-1',
+        status: 'draft' as const,
+        content: { selectedNeeds: [{ id: 'need_sec' }] },
+        createdAt: '2026-04-01T08:00:00Z'
+      };
+      const newer = {
+        id: 'p-newer',
+        caseId: 'case-test',
+        actorId: 'actor-1',
+        status: 'draft' as const,
+        content: { selectedNeeds: [{ id: 'need_aut' }] },
+        createdAt: '2026-04-01T12:00:00Z'
+      };
+
+      const result = selectPerspectiveForSelectionDisplay([older, newer]);
+      expect(result?.id).toBe('p-newer');
+    });
+
+    it('returns undefined for empty perspective list', () => {
+      expect(selectPerspectiveForSelectionDisplay([])).toBeUndefined();
     });
   });
 });

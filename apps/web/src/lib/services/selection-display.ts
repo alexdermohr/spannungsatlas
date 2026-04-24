@@ -1,15 +1,9 @@
 import { needs, determinants } from '$lib/catalog/catalog-data.js';
 import type { CatalogSelection } from '$domain/types.js';
 
-/**
- * Build a lookup map of catalog ID → catalog item (label + description).
- * Used to render selection metadata in case detail view.
- */
-function buildCatalogMaps() {
-  const needMap = new Map(needs.map((n) => [n.id, n]));
-  const determinantMap = new Map(determinants.map((d) => [d.id, d]));
-  return { needMap, determinantMap };
-}
+// Catalog maps are built once at module load time and reused across calls.
+const needMap = new Map(needs.map((n) => [n.id, n]));
+const determinantMap = new Map(determinants.map((d) => [d.id, d]));
 
 export interface SelectionMetadata {
   type: 'need' | 'determinant';
@@ -28,7 +22,9 @@ export interface FormattedSelectionsForDisplay {
 
 /**
  * Resolve a list of selection IDs to full catalog metadata.
- * Returns only entries that exist in the current catalog (handles missing/deleted ids gracefully).
+ * Known IDs are resolved to full catalog metadata.
+ * Unknown IDs (removed from the catalog since the selection was saved) are returned
+ * as legacy-unknown markers so historical selections remain visible.
  */
 export function resolveSelections(
   selections: readonly CatalogSelection[] | undefined,
@@ -36,7 +32,6 @@ export function resolveSelections(
 ): readonly SelectionMetadata[] {
   if (!selections || selections.length === 0) return [];
 
-  const { needMap, determinantMap } = buildCatalogMaps();
   const catalog = catalogType === 'need' ? needMap : determinantMap;
 
   return selections.map((sel) => {

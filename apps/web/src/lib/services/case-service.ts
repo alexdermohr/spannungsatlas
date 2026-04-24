@@ -193,6 +193,32 @@ export function getDraftPerspectiveForActor(caseId: string, requestingActorId: s
 }
 
 /**
+ * Selects the single perspective to use for selection display.
+ *
+ * Explicit priority rule (deterministic, independent of array order):
+ *   1. Draft — the actor is actively working on it and selections reflect current intent.
+ *   2. Committed — no draft present, show the committed state.
+ *   3. If multiple perspectives share the same status (defensive, should not occur in normal
+ *      operation given the single-perspective-per-actor invariant), pick the most recently
+ *      created one (latest createdAt ISO string).
+ *
+ * This function only receives perspectives that have already been filtered to the requesting
+ * actor via filterVisiblePerspectives, so it never sees another actor's data.
+ */
+export function selectPerspectiveForSelectionDisplay(
+  ownPerspectives: readonly PerspectiveRecord[]
+): PerspectiveRecord | undefined {
+  if (ownPerspectives.length === 0) return undefined;
+
+  const drafts = ownPerspectives.filter((p): p is typeof p & { status: 'draft' } => p.status === 'draft');
+  const candidates = drafts.length > 0 ? drafts : [...ownPerspectives];
+
+  return candidates.reduce((best, current) =>
+    current.createdAt > best.createdAt ? current : best
+  );
+}
+
+/**
  * Returns selection metadata for the requesting actor's own visible perspective.
  * In Phase 1 (strict blind), this never exposes another actor's perspective.
  */
@@ -203,7 +229,8 @@ export function getSelectionDisplayForActor(caseId: string, requestingActorId: s
   }
 
   const visiblePerspectives = filterVisiblePerspectives(c.perspectives || [], requestingActorId);
-  const ownPerspective = visiblePerspectives.find((p) => p.actorId === requestingActorId);
+  const ownPerspectives = visiblePerspectives.filter((p) => p.actorId === requestingActorId);
+  const ownPerspective = selectPerspectiveForSelectionDisplay(ownPerspectives);
 
   return formatSelectionsForDisplay(
     ownPerspective?.content.selectedNeeds,
