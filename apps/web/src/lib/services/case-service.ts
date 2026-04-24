@@ -3,6 +3,7 @@ import type { CreateCaseInput } from '$domain/factories.js';
 import { createCase, createPerspectiveDraftRecord, commitPerspectiveRecord, type CreatePerspectiveDraftInput } from '$domain/factories.js';
 import { canReadPerspective, canWritePerspective, canComparePerspectives, getComparablePerspectives, filterVisiblePerspectives } from '$domain/perspective-access.js';
 import { validateNewPerspectiveCatalogIds } from '$domain/exploration-catalog.js';
+import { formatSelectionsForDisplay, type FormattedSelectionsForDisplay } from '$lib/services/selection-display.js';
 import { localStorageStore, type PersistenceStore } from '$lib/persistence/store.js';
 
 export interface StartNewCaseInput {
@@ -189,4 +190,62 @@ export function getDraftPerspectiveForActor(caseId: string, requestingActorId: s
   const c = getCase(caseId);
   if (!c) return undefined;
   return (c.perspectives || []).find(p => p.actorId === requestingActorId && p.status === 'draft');
+}
+
+function createdAtMs(p: PerspectiveRecord): number {
+  const ms = Date.parse(p.createdAt);
+  return Number.isFinite(ms) ? ms : Number.NEGATIVE_INFINITY;
+}
+
+/**
+ * Selects the single perspective to use for selection display.
+ *
+ * Explicit priority rule (deterministic, independent of array order):
+ *   1. Draft — the actor is actively working on it and selections reflect current intent.
+ *   2. Committed — no draft present, show the committed state.
+ *   3. If multiple perspectives share the same status (defensive, should not occur in normal
+ *      operation given the single-perspective-per-actor invariant), pick the most recently
+ *      created one (latest parseable createdAt timestamp).
+ *
+ * This function does not enforce ownership itself. Callers must pass already actor-filtered
+ * perspectives (e.g. via filterVisiblePerspectives + actorId filter).
+ */
+export function selectPerspectiveForSelectionDisplay(
+  ownPerspectives: readonly PerspectiveRecord[]
+): PerspectiveRecord | undefined {
+  if (ownPerspectives.length === 0) return undefined;
+
+  const drafts = ownPerspectives.filter((p) => p.status === 'draft');
+  const candidates = drafts.length > 0 ? drafts : [...ownPerspectives];
+
+  return candidates.reduce((best, current) =>
+    createdAtMs(current) > createdAtMs(best) ? current : best
+  );
+}
+
+export function getSelectionDisplayForActorFromPerspectives(
+  perspectives: readonly PerspectiveRecord[] | undefined,
+  requestingActorId: string
+): FormattedSelectionsForDisplay {
+  const ownPerspectives = (perspectives || []).filter((p) => p.actorId === requestingActorId);
+  const ownPerspective = selectPerspectiveForSelectionDisplay(ownPerspectives);
+
+  return formatSelectionsForDisplay(
+    ownPerspective?.content.selectedNeeds,
+    ownPerspective?.content.selectedDeterminants
+  );
+}
+
+/**
+ * Returns selection metadata for the requesting actor's own visible perspective.
+ * In Phase 1 (strict blind), this never exposes another actor's perspective.
+ */
+export function getSelectionDisplayForActor(caseId: string, requestingActorId: string): FormattedSelectionsForDisplay {
+  const c = getCase(caseId);
+  if (!c) {
+    return formatSelectionsForDisplay(undefined, undefined);
+  }
+
+  const visiblePerspectives = filterVisiblePerspectives(c.perspectives || [], requestingActorId);
+  return getSelectionDisplayForActorFromPerspectives(visiblePerspectives, requestingActorId);
 }
