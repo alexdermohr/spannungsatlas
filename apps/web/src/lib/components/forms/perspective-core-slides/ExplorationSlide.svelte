@@ -15,8 +15,8 @@
     title: string;
     selectedNeedIds?: string[];
     selectedDeterminantIds?: string[];
-    activeClusterId?: string;
-    selectionSearch?: string;
+    activeClusterId: string;
+    selectionSearch: string;
     onChange?: () => void;
   } = $props();
 
