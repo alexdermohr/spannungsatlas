@@ -3,6 +3,7 @@ import type { CreateCaseInput } from '$domain/factories.js';
 import { createCase, createPerspectiveDraftRecord, commitPerspectiveRecord, type CreatePerspectiveDraftInput } from '$domain/factories.js';
 import { canReadPerspective, canWritePerspective, canComparePerspectives, getComparablePerspectives, filterVisiblePerspectives } from '$domain/perspective-access.js';
 import { validateNewPerspectiveCatalogIds } from '$domain/exploration-catalog.js';
+import { formatSelectionsForDisplay, type FormattedSelectionsForDisplay } from '$lib/services/selection-display.js';
 import { localStorageStore, type PersistenceStore } from '$lib/persistence/store.js';
 
 export interface StartNewCaseInput {
@@ -189,4 +190,23 @@ export function getDraftPerspectiveForActor(caseId: string, requestingActorId: s
   const c = getCase(caseId);
   if (!c) return undefined;
   return (c.perspectives || []).find(p => p.actorId === requestingActorId && p.status === 'draft');
+}
+
+/**
+ * Returns selection metadata for the requesting actor's own visible perspective.
+ * In Phase 1 (strict blind), this never exposes another actor's perspective.
+ */
+export function getSelectionDisplayForActor(caseId: string, requestingActorId: string): FormattedSelectionsForDisplay {
+  const c = getCase(caseId);
+  if (!c) {
+    return formatSelectionsForDisplay(undefined, undefined);
+  }
+
+  const visiblePerspectives = filterVisiblePerspectives(c.perspectives || [], requestingActorId);
+  const ownPerspective = visiblePerspectives.find((p) => p.actorId === requestingActorId);
+
+  return formatSelectionsForDisplay(
+    ownPerspective?.content.selectedNeeds,
+    ownPerspective?.content.selectedDeterminants
+  );
 }

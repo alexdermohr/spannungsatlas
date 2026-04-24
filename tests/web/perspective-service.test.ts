@@ -6,6 +6,7 @@ import {
   commitPerspective,
   getComparablePerspectivesForCase,
   getDraftPerspectiveForActor,
+  getSelectionDisplayForActor,
 } from '../../apps/web/src/lib/services/case-service.js';
 import { localStorageStore } from '../../apps/web/src/lib/persistence/store.js';
 import type { Case } from '../../src/domain/types.js';
@@ -427,6 +428,59 @@ describe('case-service - perspective management', () => {
 
       const p2 = getDraftPerspectiveForActor('case-test', 'actor-2');
       expect(p2).toBeUndefined();
+    });
+  });
+
+  describe('getSelectionDisplayForActor', () => {
+    it('shows selection metadata for own perspective selections', () => {
+      addDraftPerspective('case-test', {
+        ...DUMMY_INPUT,
+        id: 'p-own-sel',
+        actorId: 'actor-1',
+        selectedNeeds: [{ id: 'need_sec' }],
+        selectedDeterminants: [{ id: 'det_env' }]
+      }, 'actor-1');
+
+      const selectionDisplay = getSelectionDisplayForActor('case-test', 'actor-1');
+
+      expect(selectionDisplay.isEmpty).toBe(false);
+      expect(selectionDisplay.needs).toHaveLength(1);
+      expect(selectionDisplay.needs[0]?.id).toBe('need_sec');
+      expect(selectionDisplay.determinants).toHaveLength(1);
+      expect(selectionDisplay.determinants[0]?.id).toBe('det_env');
+    });
+
+    it('does not show selections from foreign perspectives in strict blind phase', () => {
+      addDraftPerspective('case-test', {
+        ...DUMMY_INPUT,
+        id: 'p-foreign-sel',
+        actorId: 'actor-2',
+        selectedNeeds: [{ id: 'need_soc' }],
+        selectedDeterminants: [{ id: 'det_group' }]
+      }, 'actor-2');
+
+      const selectionDisplay = getSelectionDisplayForActor('case-test', 'actor-1');
+
+      expect(selectionDisplay.isEmpty).toBe(true);
+      expect(selectionDisplay.needs).toEqual([]);
+      expect(selectionDisplay.determinants).toEqual([]);
+    });
+
+    it('does not mutate currentReflection when resolving perspective selections', () => {
+      const before = localStorageStore.loadCase('case-test')!;
+      const reflectionBefore = before.currentReflection;
+
+      addDraftPerspective('case-test', {
+        ...DUMMY_INPUT,
+        id: 'p-own-sel-immut',
+        actorId: 'actor-1',
+        selectedNeeds: [{ id: 'need_sec' }]
+      }, 'actor-1');
+
+      getSelectionDisplayForActor('case-test', 'actor-1');
+
+      const after = localStorageStore.loadCase('case-test')!;
+      expect(after.currentReflection).toEqual(reflectionBefore);
     });
   });
 });

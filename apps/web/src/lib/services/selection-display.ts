@@ -13,10 +13,17 @@ function buildCatalogMaps() {
 
 export interface SelectionMetadata {
   type: 'need' | 'determinant';
+  source: 'catalog' | 'legacy-unknown';
   id: string;
   label: string;
   short: string;
   description: string;
+}
+
+export interface FormattedSelectionsForDisplay {
+  needs: readonly SelectionMetadata[];
+  determinants: readonly SelectionMetadata[];
+  isEmpty: boolean;
 }
 
 /**
@@ -32,14 +39,26 @@ export function resolveSelections(
   const { needMap, determinantMap } = buildCatalogMaps();
   const catalog = catalogType === 'need' ? needMap : determinantMap;
 
-  return selections
-    .map((sel) => {
+  return selections.map((sel) => {
       const item = catalog.get(sel.id);
       return item
-        ? { type: catalogType, id: item.id, label: item.label, short: item.short, description: item.description }
-        : null;
-    })
-    .filter((meta): meta is SelectionMetadata => meta !== null);
+        ? {
+            type: catalogType,
+            source: 'catalog',
+            id: item.id,
+            label: item.label,
+            short: item.short,
+            description: item.description
+          }
+        : {
+            type: catalogType,
+            source: 'legacy-unknown',
+            id: sel.id,
+            label: `Unbekannter/veralteter Katalogeintrag: ${sel.id}`,
+            short: sel.id,
+            description: 'Historischer Eintrag, der im aktuellen Katalog nicht mehr vorhanden ist.'
+          };
+    });
 }
 
 /**
@@ -48,11 +67,7 @@ export function resolveSelections(
 export function formatSelectionsForDisplay(
   selectedNeeds: readonly CatalogSelection[] | undefined,
   selectedDeterminants: readonly CatalogSelection[] | undefined
-): {
-  needs: readonly SelectionMetadata[];
-  determinants: readonly SelectionMetadata[];
-  isEmpty: boolean;
-} {
+): FormattedSelectionsForDisplay {
   const needs = resolveSelections(selectedNeeds, 'need');
   const determinants = resolveSelections(selectedDeterminants, 'determinant');
   return {

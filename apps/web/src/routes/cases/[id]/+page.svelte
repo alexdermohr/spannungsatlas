@@ -1,10 +1,15 @@
 <script lang="ts">
   import { page } from '$app/state';
   import { onMount } from 'svelte';
-  import { getCase, getCommittedPerspectiveCount, getComparablePerspectivesForCase } from '$lib/services/case-service.js';
+  import {
+    getCase,
+    getCommittedPerspectiveCount,
+    getComparablePerspectivesForCase,
+    getSelectionDisplayForActor
+  } from '$lib/services/case-service.js';
   import { roleLabels, evidenceLabels } from '$lib/ui/labels.js';
   import { renderCaseAsMarkdown } from '$lib/services/case-report.js';
-  import { formatSelectionsForDisplay } from '$lib/services/selection-display.js';
+  import type { FormattedSelectionsForDisplay } from '$lib/services/selection-display.js';
   import type { Case, EvidenceType } from '$domain/types.js';
 
   let caseData: Case | null = $state(null);
@@ -15,6 +20,11 @@
   let isComparable: boolean = $state(false);
   let actorHasCommitted: boolean = $state(false);
   let actorHasDraft: boolean = $state(false);
+  let selectionDisplay: FormattedSelectionsForDisplay = $state({
+    needs: [],
+    determinants: [],
+    isEmpty: true
+  });
 
   function evidenceBadgeClass(t: EvidenceType): string {
     return `badge badge-${t}`;
@@ -50,7 +60,10 @@
   }
 
   function updateActorState() {
-    if (!caseData || !demoActorId) return;
+    if (!caseData || !demoActorId) {
+      selectionDisplay = { needs: [], determinants: [], isEmpty: true };
+      return;
+    }
 
     // All states derived directly from the loaded case object to ensure synchronous rendering
     // and avoid unnecessary localStorage reads.
@@ -60,6 +73,7 @@
     actorHasDraft = perspectives.some(p => p.actorId === demoActorId && p.status === 'draft');
     // Compare is available if the service layer allows it for the current phase
     isComparable = getComparablePerspectivesForCase(caseData.id, demoActorId).length > 0;
+    selectionDisplay = getSelectionDisplayForActor(caseData.id, demoActorId);
   }
 
   onMount(() => {
@@ -146,43 +160,40 @@
       {/if}
     </section>
 
-    <!-- Explorations-Selektionen -->
-    {#if caseData.currentReflection?.selectedNeeds || caseData.currentReflection?.selectedDeterminants}
-      {@const selections = formatSelectionsForDisplay(caseData.currentReflection?.selectedNeeds, caseData.currentReflection?.selectedDeterminants)}
-      {#if !selections.isEmpty}
-        <section class="card section">
-          <h2>Explorationsraum-Markierungen</h2>
-          <p class="helper">Bedürfnisse und Determinanten, die als Reflexionsanker markiert wurden.</p>
+    <!-- Explorations-Selektionen (eigene sichtbare Perspektive) -->
+    {#if !selectionDisplay.isEmpty}
+      <section class="card section">
+        <h2>Explorationsraum-Markierungen</h2>
+        <p class="helper">Bedürfnisse und Determinanten aus Ihrer eigenen Perspektive.</p>
 
-          {#if selections.needs.length > 0}
-            <div class="selection-category">
-              <h3>Bedürfnisse ({selections.needs.length})</h3>
-              <div class="selection-list">
-                {#each selections.needs as need}
-                  <div class="selection-item">
-                    <strong>{need.label}</strong>
-                    <p class="selection-desc">{need.description}</p>
-                  </div>
-                {/each}
-              </div>
+        {#if selectionDisplay.needs.length > 0}
+          <div class="selection-category">
+            <h3>Bedürfnisse ({selectionDisplay.needs.length})</h3>
+            <div class="selection-list">
+              {#each selectionDisplay.needs as need}
+                <div class="selection-item">
+                  <strong>{need.label}</strong>
+                  <p class="selection-desc">{need.description}</p>
+                </div>
+              {/each}
             </div>
-          {/if}
+          </div>
+        {/if}
 
-          {#if selections.determinants.length > 0}
-            <div class="selection-category">
-              <h3>Determinanten ({selections.determinants.length})</h3>
-              <div class="selection-list">
-                {#each selections.determinants as determinant}
-                  <div class="selection-item">
-                    <strong>{determinant.label}</strong>
-                    <p class="selection-desc">{determinant.description}</p>
-                  </div>
-                {/each}
-              </div>
+        {#if selectionDisplay.determinants.length > 0}
+          <div class="selection-category">
+            <h3>Determinanten ({selectionDisplay.determinants.length})</h3>
+            <div class="selection-list">
+              {#each selectionDisplay.determinants as determinant}
+                <div class="selection-item">
+                  <strong>{determinant.label}</strong>
+                  <p class="selection-desc">{determinant.description}</p>
+                </div>
+              {/each}
             </div>
-          {/if}
-        </section>
-      {/if}
+          </div>
+        {/if}
+      </section>
     {/if}
 
     <!-- Deutung -->
