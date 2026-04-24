@@ -35,25 +35,25 @@ export function resolveSelections(
   const catalog = catalogType === 'need' ? needMap : determinantMap;
 
   return selections.map((sel) => {
-      const item = catalog.get(sel.id);
-      return item
-        ? {
-            type: catalogType,
-            source: 'catalog',
-            id: item.id,
-            label: item.label,
-            short: item.short,
-            description: item.description
-          }
-        : {
-            type: catalogType,
-            source: 'legacy-unknown',
-            id: sel.id,
-            label: `Unbekannter/veralteter Katalogeintrag: ${sel.id}`,
-            short: sel.id,
-            description: 'Historischer Eintrag, der im aktuellen Katalog nicht mehr vorhanden ist.'
-          };
-    });
+    const item = catalog.get(sel.id);
+    return item
+      ? {
+          type: catalogType,
+          source: 'catalog',
+          id: item.id,
+          label: item.label,
+          short: item.short,
+          description: item.description
+        }
+      : {
+          type: catalogType,
+          source: 'legacy-unknown',
+          id: sel.id,
+          label: `Unbekannter/veralteter Katalogeintrag: ${sel.id}`,
+          short: sel.id,
+          description: 'Historischer Eintrag, der im aktuellen Katalog nicht mehr vorhanden ist.'
+        };
+  });
 }
 
 /**

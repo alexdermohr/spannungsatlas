@@ -192,6 +192,11 @@ export function getDraftPerspectiveForActor(caseId: string, requestingActorId: s
   return (c.perspectives || []).find(p => p.actorId === requestingActorId && p.status === 'draft');
 }
 
+function createdAtMs(p: PerspectiveRecord): number {
+  const ms = Date.parse(p.createdAt);
+  return Number.isFinite(ms) ? ms : Number.NEGATIVE_INFINITY;
+}
+
 /**
  * Selects the single perspective to use for selection display.
  *
@@ -200,21 +205,34 @@ export function getDraftPerspectiveForActor(caseId: string, requestingActorId: s
  *   2. Committed — no draft present, show the committed state.
  *   3. If multiple perspectives share the same status (defensive, should not occur in normal
  *      operation given the single-perspective-per-actor invariant), pick the most recently
- *      created one (latest createdAt ISO string).
+ *      created one (latest parseable createdAt timestamp).
  *
- * This function only receives perspectives that have already been filtered to the requesting
- * actor via filterVisiblePerspectives, so it never sees another actor's data.
+ * This function does not enforce ownership itself. Callers must pass already actor-filtered
+ * perspectives (e.g. via filterVisiblePerspectives + actorId filter).
  */
 export function selectPerspectiveForSelectionDisplay(
   ownPerspectives: readonly PerspectiveRecord[]
 ): PerspectiveRecord | undefined {
   if (ownPerspectives.length === 0) return undefined;
 
-  const drafts = ownPerspectives.filter((p): p is typeof p & { status: 'draft' } => p.status === 'draft');
+  const drafts = ownPerspectives.filter((p) => p.status === 'draft');
   const candidates = drafts.length > 0 ? drafts : [...ownPerspectives];
 
   return candidates.reduce((best, current) =>
-    current.createdAt > best.createdAt ? current : best
+    createdAtMs(current) > createdAtMs(best) ? current : best
+  );
+}
+
+export function getSelectionDisplayForActorFromPerspectives(
+  perspectives: readonly PerspectiveRecord[] | undefined,
+  requestingActorId: string
+): FormattedSelectionsForDisplay {
+  const ownPerspectives = (perspectives || []).filter((p) => p.actorId === requestingActorId);
+  const ownPerspective = selectPerspectiveForSelectionDisplay(ownPerspectives);
+
+  return formatSelectionsForDisplay(
+    ownPerspective?.content.selectedNeeds,
+    ownPerspective?.content.selectedDeterminants
   );
 }
 
@@ -229,11 +247,5 @@ export function getSelectionDisplayForActor(caseId: string, requestingActorId: s
   }
 
   const visiblePerspectives = filterVisiblePerspectives(c.perspectives || [], requestingActorId);
-  const ownPerspectives = visiblePerspectives.filter((p) => p.actorId === requestingActorId);
-  const ownPerspective = selectPerspectiveForSelectionDisplay(ownPerspectives);
-
-  return formatSelectionsForDisplay(
-    ownPerspective?.content.selectedNeeds,
-    ownPerspective?.content.selectedDeterminants
-  );
+  return getSelectionDisplayForActorFromPerspectives(visiblePerspectives, requestingActorId);
 }

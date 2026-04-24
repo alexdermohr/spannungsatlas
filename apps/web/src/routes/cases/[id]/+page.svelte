@@ -5,7 +5,7 @@
     getCase,
     getCommittedPerspectiveCount,
     getComparablePerspectivesForCase,
-    getSelectionDisplayForActor
+    getSelectionDisplayForActorFromPerspectives
   } from '$lib/services/case-service.js';
   import { roleLabels, evidenceLabels } from '$lib/ui/labels.js';
   import { renderCaseAsMarkdown } from '$lib/services/case-report.js';
@@ -73,7 +73,7 @@
     actorHasDraft = perspectives.some(p => p.actorId === demoActorId && p.status === 'draft');
     // Compare is available if the service layer allows it for the current phase
     isComparable = getComparablePerspectivesForCase(caseData.id, demoActorId).length > 0;
-    selectionDisplay = getSelectionDisplayForActor(caseData.id, demoActorId);
+    selectionDisplay = getSelectionDisplayForActorFromPerspectives(perspectives, demoActorId);
   }
 
   onMount(() => {
