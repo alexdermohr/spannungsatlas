@@ -1,4 +1,4 @@
-import type { Case, CaseParticipant, EvidenceType, UncertaintyLevel, PerspectiveRecord, PerspectiveCommittedRecord } from '$domain/types.js';
+import type { Case, CaseParticipant, CatalogSelection, EvidenceType, UncertaintyLevel, PerspectiveRecord, PerspectiveCommittedRecord } from '$domain/types.js';
 import type { CreateCaseInput } from '$domain/factories.js';
 import { createCase, createPerspectiveDraftRecord, commitPerspectiveRecord, type CreatePerspectiveDraftInput } from '$domain/factories.js';
 import { canReadPerspective, canWritePerspective, canComparePerspectives, getComparablePerspectives, filterVisiblePerspectives } from '$domain/perspective-access.js';
@@ -15,13 +15,36 @@ export interface StartNewCaseInput {
   interpretationEvidenceType: EvidenceType;
   counterInterpretations: Array<{ text: string; evidenceType: EvidenceType }>;
   uncertainties: Array<{ level: UncertaintyLevel; rationale: string }>;
+  /**
+   * Optional actor id under which the Case's first PerspectiveRecord is created.
+   * Defaults to the id of the first participant.
+   */
+  primaryActorId?: string;
+  /**
+   * Optional exploration selections belonging to the first perspective.
+   * Persisted on the PerspectiveRecord, never on currentReflection.
+   */
+  selectedNeeds?: readonly CatalogSelection[];
+  selectedDeterminants?: readonly CatalogSelection[];
 }
 
 const store: PersistenceStore = localStorageStore;
 
+/**
+ * Creates a Case and — as part of the same epistemic act — its first PerspectiveRecord
+ * for the primary actor. Exploration selections live exclusively on that perspective,
+ * never on currentReflection.
+ *
+ * The case's currentReflection remains as the canonical reflection snapshot
+ * (per MASTERPLAN §3.1), while the PerspectiveRecord carries the actor-attributed
+ * view (observation/interpretation/counters/uncertainties + selections) for the
+ * single-perspective-per-actor invariant.
+ */
 export function startNewCase(input: StartNewCaseInput): Case {
   const id = crypto.randomUUID();
   const now = new Date().toISOString();
+
+  const primaryActorId = input.primaryActorId ?? input.participants[0]?.id;
 
   const caseInput: CreateCaseInput = {
     id,
@@ -43,8 +66,56 @@ export function startNewCase(input: StartNewCaseInput): Case {
   };
 
   const created = createCase(caseInput);
-  store.saveCase(created);
-  return created;
+
+  // First-perspective persistence: if we have an actor, promote the freshly-created
+  // case into one that also carries an initial committed PerspectiveRecord.
+  let withFirstPerspective: Case = created;
+  if (primaryActorId) {
+    if (input.selectedNeeds || input.selectedDeterminants) {
+      const catalogErrors = validateNewPerspectiveCatalogIds(
+        input.selectedNeeds,
+        input.selectedDeterminants
+      );
+      if (catalogErrors.length > 0) {
+        throw new Error(`Invalid catalog selections: ${catalogErrors.join('; ')}`);
+      }
+    }
+
+    const draftId = crypto.randomUUID();
+    const draft = createPerspectiveDraftRecord({
+      id: draftId,
+      caseId: id,
+      actorId: primaryActorId,
+      createdAt: now,
+      observation: {
+        text: input.observationText,
+        isCameraDescribable: input.isCameraDescribable
+      },
+      interpretation: {
+        text: input.interpretationText,
+        evidenceType: input.interpretationEvidenceType
+      },
+      counterInterpretations: input.counterInterpretations.map((c) => ({
+        text: c.text,
+        evidenceType: c.evidenceType
+      })),
+      uncertainties: input.uncertainties.map((u) => ({
+        level: u.level,
+        rationale: u.rationale
+      })),
+      ...(input.selectedNeeds && input.selectedNeeds.length > 0
+        ? { selectedNeeds: input.selectedNeeds.map((s) => ({ id: s.id })) }
+        : {}),
+      ...(input.selectedDeterminants && input.selectedDeterminants.length > 0
+        ? { selectedDeterminants: input.selectedDeterminants.map((s) => ({ id: s.id })) }
+        : {})
+    });
+    const committed = commitPerspectiveRecord(draft, now);
+    withFirstPerspective = { ...created, perspectives: [committed] };
+  }
+
+  store.saveCase(withFirstPerspective);
+  return withFirstPerspective;
 }
 
 export function getCase(id: string): Case | null {
