@@ -17,7 +17,8 @@
   und werden von den Routen selbst vor oder neben diese Folien gesetzt.
 -->
 <script lang="ts">
-  import type { EvidenceType, UncertaintyLevel } from '$domain/types.js';
+  import type { EvidenceType } from '$domain/types.js';
+  import { clusters } from '$lib/catalog/catalog-data.js';
   import SlideNav from '$lib/components/forms/perspective-core-slides/SlideNav.svelte';
   import ObservationSlide from '$lib/components/forms/perspective-core-slides/ObservationSlide.svelte';
   import ExplorationSlide from '$lib/components/forms/perspective-core-slides/ExplorationSlide.svelte';
@@ -63,6 +64,10 @@
     onSubmit,
     onChange
   }: Props = $props();
+
+  // Parent-owned exploration UI state: keeps cluster/search when Folie 2 unmounts.
+  let activeClusterId = $state<string>(clusters[0]?.id ?? '');
+  let selectionSearch = $state('');
 
   const totalSlides = 6;
 
@@ -115,6 +120,8 @@
         title={slideTitles[1]}
         bind:selectedNeedIds
         bind:selectedDeterminantIds
+        bind:activeClusterId
+        bind:selectionSearch
         onChange={notifyChange}
       />
     {/if}

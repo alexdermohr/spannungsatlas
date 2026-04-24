@@ -20,7 +20,6 @@
 
   function addCounterRow() {
     counterRows = [...counterRows, { text: '', evidence: 'observational' }];
-    notifyChange();
   }
 
   function removeCounterRow(index: number) {

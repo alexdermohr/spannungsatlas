@@ -4,22 +4,21 @@
   import { filterItemsByClusterFocus, getClusterFocusItemIds } from '$lib/catalog/cluster-focus.js';
   import { toggleSelectionId } from '$lib/forms/exploration-selection-model.js';
 
-  interface Props {
-    title: string;
-    selectedNeedIds: string[];
-    selectedDeterminantIds: string[];
-    onChange?: () => void;
-  }
-
   let {
     title,
-    selectedNeedIds = $bindable(),
-    selectedDeterminantIds = $bindable(),
+    selectedNeedIds = $bindable<string[]>(),
+    selectedDeterminantIds = $bindable<string[]>(),
+    activeClusterId = $bindable<string>(),
+    selectionSearch = $bindable<string>(),
     onChange
-  }: Props = $props();
-
-  let activeClusterId = $state<string>(clusters[0]?.id ?? '');
-  let selectionSearch = $state('');
+  }: {
+    title: string;
+    selectedNeedIds?: string[];
+    selectedDeterminantIds?: string[];
+    activeClusterId?: string;
+    selectionSearch?: string;
+    onChange?: () => void;
+  } = $props();
 
   const activeCluster = $derived(
     clusters.find((cluster) => cluster.id === activeClusterId) ?? null
