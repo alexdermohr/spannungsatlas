@@ -2,43 +2,40 @@
   import { page } from '$app/state';
   import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
-  import { getCase, addDraftPerspective, commitPerspective, getDraftPerspectiveForActor } from '$lib/services/case-service.js';
-  import { clusters, needs, determinants } from '$lib/catalog/catalog-data.js';
-  import { filterCatalogItems } from '$lib/catalog/catalog-utils.js';
-  import { filterItemsByClusterFocus, getClusterFocusItemIds } from '$lib/catalog/cluster-focus.js';
   import {
-    selectedIdsFromCatalogSelections,
+    getCase,
+    addDraftPerspective,
+    commitPerspective,
+    getDraftPerspectiveForActor
+  } from '$lib/services/case-service.js';
+  import {
+    fromCatalogSelections,
     toCatalogSelections,
-    toggleSelectionId,
-  } from '$lib/forms/perspective-exploration-form.js';
+  } from '$lib/forms/exploration-selection-model.js';
+  import { buildPerspectiveDraftContent } from '$lib/forms/perspective-core-form.js';
   import { mapCameraStateToFormValue } from '$domain/form-mappers.js';
-  import { roleLabels, evidenceLabels, uncertaintyLabels } from '$lib/ui/labels.js';
+  import { roleLabels } from '$lib/ui/labels.js';
+  import PerspectiveCoreSlides from '$lib/components/forms/PerspectiveCoreSlides.svelte';
   import type { Case, EvidenceType, UncertaintyLevel } from '$domain/types.js';
 
   let caseId = $state('');
   let caseData: Case | null = $state(null);
   let loaded = $state(false);
-
-  // Simulated actor for access control. Nur Demo-Zugriffssimulation, keine echte Sicherheitsgrenze.
   let currentActorId = $state('User-1');
 
-  // Form State
   let observationText = $state('');
-  let isCameraDescribableStr = $state<"null" | "true" | "false">("null");
+  let isCameraDescribableStr = $state<'null' | 'true' | 'false'>('null');
   let interpretationText = $state('');
   let interpretationEvidence = $state<EvidenceType>('observational');
-
-  let counterRows = $state<{ text: string; evidence: EvidenceType }[]>([{ text: '', evidence: 'observational' }]);
-  let uncertaintyRows = $state<{ level: UncertaintyLevel; rationale: string }[]>([{ level: 2, rationale: '' }]);
+  let counterRows = $state<{ text: string; evidence: EvidenceType }[]>([
+    { text: '', evidence: 'observational' }
+  ]);
+  let uncertaintyRows = $state<{ level: UncertaintyLevel; rationale: string }[]>([
+    { level: 2, rationale: '' }
+  ]);
   let selectedNeedIds = $state<string[]>([]);
   let selectedDeterminantIds = $state<string[]>([]);
-  let activeClusterId = $state<string>(clusters[0]?.id ?? '');
-  let selectionSearch = $state('');
-  const uncertaintyLevelOptions: UncertaintyLevel[] = [0, 1, 2, 3, 4, 5];
-
-  const activeCluster = $derived(clusters.find((cluster) => cluster.id === activeClusterId) ?? null);
-  const visibleNeeds = $derived(filterItemsByClusterFocus(filterCatalogItems(needs, selectionSearch), activeClusterId, 'need'));
-  const visibleDeterminants = $derived(filterItemsByClusterFocus(filterCatalogItems(determinants, selectionSearch), activeClusterId, 'determinant'));
+  let currentSlide = $state(1);
 
   let draftId = $state<string | null>(null);
   let draftCreatedAt = $state<string | null>(null);
@@ -47,10 +44,9 @@
   onMount(() => {
     caseId = page.params.id ?? '';
     caseData = getCase(caseId);
-
-    // We auto-select the first participant as the actor for demo purposes, if none is set
-    currentActorId = page.url.searchParams.get('actor') || (caseData && caseData.participants.length > 0 ? caseData.participants[0].id : 'User-1');
-
+    currentActorId =
+      page.url.searchParams.get('actor') ||
+      (caseData && caseData.participants.length > 0 ? caseData.participants[0].id : 'User-1');
     loadDraft();
     loaded = true;
   });
@@ -60,31 +56,22 @@
     if (draft) {
       draftId = draft.id;
       draftCreatedAt = draft.createdAt;
-
       const obs = draft.content.observation;
       observationText = obs?.text ?? '';
       isCameraDescribableStr = mapCameraStateToFormValue(obs?.isCameraDescribable);
-
       const interp = draft.content.interpretation;
       interpretationText = interp?.text ?? '';
       interpretationEvidence = interp?.evidenceType ?? 'observational';
-
       const counters = draft.content.counterInterpretations;
-      if (counters && counters.length > 0) {
-        counterRows = counters.map(c => ({ text: c.text ?? '', evidence: c.evidenceType ?? 'observational' }));
-      } else {
-        counterRows = [{ text: '', evidence: 'observational' }];
-      }
-
+      counterRows = counters && counters.length > 0
+        ? counters.map((c) => ({ text: c.text ?? '', evidence: c.evidenceType ?? 'observational' }))
+        : [{ text: '', evidence: 'observational' }];
       const uncerts = draft.content.uncertainties;
-      if (uncerts && uncerts.length > 0) {
-        uncertaintyRows = uncerts.map(u => ({ level: u.level ?? 2, rationale: u.rationale ?? '' }));
-      } else {
-        uncertaintyRows = [{ level: 2, rationale: '' }];
-      }
-
-  selectedNeedIds = selectedIdsFromCatalogSelections(draft.content.selectedNeeds);
-  selectedDeterminantIds = selectedIdsFromCatalogSelections(draft.content.selectedDeterminants);
+      uncertaintyRows = uncerts && uncerts.length > 0
+        ? uncerts.map((u) => ({ level: u.level ?? 2, rationale: u.rationale ?? '' }))
+        : [{ level: 2, rationale: '' }];
+      selectedNeedIds = fromCatalogSelections(draft.content.selectedNeeds);
+      selectedDeterminantIds = fromCatalogSelections(draft.content.selectedDeterminants);
       errorMsg = '';
     } else {
       draftId = crypto.randomUUID();
@@ -101,88 +88,49 @@
     }
   }
 
-  function toggleNeedSelection(needId: string) {
-    selectedNeedIds = toggleSelectionId(selectedNeedIds, needId);
-    saveDraft();
-  }
-
-  function toggleDeterminantSelection(determinantId: string) {
-    selectedDeterminantIds = toggleSelectionId(selectedDeterminantIds, determinantId);
-    saveDraft();
-  }
-
-  function selectedNeedCountForCluster(clusterId: string): number {
-    const ids = new Set(getClusterFocusItemIds(clusterId).needs);
-    return selectedNeedIds.filter((id) => ids.has(id)).length;
-  }
-
-  function selectedDeterminantCountForCluster(clusterId: string): number {
-    const ids = new Set(getClusterFocusItemIds(clusterId).determinants);
-    return selectedDeterminantIds.filter((id) => ids.has(id)).length;
-  }
-
   function handleActorChange(e: Event) {
     const target = e.target as HTMLSelectElement;
     currentActorId = target.value;
     loadDraft();
   }
 
-  function addCounterRow() {
-    counterRows = [...counterRows, { text: '', evidence: 'observational' }];
-  }
-
-  function removeCounterRow(index: number) {
-    if (counterRows.length > 1) {
-      counterRows = counterRows.filter((_, i) => i !== index);
-    }
-  }
-
-  function addUncertaintyRow() {
-    uncertaintyRows = [...uncertaintyRows, { level: 2, rationale: '' }];
-  }
-
-  function removeUncertaintyRow(index: number) {
-    if (uncertaintyRows.length > 1) {
-      uncertaintyRows = uncertaintyRows.filter((_, i) => i !== index);
-    }
-  }
-
   function saveDraft(): { success: boolean; error?: string } {
     try {
       if (!draftId) draftId = crypto.randomUUID();
       if (!draftCreatedAt) draftCreatedAt = new Date().toISOString();
-
-      const counters = counterRows.filter(r => r.text.trim() !== '').map(r => ({ text: r.text, evidenceType: r.evidence }));
-      const uncerts = uncertaintyRows.filter(r => r.rationale.trim() !== '').map(r => ({ level: r.level, rationale: r.rationale }));
-
+      const draftContent = buildPerspectiveDraftContent({
+        observationText,
+        cameraState: isCameraDescribableStr,
+        interpretationText,
+        interpretationEvidence,
+        counterRows,
+        uncertaintyRows,
+        selectedNeeds: toCatalogSelections(selectedNeedIds),
+        selectedDeterminants: toCatalogSelections(selectedDeterminantIds)
+      });
       addDraftPerspective(caseId, {
         id: draftId,
         caseId,
         actorId: currentActorId,
         createdAt: draftCreatedAt,
-        observation: (observationText.trim() !== '' || isCameraDescribableStr !== 'null') ? {
-          text: observationText,
-          ...(isCameraDescribableStr !== 'null' ? { isCameraDescribable: isCameraDescribableStr === 'true' } : {})
-        } : undefined,
-        interpretation: interpretationText.trim() ? { text: interpretationText, evidenceType: interpretationEvidence } : undefined,
-        counterInterpretations: counters.length > 0 ? counters : undefined,
-        uncertainties: uncerts.length > 0 ? uncerts : undefined,
-        selectedNeeds: toCatalogSelections(selectedNeedIds),
-        selectedDeterminants: toCatalogSelections(selectedDeterminantIds)
+        observation: draftContent.observation,
+        interpretation: draftContent.interpretation,
+        counterInterpretations: draftContent.counterInterpretations,
+        uncertainties: draftContent.uncertainties,
+        selectedNeeds: draftContent.selectedNeeds,
+        selectedDeterminants: draftContent.selectedDeterminants
       }, currentActorId);
-
-      errorMsg = ''; // clear on success
+      errorMsg = '';
       return { success: true };
-    } catch (e: any) {
-      // Log unexpected errors but don't show to user while typing
-      return { success: false, error: e.message };
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      return { success: false, error: msg };
     }
   }
 
   function onCommit() {
     const result = saveDraft();
     if (!result.success) {
-      // Translate common validation errors
       let msg = result.error || 'Bitte füllen Sie alle Felder aus.';
       if (msg.includes('counter-interpretation') || msg.includes('Gegen-Deutung')) {
         msg = 'Für das Commit wird mindestens eine Gegen-Deutung benötigt.';
@@ -196,15 +144,13 @@
       errorMsg = msg;
       return;
     }
-
     try {
       commitPerspective(caseId, draftId!, currentActorId);
       goto(`/cases/${caseId}`);
-    } catch (e: any) {
-      errorMsg = e.message;
+    } catch (e: unknown) {
+      errorMsg = e instanceof Error ? e.message : String(e);
     }
   }
-
 </script>
 
 <div class="page">
@@ -220,15 +166,12 @@
     <h1>Neue Perspektive</h1>
     <p class="subtitle">Fall: <code>{caseId.slice(0, 8)}</code></p>
 
-    {#if errorMsg}
-      <div class="error-box">
-        <p><strong>Fehler:</strong> {errorMsg}</p>
-      </div>
-    {/if}
-
     <div class="card form-section simulated-auth">
       <h2>Wer sind Sie?</h2>
-      <p class="helper"><strong>Demo-Zugriffssimulation (später via Benutzerkonto).</strong> Ihr Draft ist nur für die gewählte Identität sichtbar, bis er committed wird.</p>
+      <p class="helper">
+        <strong>Demo-Zugriffssimulation (später via Benutzerkonto).</strong> Ihr Draft ist
+        nur für die gewählte Identität sichtbar, bis er committed wird.
+      </p>
       <label class="field">
         <select value={currentActorId} onchange={handleActorChange}>
           {#each caseData.participants as p}
@@ -239,264 +182,32 @@
       </label>
     </div>
 
-    <form onsubmit={(e) => { e.preventDefault(); onCommit(); }}>
-
-      <section class="card form-section">
-        <h2>1. Beobachtung</h2>
-        <p class="helper">Beschreiben Sie das Verhalten rein faktisch.</p>
-        <label class="field">
-          <textarea bind:value={observationText} oninput={saveDraft} rows="4" placeholder="z.B. Kind A wirft das Spielzeug..."></textarea>
-        </label>
-        <label class="field">
-          <span class="field-label">Ist diese Beschreibung rein beobachtbar (Kamera-Test)?</span>
-          <select bind:value={isCameraDescribableStr} onchange={saveDraft}>
-            <option value="null">Bitte wählen...</option>
-            <option value="true">Ja, rein beobachtbar</option>
-            <option value="false">Nein, enthält Wertungen/Deutungen</option>
-          </select>
-        </label>
-      </section>
-
-      <section class="card form-section">
-        <h2>2. Explorationsraum</h2>
-        <p class="helper">Markieren Sie relevante Bedürfnisse und Determinanten als Reflexionsanker. Es erfolgt keine automatische Deutung.</p>
-
-        <div class="cluster-focus-controls" role="group" aria-label="Cluster-Fokus">
-          {#each clusters as cluster (cluster.id)}
-            <button
-              type="button"
-              class:active={activeClusterId === cluster.id}
-              aria-pressed={activeClusterId === cluster.id}
-              onclick={() => activeClusterId = cluster.id}
-            >
-              <span>{cluster.short}</span>
-              <small aria-label={`Bedürfnisse ${selectedNeedCountForCluster(cluster.id)}, Determinanten ${selectedDeterminantCountForCluster(cluster.id)}`}>
-                {selectedNeedCountForCluster(cluster.id)} B / {selectedDeterminantCountForCluster(cluster.id)} D
-              </small>
-            </button>
-          {/each}
-        </div>
-
-        {#if activeCluster}
-          <div class="cluster-focus-card">
-            <h3>{activeCluster.label}</h3>
-            <p>{activeCluster.description}</p>
-          </div>
-        {/if}
-
-        <label class="field selection-search">
-          <span class="field-label">Suche im aktuellen Cluster-Fokus</span>
-          <input
-            type="text"
-            bind:value={selectionSearch}
-            placeholder="z. B. Sicherheit, Gruppe, Raum"
-          />
-        </label>
-
-        <div class="selection-group">
-          <h3>Bedürfnisse ({selectedNeedIds.length} ausgewählt, {visibleNeeds.length} sichtbar)</h3>
-          <div class="selection-grid">
-            {#each visibleNeeds as need (need.id)}
-              <label class="selection-item">
-                <input
-                  type="checkbox"
-                  checked={selectedNeedIds.includes(need.id)}
-                  onchange={() => toggleNeedSelection(need.id)}
-                />
-                <span>{need.label}</span>
-              </label>
-            {/each}
-          </div>
-        </div>
-
-        <div class="selection-group">
-          <h3>Determinanten ({selectedDeterminantIds.length} ausgewählt, {visibleDeterminants.length} sichtbar)</h3>
-          <div class="selection-grid">
-            {#each visibleDeterminants as determinant (determinant.id)}
-              <label class="selection-item">
-                <input
-                  type="checkbox"
-                  checked={selectedDeterminantIds.includes(determinant.id)}
-                  onchange={() => toggleDeterminantSelection(determinant.id)}
-                />
-                <span>{determinant.label}</span>
-              </label>
-            {/each}
-          </div>
-        </div>
-      </section>
-
-      <section class="card form-section">
-        <h2>3. Deutung</h2>
-        <p class="helper">Wie deuten Sie die Beobachtung?</p>
-        <label class="field">
-          <textarea bind:value={interpretationText} oninput={saveDraft} rows="4"></textarea>
-        </label>
-        <label class="field">
-          <span class="field-label">Evidenztyp</span>
-          <select bind:value={interpretationEvidence} onchange={saveDraft}>
-            {#each Object.entries(evidenceLabels) as [value, label]}
-              <option {value}>{label}</option>
-            {/each}
-          </select>
-        </label>
-      </section>
-
-      <section class="card form-section">
-        <h2>4. Gegen-Deutungen</h2>
-        <p class="helper">Welche alternative Erklärung wäre denkbar?</p>
-        {#each counterRows as row, i}
-          <div class="counter-block">
-            <span class="block-sub-heading">Gegen-Deutung {i + 1}</span>
-            <label class="field">
-              <textarea bind:value={row.text} oninput={saveDraft} rows="3"></textarea>
-            </label>
-            <div class="counter-block-footer">
-              <label class="field field-counter-evidence">
-                <select bind:value={row.evidence} onchange={saveDraft}>
-                  {#each Object.entries(evidenceLabels) as [value, label]}
-                    <option {value}>{label}</option>
-                  {/each}
-                </select>
-              </label>
-              {#if counterRows.length > 1}
-                <button type="button" class="btn-remove" onclick={() => { removeCounterRow(i); saveDraft(); }} aria-label={`Gegen-Deutung ${i + 1} entfernen`}>×</button>
-              {/if}
-            </div>
-          </div>
-        {/each}
-        <button type="button" class="btn" onclick={addCounterRow}>+ Weitere Gegen-Deutung</button>
-      </section>
-
-      <section class="card form-section">
-        <h2>5. Unsicherheit</h2>
-        <p class="helper">Wie sicher sind Sie sich?</p>
-        {#each uncertaintyRows as row, i}
-          <div class="uncertainty-block">
-            <span class="block-sub-heading">Unsicherheit {i + 1}</span>
-            <label class="field">
-              <span class="field-label">Stufe</span>
-              <select bind:value={row.level} onchange={saveDraft}>
-                {#each uncertaintyLevelOptions as lvl}
-                  <option value={lvl}>{uncertaintyLabels[lvl]}</option>
-                {/each}
-              </select>
-            </label>
-            <label class="field">
-              <span class="field-label">Begründung</span>
-              <textarea bind:value={row.rationale} oninput={saveDraft} rows="2"></textarea>
-            </label>
-            <div class="uncertainty-block-footer">
-               {#if uncertaintyRows.length > 1}
-                <button type="button" class="btn-remove" onclick={() => { removeUncertaintyRow(i); saveDraft(); }} aria-label={`Unsicherheit ${i + 1} entfernen`}>×</button>
-              {/if}
-            </div>
-          </div>
-        {/each}
-        <button type="button" class="btn" onclick={addUncertaintyRow}>+ Weitere Unsicherheit</button>
-      </section>
-
-      <div class="form-actions">
-        <button type="submit" class="btn btn-primary">Perspektive committen</button>
-        <a href="/cases/{caseId}" class="btn">Abbrechen</a>
-      </div>
-    </form>
+    <PerspectiveCoreSlides
+      bind:observationText
+      bind:isCameraDescribableStr
+      bind:interpretationText
+      bind:interpretationEvidence
+      bind:counterRows
+      bind:uncertaintyRows
+      bind:selectedNeedIds
+      bind:selectedDeterminantIds
+      bind:currentSlide
+      submitLabel="Perspektive committen"
+      cancelHref={`/cases/${caseId}`}
+      errorMsg={errorMsg}
+      onSubmit={onCommit}
+      onChange={saveDraft}
+    />
   {/if}
 </div>
 
 <style>
   .subtitle { color: var(--color-text-muted); margin-top: -0.5rem; margin-bottom: 1.5rem; }
-  .error-box { background: var(--color-error-bg); border: 1px solid var(--color-error-border); border-radius: var(--radius); padding: 0.75rem 1rem; margin-bottom: 1.25rem; color: var(--color-danger); }
   .form-section { margin-bottom: 1.25rem; }
   .form-section h2 { font-size: 1.05rem; margin-bottom: 0.25rem; color: var(--color-accent); }
   .helper { font-size: 0.85rem; color: var(--color-text-muted); margin-top: 0; margin-bottom: 1rem; }
   .field { display: block; margin-bottom: 0.75rem; }
-  .field-label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.3rem; }
-  textarea, select { width: 100%; padding: 0.5rem 0.65rem; border: 1px solid var(--color-border); border-radius: var(--radius); font-family: inherit; font-size: 0.9rem; background: var(--color-bg); color: var(--color-text); }
-  textarea:focus, select:focus { outline: 2px solid var(--color-accent); outline-offset: -1px; border-color: var(--color-accent); }
-  .form-actions { display: flex; gap: 0.75rem; margin-top: 0.5rem; margin-bottom: 2rem; }
-  .counter-block, .uncertainty-block { margin-bottom: 0.75rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--color-border); }
-  .counter-block-footer, .uncertainty-block-footer { display: flex; align-items: center; gap: 0.5rem; justify-content: space-between;}
-  .field-counter-evidence { flex: 1; margin-bottom: 0; }
-  .selection-group { margin-bottom: 1rem; }
-  .selection-group h3 { margin: 0 0 0.5rem 0; font-size: 0.9rem; color: var(--color-text); }
-  .cluster-focus-controls {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 0.5rem;
-    margin-bottom: 0.65rem;
-  }
-  .cluster-focus-controls button {
-    border: 1px solid var(--color-border);
-    background: var(--color-bg);
-    border-radius: var(--radius);
-    padding: 0.45rem 0.6rem;
-    text-align: left;
-    color: var(--color-text);
-    font-size: 0.82rem;
-    cursor: pointer;
-  }
-  .cluster-focus-controls button.active {
-    border-color: var(--color-accent);
-    box-shadow: inset 0 0 0 1px var(--color-accent);
-  }
-  .cluster-focus-controls button small {
-    display: block;
-    margin-top: 0.2rem;
-    color: var(--color-text-muted);
-    font-size: 0.74rem;
-  }
-  .cluster-focus-card {
-    border: 1px dashed var(--color-border);
-    border-radius: var(--radius);
-    padding: 0.55rem 0.7rem;
-    margin-bottom: 0.75rem;
-    background: rgba(45, 90, 155, 0.04);
-  }
-  .cluster-focus-card h3 {
-    margin: 0 0 0.3rem 0;
-    color: var(--color-text);
-    font-size: 0.9rem;
-  }
-  .cluster-focus-card p {
-    margin: 0;
-    font-size: 0.82rem;
-    color: var(--color-text-muted);
-  }
-  .selection-search { margin-bottom: 0.85rem; }
-  .selection-search input {
-    width: 100%;
-    padding: 0.5rem 0.65rem;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius);
-    font-family: inherit;
-    font-size: 0.9rem;
-    background: var(--color-bg);
-    color: var(--color-text);
-  }
-  .selection-search input:focus {
-    outline: 2px solid var(--color-accent);
-    outline-offset: -1px;
-    border-color: var(--color-accent);
-  }
-  .selection-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-    gap: 0.5rem;
-  }
-  .selection-item {
-    display: flex;
-    gap: 0.5rem;
-    align-items: flex-start;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius);
-    padding: 0.5rem 0.65rem;
-    background: var(--color-bg);
-    font-size: 0.85rem;
-  }
-  .selection-item input { margin-top: 0.15rem; width: auto; }
-  .block-sub-heading { display: block; font-size: 0.82rem; font-weight: 600; color: var(--color-text-muted); margin-bottom: 0.3rem; }
-  .btn-remove { background: none; border: 1px solid var(--color-border); border-radius: var(--radius); cursor: pointer; font-size: 1.1rem; line-height: 1; padding: 0.45rem 0.6rem; color: var(--color-text-muted); }
-  .btn-remove:hover { color: var(--color-danger); border-color: var(--color-danger); }
+  select { width: 100%; padding: 0.5rem 0.65rem; border: 1px solid var(--color-border); border-radius: var(--radius); font-family: inherit; font-size: 0.9rem; background: var(--color-bg); color: var(--color-text); }
+  select:focus { outline: 2px solid var(--color-accent); outline-offset: -1px; border-color: var(--color-accent); }
   .simulated-auth { border: 2px dashed var(--color-accent); background: rgba(45, 90, 155, 0.05); }
 </style>

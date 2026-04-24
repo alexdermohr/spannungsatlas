@@ -114,6 +114,98 @@ describe('startNewCase', () => {
     expect(persisted.currentReflection.uncertainties).toHaveLength(2);
   });
 
+  it('produces a first committed PerspectiveRecord for the primary actor', () => {
+    const created = startNewCase({
+      context: 'Morgenkreis',
+      participants: [
+        { id: 'Anna', role: 'primary' },
+        { id: 'Ben', role: 'secondary' }
+      ],
+      observationText: 'Anna schaut auf den Boden.',
+      isCameraDescribable: true,
+      interpretationText: 'Anna wirkt gehemmt.',
+      interpretationEvidenceType: 'derived',
+      counterInterpretations: [{ text: 'Anna ist müde.', evidenceType: 'speculative' }],
+      uncertainties: [{ level: 3, rationale: 'Nur eine Beobachtung.' }],
+      selectedNeeds: [{ id: 'need_sec' }],
+      selectedDeterminants: [{ id: 'det_env' }]
+    });
+
+    expect(created.perspectives).toHaveLength(1);
+    const first = created.perspectives![0]!;
+    expect(first.status).toBe('committed');
+    expect(first.actorId).toBe('Anna');
+    expect(first.content.observation?.text).toBe('Anna schaut auf den Boden.');
+    expect(first.content.interpretation?.text).toBe('Anna wirkt gehemmt.');
+    expect(first.content.counterInterpretations?.[0]!.text).toBe('Anna ist müde.');
+    expect(first.content.uncertainties?.[0]!.level).toBe(3);
+    expect(first.content.selectedNeeds).toEqual([{ id: 'need_sec' }]);
+    expect(first.content.selectedDeterminants).toEqual([{ id: 'det_env' }]);
+
+    expect(first.content.observation).toEqual({
+      text: created.observation.text,
+      isCameraDescribable: created.observation.isCameraDescribable
+    });
+    expect(first.content.interpretation).toEqual(created.currentReflection.interpretation);
+    expect(first.content.counterInterpretations).toEqual(created.currentReflection.counterInterpretations);
+    expect(first.content.uncertainties).toEqual(created.currentReflection.uncertainties);
+  });
+
+  it('keeps selections off currentReflection even when first perspective is created', () => {
+    const created = startNewCase({
+      context: 'Morgenkreis',
+      participants: [{ id: 'Anna', role: 'primary' }],
+      observationText: 'Anna schaut auf den Boden.',
+      isCameraDescribable: true,
+      interpretationText: 'Anna wirkt gehemmt.',
+      interpretationEvidenceType: 'derived',
+      counterInterpretations: [{ text: 'Anna ist müde.', evidenceType: 'speculative' }],
+      uncertainties: [{ level: 3, rationale: 'Nur eine Beobachtung.' }],
+      selectedNeeds: [{ id: 'need_sec' }],
+      selectedDeterminants: [{ id: 'det_env' }]
+    });
+
+    const reflection = created.currentReflection as unknown as Record<string, unknown>;
+    expect(reflection.selectedNeeds).toBeUndefined();
+    expect(reflection.selectedDeterminants).toBeUndefined();
+  });
+
+  it('uses explicit primaryActorId over first participant for the first perspective', () => {
+    const created = startNewCase({
+      context: 'Morgenkreis',
+      participants: [
+        { id: 'Anna', role: 'primary' },
+        { id: 'Ben', role: 'secondary' }
+      ],
+      primaryActorId: 'Ben',
+      observationText: 'Ben verlässt den Kreis.',
+      isCameraDescribable: true,
+      interpretationText: 'Ben zeigt Rückzug.',
+      interpretationEvidenceType: 'derived',
+      counterInterpretations: [{ text: 'Ben musste zur Toilette.', evidenceType: 'speculative' }],
+      uncertainties: [{ level: 2, rationale: 'Kurzer Zeitraum.' }]
+    });
+
+    expect(created.perspectives).toHaveLength(1);
+    expect(created.perspectives![0]!.actorId).toBe('Ben');
+  });
+
+  it('rejects invalid catalog selections with a clear error', () => {
+    expect(() =>
+      startNewCase({
+        context: 'x',
+        participants: [{ id: 'Anna', role: 'primary' }],
+        observationText: 'Beobachtung.',
+        isCameraDescribable: true,
+        interpretationText: 'Deutung.',
+        interpretationEvidenceType: 'derived',
+        counterInterpretations: [{ text: 'Gegen-Deutung.', evidenceType: 'speculative' }],
+        uncertainties: [{ level: 2, rationale: 'Grund.' }],
+        selectedNeeds: [{ id: 'does-not-exist' }]
+      })
+    ).toThrow(/Invalid catalog selections/);
+  });
+
   it('deletes a case by id and removes it from storage', () => {
     const created = startNewCase({
       context: 'Morgenkreis',
