@@ -23,6 +23,7 @@
 
   function addUncertaintyRow() {
     uncertaintyRows = [...uncertaintyRows, { level: 2, rationale: '' }];
+    notifyChange();
   }
 
   function removeUncertaintyRow(index: number) {
