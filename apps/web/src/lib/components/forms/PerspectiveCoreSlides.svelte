@@ -98,6 +98,7 @@
 
 <div class="slides-root">
   <SlideNav {slideTitles} {currentSlide} onSelect={gotoSlide} />
+  <div class="slide-progress" aria-live="polite">Schritt {currentSlide} von {totalSlides}</div>
 
   {#if errorMsg}
     <div class="error-box" role="alert">
@@ -187,6 +188,12 @@
 
 <style>
   .slides-root { display: block; }
+  .slide-progress {
+    font-size: 0.78rem;
+    color: var(--color-text-muted);
+    margin-top: -0.5rem;
+    margin-bottom: 0.75rem;
+  }
   .error-box {
     background: var(--color-error-bg);
     border: 1px solid var(--color-error-border);

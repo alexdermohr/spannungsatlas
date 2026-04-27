@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { CounterRow, UncertaintyRow, CameraStateStr } from './types.js';
+  import { evidenceLabels, uncertaintyLabels } from '$lib/ui/labels.js';
 
   interface Props {
     title: string;
@@ -22,6 +23,9 @@
     selectedNeedIds,
     selectedDeterminantIds
   }: Props = $props();
+
+  const filledCounterRows = $derived(counterRows.filter((r) => r.text.trim() !== ''));
+  const filledUncertaintyRows = $derived(uncertaintyRows.filter((r) => r.rationale.trim() !== ''));
 </script>
 
 <section class="card form-section slide">
@@ -47,10 +51,36 @@
     <dd>{interpretationText.trim() || '— (noch leer)'}</dd>
 
     <dt>Gegen-Deutungen</dt>
-    <dd>{counterRows.filter((r) => r.text.trim() !== '').length} gefüllt</dd>
+    <dd>
+      {#if filledCounterRows.length}
+        <ol class="review-list">
+          {#each filledCounterRows as row}
+            <li>
+              <span class="review-item-text">{row.text.trim()}</span>
+              <small class="review-item-meta">{evidenceLabels[row.evidence]}</small>
+            </li>
+          {/each}
+        </ol>
+      {:else}
+        — (noch leer)
+      {/if}
+    </dd>
 
     <dt>Unsicherheiten</dt>
-    <dd>{uncertaintyRows.filter((r) => r.rationale.trim() !== '').length} gefüllt</dd>
+    <dd>
+      {#if filledUncertaintyRows.length}
+        <ol class="review-list">
+          {#each filledUncertaintyRows as row}
+            <li>
+              <span class="review-item-text">{row.rationale.trim()}</span>
+              <small class="review-item-meta">Stufe {uncertaintyLabels[row.level]}</small>
+            </li>
+          {/each}
+        </ol>
+      {:else}
+        — (noch leer)
+      {/if}
+    </dd>
 
     <dt>Exploration</dt>
     <dd>
@@ -73,11 +103,29 @@
     font-weight: 600;
     font-size: 0.82rem;
     color: var(--color-text-muted);
+    padding-top: 0.15rem;
   }
   .summary-list dd {
     margin: 0;
     font-size: 0.9rem;
     color: var(--color-text);
     white-space: pre-wrap;
+  }
+  .review-list {
+    margin: 0;
+    padding-left: 1.1rem;
+    list-style: decimal;
+    white-space: normal;
+  }
+  .review-list li {
+    margin-bottom: 0.3rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+  }
+  .review-item-text { font-size: 0.9rem; }
+  .review-item-meta {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
   }
 </style>

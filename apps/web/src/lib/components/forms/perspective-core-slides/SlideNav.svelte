@@ -6,29 +6,47 @@
   }
 
   let { slideTitles, currentSlide, onSelect }: Props = $props();
+
+  const activeTitle = $derived(
+    (slideTitles[currentSlide - 1] ?? '').replace(/^\d+\.\s*/, '')
+  );
 </script>
 
-<nav class="slide-nav" aria-label="Formularfolien">
-  {#each slideTitles as title, i}
-    <button
-      type="button"
-      class="slide-nav-item"
-      class:active={currentSlide === i + 1}
-      aria-current={currentSlide === i + 1 ? 'step' : undefined}
-      onclick={() => onSelect(i + 1)}
-    >
-      <span class="slide-nav-step">{i + 1}</span>
-      <span class="slide-nav-label">{title.replace(/^\d+\.\s*/, '')}</span>
-    </button>
-  {/each}
-</nav>
+<div class="slide-nav-wrapper">
+  <div class="slide-nav-current" aria-live="polite">
+    Aktueller Schritt: {currentSlide}. {activeTitle}
+  </div>
+  <nav class="slide-nav" aria-label="Formularfolien">
+    {#each slideTitles as title, i}
+      <button
+        type="button"
+        class="slide-nav-item"
+        class:active={currentSlide === i + 1}
+        aria-current={currentSlide === i + 1 ? 'step' : undefined}
+        onclick={() => onSelect(i + 1)}
+      >
+        <span class="slide-nav-step">{i + 1}</span>
+        <span class="slide-nav-label">{title.replace(/^\d+\.\s*/, '')}</span>
+      </button>
+    {/each}
+  </nav>
+</div>
 
 <style>
+  .slide-nav-wrapper {
+    margin-bottom: 1rem;
+  }
+  .slide-nav-current {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--color-accent);
+    padding: 0.3rem 0.5rem 0.3rem 0;
+    display: none;
+  }
   .slide-nav {
     display: flex;
     flex-wrap: wrap;
     gap: 0.35rem;
-    margin-bottom: 1rem;
     padding: 0.5rem;
     border: 1px solid var(--color-border);
     border-radius: var(--radius);
@@ -70,6 +88,7 @@
   }
 
   @media (max-width: 640px) {
+    .slide-nav-current { display: block; }
     .slide-nav-label { display: none; }
   }
 </style>
