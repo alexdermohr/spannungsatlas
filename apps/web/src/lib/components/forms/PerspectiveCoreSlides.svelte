@@ -98,7 +98,7 @@
 
 <div class="slides-root">
   <SlideNav {slideTitles} {currentSlide} onSelect={gotoSlide} />
-  <div class="slide-progress" aria-live="polite">Schritt {currentSlide} von {totalSlides}</div>
+  <div class="slide-progress">Schritt {currentSlide} von {totalSlides}</div>
 
   {#if errorMsg}
     <div class="error-box" role="alert">

@@ -73,7 +73,7 @@
           {#each filledUncertaintyRows as row}
             <li>
               <span class="review-item-text">{row.rationale.trim()}</span>
-              <small class="review-item-meta">Stufe {uncertaintyLabels[row.level]}</small>
+              <small class="review-item-meta">Unsicherheit: {uncertaintyLabels[row.level]}</small>
             </li>
           {/each}
         </ol>
