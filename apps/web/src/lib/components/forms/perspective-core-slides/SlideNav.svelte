@@ -23,6 +23,7 @@
         class="slide-nav-item"
         class:active={currentSlide === i + 1}
         aria-current={currentSlide === i + 1 ? 'step' : undefined}
+        aria-label={`Schritt ${i + 1}: ${title.replace(/^\d+\.\s*/, '')}`}
         onclick={() => onSelect(i + 1)}
       >
         <span class="slide-nav-step">{i + 1}</span>
@@ -37,11 +38,15 @@
     margin-bottom: 1rem;
   }
   .slide-nav-current {
-    font-size: 0.82rem;
-    font-weight: 600;
-    color: var(--color-accent);
-    padding: 0.3rem 0.5rem 0.3rem 0;
-    display: none;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
   }
   .slide-nav {
     display: flex;
@@ -88,7 +93,21 @@
   }
 
   @media (max-width: 640px) {
-    .slide-nav-current { display: block; }
+    .slide-nav-current {
+      position: static;
+      width: auto;
+      height: auto;
+      margin: 0;
+      overflow: visible;
+      clip: auto;
+      white-space: normal;
+      border: 0;
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--color-accent);
+      padding: 0.3rem 0.5rem 0.3rem 0;
+    }
     .slide-nav-label { display: none; }
   }
 </style>

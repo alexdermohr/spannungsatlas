@@ -22,15 +22,37 @@ describe('perspective layout invariants', () => {
     expect(src).toContain('slideTitles[currentSlide - 1]');
   });
 
+  it('SlideNav gives step buttons semantic aria-labels', () => {
+    const src = readFileSync(slideNavFile, 'utf-8');
+    expect(src).toContain('aria-label={`Schritt ${i + 1}:');
+  });
+
+  it('SlideNav keeps the active step live region in the accessibility tree', () => {
+    const src = readFileSync(slideNavFile, 'utf-8');
+    // Find the base .slide-nav-current rule (before any @media block)
+    const mediaIdx = src.indexOf('@media');
+    const baseRules = mediaIdx >= 0 ? src.slice(0, mediaIdx) : src;
+    const ruleMatch = baseRules.match(/\.slide-nav-current\s*\{([^}]*)\}/);
+    expect(ruleMatch).not.toBeNull();
+    const ruleBody = ruleMatch![1];
+    // Must use visually-hidden pattern, not display:none
+    expect(ruleBody).not.toMatch(/display:\s*none/);
+    expect(ruleBody).toMatch(/position:\s*absolute/);
+    expect(ruleBody).toMatch(/width:\s*1px/);
+    expect(ruleBody).toMatch(/clip:/);
+  });
+
   it('SlideNav hides labels on mobile but keeps active step indicator visible', () => {
     const src = readFileSync(slideNavFile, 'utf-8');
     expect(src).toMatch(/max-width:\s*640px/);
     expect(src).toContain('slide-nav-label');
-    // The active step indicator class must be distinct from the hidden label
     expect(src).toContain('slide-nav-current');
-    // On mobile, slide-nav-current is shown (display: block) while slide-nav-label is hidden
-    const mobileBlock = src.slice(src.indexOf('@media (max-width: 640px)'));
-    expect(mobileBlock).toMatch(/slide-nav-current\s*\{[^}]*display:\s*block/);
+    // Use regex-based index to find the media block
+    const mobileMediaMatch = src.match(/@media\s*\(\s*max-width:\s*640px\s*\)/);
+    expect(mobileMediaMatch?.index).toBeGreaterThanOrEqual(0);
+    const mobileBlock = src.slice(mobileMediaMatch!.index);
+    // Mobile restores slide-nav-current to visible (display: block)
+    expect(mobileBlock).toMatch(/slide-nav-current[\s\S]*?display:\s*block/);
     expect(mobileBlock).toMatch(/slide-nav-label\s*\{[^}]*display:\s*none/);
   });
 
@@ -44,9 +66,7 @@ describe('perspective layout invariants', () => {
   it('ReviewSlide renders counterRows as a list, not just a count', () => {
     const src = readFileSync(reviewSlideFile, 'utf-8');
     expect(src).toContain('filledCounterRows');
-    // Iterates over filled entries
     expect(src).toMatch(/each filledCounterRows/);
-    // Shows evidence label
     expect(src).toContain('evidenceLabels[row.evidence]');
   });
 
@@ -59,17 +79,21 @@ describe('perspective layout invariants', () => {
 
   it('ReviewSlide shows empty-state placeholder when lists are empty', () => {
     const src = readFileSync(reviewSlideFile, 'utf-8');
-    // Both branches should have an else with empty placeholder
     const emptyPlaceholderCount = (src.match(/noch leer/g) ?? []).length;
     expect(emptyPlaceholderCount).toBeGreaterThanOrEqual(2);
   });
 
-  it('PerspectiveCoreSlides shows a step progress indicator', () => {
+  it('PerspectiveCoreSlides shows a step progress indicator without a second live region', () => {
     const src = readFileSync(sharedSlidesFile, 'utf-8');
     expect(src).toContain('Schritt');
     expect(src).toContain('totalSlides');
     expect(src).toContain('currentSlide');
     expect(src).toContain('slide-progress');
+    // slide-progress must not be a live region (that role belongs to SlideNav)
+    const progressMatch = src.match(/<div[^>]*class="slide-progress"[^>]*>/);
+    expect(progressMatch).not.toBeNull();
+    expect(progressMatch![0]).not.toContain('aria-live');
+    expect(progressMatch![0]).not.toContain('role="status"');
   });
 
   it('PerspectiveCoreSlides remains shared across both routes', () => {
