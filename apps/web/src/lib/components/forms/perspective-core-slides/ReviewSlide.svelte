@@ -84,7 +84,11 @@
 
     <dt>Exploration</dt>
     <dd>
-      {selectedNeedIds.length} Bedürfnis(se), {selectedDeterminantIds.length} Determinante(n)
+      {#if selectedNeedIds.length || selectedDeterminantIds.length}
+        {selectedNeedIds.length} Bedürfnis(se), {selectedDeterminantIds.length} Determinante(n)
+      {:else}
+        — (noch nicht durchgeführt)
+      {/if}
     </dd>
   </dl>
 </section>

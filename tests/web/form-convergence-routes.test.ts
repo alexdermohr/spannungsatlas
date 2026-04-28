@@ -18,16 +18,16 @@ describe('form convergence route wiring', () => {
     expect(newPerspectiveRoute).toContain('<PerspectiveCoreSlides');
   });
 
-  it('keeps exploration as a dedicated shared slide instead of route-local inline UI', () => {
+  it('keeps initial flow free of route-local exploration wiring', () => {
     const newCaseRoute = readFileSync(newCaseRouteFile, 'utf-8');
     const newPerspectiveRoute = readFileSync(newPerspectiveRouteFile, 'utf-8');
     const sharedSlides = readFileSync(sharedSlidesFile, 'utf-8');
-    const explorationSlide = readFileSync(explorationSlideFile, 'utf-8');
 
-    expect(sharedSlides).toContain('2. Explorationsraum');
-    expect(sharedSlides).toContain("import ExplorationSlide from '$lib/components/forms/perspective-core-slides/ExplorationSlide.svelte';");
-    expect(sharedSlides).toContain('bind:activeClusterId');
-    expect(sharedSlides).toContain('bind:selectionSearch');
+    expect(sharedSlides).not.toContain('2. Explorationsraum');
+    expect(sharedSlides).not.toContain("import ExplorationSlide from '$lib/components/forms/perspective-core-slides/ExplorationSlide.svelte';");
+    expect(sharedSlides).not.toContain('<ExplorationSlide');
+    expect(sharedSlides).toContain('const totalSlides = slideTitles.length;');
+    expect(sharedSlides).toContain("'5. Prüfen'");
 
     expect(newCaseRoute).not.toContain('isExplorationOpen');
     expect(newPerspectiveRoute).not.toContain('isExplorationOpen');
@@ -35,11 +35,17 @@ describe('form convergence route wiring', () => {
     expect(newPerspectiveRoute).not.toContain('filterCatalogItems');
     expect(newCaseRoute).not.toContain('ExplorationSlide');
     expect(newPerspectiveRoute).not.toContain('ExplorationSlide');
+  });
+
+  it('keeps ExplorationSlide component present for later workflows', () => {
+    const explorationSlide = readFileSync(explorationSlideFile, 'utf-8');
 
     expect(explorationSlide).not.toContain('let activeClusterId = $state');
     expect(explorationSlide).not.toContain('let selectionSearch = $state');
     expect(explorationSlide).toContain('activeClusterId = $bindable<string>()');
     expect(explorationSlide).toContain('selectionSearch = $bindable<string>()');
+    expect(explorationSlide).toContain('Bedürfnisse');
+    expect(explorationSlide).toContain('Determinanten');
   });
 
   it('documents route-specific autosave behavior at the usage sites', () => {

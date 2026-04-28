@@ -102,6 +102,14 @@ describe('perspective layout invariants', () => {
     expect(progressMatch![0]).not.toContain('role="status"');
   });
 
+  it('PerspectiveCoreSlides initial flow excludes ExplorationSlide', () => {
+    const src = readFileSync(sharedSlidesFile, 'utf-8');
+    expect(src).toContain('const totalSlides = slideTitles.length;');
+    expect(src).toContain("'5. Prüfen'");
+    expect(src).not.toContain('Explorationsraum');
+    expect(src).not.toContain('<ExplorationSlide');
+  });
+
   it('PerspectiveCoreSlides remains shared across both routes', () => {
     const newCaseRoute = readFileSync(newCaseRouteFile, 'utf-8');
     const newPerspectiveRoute = readFileSync(newPerspectiveRouteFile, 'utf-8');

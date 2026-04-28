@@ -153,7 +153,7 @@
   <h1>Neuer Fall</h1>
   <p class="subtitle">
     Erste Fallanlage = erste Perspektive. Kontext und Teilnehmer werden ergänzt; der
-    epistemische Kern (Beobachtung → Exploration → Deutung → Gegen-Deutung → Unsicherheit)
+    epistemische Kern (Beobachtung → Deutung → Gegen-Deutung → Unsicherheit)
     ist identisch zu jeder weiteren Perspektive.
   </p>
 

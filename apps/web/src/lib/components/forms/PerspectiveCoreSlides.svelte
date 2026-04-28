@@ -7,21 +7,18 @@
 
   Folien:
     1. Beobachtung
-    2. Explorationsraum  (eigenständige Folie, kein Inline-Aufklappen)
-    3. Deutung
-    4. Gegen-Deutungen
-    5. Unsicherheit
-    6. Prüfen / Abschluss
+    2. Deutung
+    3. Gegen-Deutungen
+    4. Unsicherheit
+    5. Prüfen / Abschluss
 
   Zusatzmetadaten (Fallkontext, Teilnehmer, Actor-Auswahl) liegen außerhalb
   und werden von den Routen selbst vor oder neben diese Folien gesetzt.
 -->
 <script lang="ts">
   import type { EvidenceType } from '$domain/types.js';
-  import { clusters } from '$lib/catalog/catalog-data.js';
   import SlideNav from '$lib/components/forms/perspective-core-slides/SlideNav.svelte';
   import ObservationSlide from '$lib/components/forms/perspective-core-slides/ObservationSlide.svelte';
-  import ExplorationSlide from '$lib/components/forms/perspective-core-slides/ExplorationSlide.svelte';
   import InterpretationSlide from '$lib/components/forms/perspective-core-slides/InterpretationSlide.svelte';
   import CounterInterpretationsSlide from '$lib/components/forms/perspective-core-slides/CounterInterpretationsSlide.svelte';
   import UncertaintySlide from '$lib/components/forms/perspective-core-slides/UncertaintySlide.svelte';
@@ -65,11 +62,15 @@
     onChange
   }: Props = $props();
 
-  // Parent-owned exploration UI state: keeps cluster/search when Folie 2 unmounts.
-  let activeClusterId = $state<string>(clusters[0]?.id ?? '');
-  let selectionSearch = $state('');
+  const slideTitles = [
+    '1. Beobachtung',
+    '2. Deutung',
+    '3. Gegen-Deutungen',
+    '4. Unsicherheit',
+    '5. Prüfen'
+  ];
 
-  const totalSlides = 6;
+  const totalSlides = slideTitles.length;
 
   function notifyChange() {
     onChange?.();
@@ -85,15 +86,6 @@
   function prev() {
     gotoSlide(Math.max(currentSlide - 1, 1));
   }
-
-  const slideTitles = [
-    '1. Beobachtung',
-    '2. Explorationsraum',
-    '3. Deutung',
-    '4. Gegen-Deutungen',
-    '5. Unsicherheit',
-    '6. Prüfen'
-  ];
 </script>
 
 <div class="slides-root">
@@ -117,44 +109,33 @@
     {/if}
 
     {#if currentSlide === 2}
-      <ExplorationSlide
-        title={slideTitles[1]}
-        bind:selectedNeedIds
-        bind:selectedDeterminantIds
-        bind:activeClusterId
-        bind:selectionSearch
-        onChange={notifyChange}
-      />
-    {/if}
-
-    {#if currentSlide === 3}
       <InterpretationSlide
-        title={slideTitles[2]}
+        title={slideTitles[1]}
         bind:interpretationText
         bind:interpretationEvidence
         onChange={notifyChange}
       />
     {/if}
 
-    {#if currentSlide === 4}
+    {#if currentSlide === 3}
       <CounterInterpretationsSlide
-        title={slideTitles[3]}
+        title={slideTitles[2]}
         bind:counterRows
         onChange={notifyChange}
       />
     {/if}
 
-    {#if currentSlide === 5}
+    {#if currentSlide === 4}
       <UncertaintySlide
-        title={slideTitles[4]}
+        title={slideTitles[3]}
         bind:uncertaintyRows
         onChange={notifyChange}
       />
     {/if}
 
-    {#if currentSlide === 6}
+    {#if currentSlide === 5}
       <ReviewSlide
-        title={slideTitles[5]}
+        title={slideTitles[4]}
         {observationText}
         {isCameraDescribableStr}
         {interpretationText}
