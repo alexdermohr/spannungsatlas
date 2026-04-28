@@ -87,7 +87,7 @@
       {#if selectedNeedIds.length || selectedDeterminantIds.length}
         {selectedNeedIds.length} Bedürfnis(se), {selectedDeterminantIds.length} Determinante(n)
       {:else}
-        noch nicht durchgeführt
+        — (noch nicht durchgeführt)
       {/if}
     </dd>
   </dl>

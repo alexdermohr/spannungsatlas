@@ -26,7 +26,8 @@ describe('form convergence route wiring', () => {
     expect(sharedSlides).not.toContain('2. Explorationsraum');
     expect(sharedSlides).not.toContain("import ExplorationSlide from '$lib/components/forms/perspective-core-slides/ExplorationSlide.svelte';");
     expect(sharedSlides).not.toContain('<ExplorationSlide');
-    expect(sharedSlides).toContain('const totalSlides = 5;');
+    expect(sharedSlides).toContain('const totalSlides = slideTitles.length;');
+    expect(sharedSlides).toContain("'5. Prüfen'");
 
     expect(newCaseRoute).not.toContain('isExplorationOpen');
     expect(newPerspectiveRoute).not.toContain('isExplorationOpen');

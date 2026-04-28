@@ -62,7 +62,15 @@
     onChange
   }: Props = $props();
 
-  const totalSlides = 5;
+  const slideTitles = [
+    '1. Beobachtung',
+    '2. Deutung',
+    '3. Gegen-Deutungen',
+    '4. Unsicherheit',
+    '5. Prüfen'
+  ];
+
+  const totalSlides = slideTitles.length;
 
   function notifyChange() {
     onChange?.();
@@ -78,14 +86,6 @@
   function prev() {
     gotoSlide(Math.max(currentSlide - 1, 1));
   }
-
-  const slideTitles = [
-    '1. Beobachtung',
-    '2. Deutung',
-    '3. Gegen-Deutungen',
-    '4. Unsicherheit',
-    '5. Prüfen'
-  ];
 </script>
 
 <div class="slides-root">

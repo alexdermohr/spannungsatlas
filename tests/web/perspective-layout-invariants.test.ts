@@ -104,7 +104,8 @@ describe('perspective layout invariants', () => {
 
   it('PerspectiveCoreSlides initial flow excludes ExplorationSlide', () => {
     const src = readFileSync(sharedSlidesFile, 'utf-8');
-    expect(src).toContain('const totalSlides = 5;');
+    expect(src).toContain('const totalSlides = slideTitles.length;');
+    expect(src).toContain("'5. Prüfen'");
     expect(src).not.toContain('Explorationsraum');
     expect(src).not.toContain('<ExplorationSlide');
   });
