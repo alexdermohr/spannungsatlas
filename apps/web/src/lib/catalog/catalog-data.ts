@@ -1,8 +1,6 @@
-// TODO: Tech Debt - These deep relative imports bypass module resolution boundaries.
-// data/catalog ist aktuell eine globale Quelle. Zukünftig über API oder Alias kapseln.
-import needsRaw from '../../../../../data/catalog/needs.json';
-import determinantsRaw from '../../../../../data/catalog/determinants.json';
-import clustersRaw from '../../../../../data/catalog/clusters.json';
+import needsRaw from '$data/catalog/needs.json';
+import determinantsRaw from '$data/catalog/determinants.json';
+import clustersRaw from '$data/catalog/clusters.json';
 
 /**
  * Minimaler Pflicht-Contract für Anzeige und Filter in Phase 2b.

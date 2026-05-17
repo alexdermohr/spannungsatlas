@@ -36,7 +36,7 @@
       <ul class="topnav-links">
         <li><a href="/" onclick={closeMenu}>Übersicht</a></li>
         <li><a href="/cases/new" onclick={closeMenu}>Neuer Fall</a></li>
-        <li><span class="nav-inactive" aria-label="Katalog (geplant für Phase 2)">Katalog <span class="nav-phase" aria-hidden="true">Phase 2</span></span></li>
+        <li><a href="/catalog" onclick={closeMenu}>Katalog</a></li>
         <li><span class="nav-inactive" aria-label="Vergleich (geplant für Phase 3)">Vergleich <span class="nav-phase" aria-hidden="true">Phase 3</span></span></li>
       </ul>
       <ThemeToggle />

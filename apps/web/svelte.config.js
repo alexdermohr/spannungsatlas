@@ -6,7 +6,9 @@ const config = {
     adapter: adapter(),
     alias: {
       '$domain': '../../src/domain',
-      '$domain/*': '../../src/domain/*'
+      '$domain/*': '../../src/domain/*',
+      '$data': '../../data',
+      '$data/*': '../../data/*'
     }
   }
 };
