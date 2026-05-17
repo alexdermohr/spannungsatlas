@@ -2,20 +2,23 @@
 	import { needs, determinants, clusters } from '$lib/catalog/catalog-data';
 	import { filterCatalogItems } from '$lib/catalog/catalog-utils';
 
-	let activeTab: 'needs' | 'determinants' | 'clusters' = 'needs';
-	let searchQuery = '';
+	type Tab = 'needs' | 'determinants' | 'clusters';
 
-	$: activeData =
+	let activeTab: Tab = $state('needs');
+	let searchQuery: string = $state('');
+
+	const activeData = $derived(
 		activeTab === 'needs' ? needs :
 		activeTab === 'determinants' ? determinants :
-		clusters;
+		clusters
+	);
 
-	$: filteredData = filterCatalogItems(activeData, searchQuery);
+	const filteredData = $derived(filterCatalogItems(activeData, searchQuery));
 
-	const contextDescriptions = {
-		needs: "Grundlegende menschliche Bedürfnisse, die pädagogisches Handeln leiten und erklären.",
-		determinants: "Äußere und innere Rahmenbedingungen, die eine Situation prägen.",
-		clusters: "Thematische Zusammenhänge zwischen bestimmten Bedürfnissen und Determinanten."
+	const contextDescriptions: Record<Tab, string> = {
+		needs: 'Grundlegende menschliche Bedürfnisse, die pädagogisches Handeln leiten und erklären.',
+		determinants: 'Äußere und innere Rahmenbedingungen, die eine Situation prägen.',
+		clusters: 'Thematische Zusammenhänge zwischen bestimmten Bedürfnissen und Determinanten.'
 	};
 </script>
 
@@ -30,21 +33,21 @@
 			<button
 				type="button"
 				class:active={activeTab === 'needs'}
-				on:click={() => activeTab = 'needs'}
+				onclick={() => (activeTab = 'needs')}
 			>
 				Bedürfnisse <span class="count">({needs.length})</span>
 			</button>
 			<button
 				type="button"
 				class:active={activeTab === 'determinants'}
-				on:click={() => activeTab = 'determinants'}
+				onclick={() => (activeTab = 'determinants')}
 			>
 				Determinanten <span class="count">({determinants.length})</span>
 			</button>
 			<button
 				type="button"
 				class:active={activeTab === 'clusters'}
-				on:click={() => activeTab = 'clusters'}
+				onclick={() => (activeTab = 'clusters')}
 			>
 				Cluster <span class="count">({clusters.length})</span>
 			</button>

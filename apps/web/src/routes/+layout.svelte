@@ -36,8 +36,8 @@
       <ul class="topnav-links">
         <li><a href="/" onclick={closeMenu}>Übersicht</a></li>
         <li><a href="/cases/new" onclick={closeMenu}>Neuer Fall</a></li>
-        <li><span class="nav-inactive" aria-label="Katalog (geplant für Phase 2)">Katalog <span class="nav-phase" aria-hidden="true">Phase 2</span></span></li>
-        <li><span class="nav-inactive" aria-label="Vergleich (geplant für Phase 3)">Vergleich <span class="nav-phase" aria-hidden="true">Phase 3</span></span></li>
+        <li><a href="/catalog" onclick={closeMenu}>Katalog</a></li>
+        <li><a href="/compare" onclick={closeMenu}>Vergleich</a></li>
       </ul>
       <ThemeToggle />
     </div>
@@ -132,8 +132,7 @@
   .topnav-links li {
     list-style: none;
   }
-  .topnav-links a,
-  .topnav-links span {
+  .topnav-links a {
     color: var(--color-text-muted);
     text-decoration: none;
     padding: 0.25rem 0;
@@ -141,15 +140,6 @@
   }
   .topnav-links a:hover {
     color: var(--color-accent);
-  }
-  .nav-inactive {
-    opacity: 0.45;
-    cursor: default;
-  }
-  .nav-phase {
-    font-size: 0.65rem;
-    vertical-align: super;
-    opacity: 0.7;
   }
 
   /* ── Responsive: collapse to hamburger ────── */

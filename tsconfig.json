@@ -13,7 +13,8 @@
     "paths": {
       "$domain": ["./src/domain/types.ts"],
       "$domain/*": ["./src/domain/*"],
-      "$lib/*": ["./apps/web/src/lib/*"]
+      "$lib/*": ["./apps/web/src/lib/*"],
+      "$data/*": ["./data/*"]
     }
   },
   "include": ["src/**/*.ts", "tests/**/*.ts"]
