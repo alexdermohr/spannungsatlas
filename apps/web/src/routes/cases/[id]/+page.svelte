@@ -147,9 +147,6 @@
             <a href="/cases/{caseData.id}/perspectives/new?actor={demoActorId}" class="btn btn-primary">Perspektive erstellen</a>
           {/if}
         {/if}
-        {#if isComparable}
-          <a href="/cases/{caseData.id}/compare?actor={demoActorId}" class="btn">Perspektiven vergleichen</a>
-        {/if}
       </div>
     </section>
 
