@@ -193,6 +193,23 @@ export interface PerspectiveDraftRecord {
   readonly committedAt?: undefined;
 }
 
+/**
+ * Phase 2b: nachgelagerte Exploration nach Commit.
+ *
+ * Post-commit reflection anchor for the OWN committed perspective.
+ * Lives strictly outside `PerspectiveCommittedContent` so that the committed
+ * epistemic core (observation, interpretation, counter-interpretations,
+ * uncertainties) remains byte-identical after the user opens the exploration
+ * space. Selections here are NOT inferred — they are user-picked catalog
+ * markers, time-stamped as nachgelagert.
+ */
+export interface PerspectiveExplorationSnapshot {
+  readonly selectedNeeds?: readonly CatalogSelection[];
+  readonly selectedDeterminants?: readonly CatalogSelection[];
+  readonly exploredAt: string;
+  readonly updatedAt?: string;
+}
+
 export interface PerspectiveCommittedRecord {
   readonly id: string;
   readonly caseId: string;
@@ -201,6 +218,7 @@ export interface PerspectiveCommittedRecord {
   readonly content: PerspectiveCommittedContent;
   readonly createdAt: string;
   readonly committedAt: string;
+  readonly postCommitExploration?: PerspectiveExplorationSnapshot;
 }
 
 export type PerspectiveRecord = PerspectiveDraftRecord | PerspectiveCommittedRecord;

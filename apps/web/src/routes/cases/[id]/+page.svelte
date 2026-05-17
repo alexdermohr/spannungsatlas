@@ -5,7 +5,9 @@
     getCase,
     getCommittedPerspectiveCount,
     getComparablePerspectivesForCase,
-    getSelectionDisplayForActorFromPerspectives
+    getSelectionDisplayForActorFromPerspectives,
+    getPostCommitExplorationDisplayForActor,
+    getOwnCommittedPerspectiveForActor
   } from '$lib/services/case-service.js';
   import { roleLabels, evidenceLabels } from '$lib/ui/labels.js';
   import { renderCaseAsMarkdown } from '$lib/services/case-report.js';
@@ -25,6 +27,12 @@
     determinants: [],
     isEmpty: true
   });
+  let postCommitExplorationDisplay: FormattedSelectionsForDisplay = $state({
+    needs: [],
+    determinants: [],
+    isEmpty: true
+  });
+  let ownCommittedPerspectiveId: string = $state('');
 
   function evidenceBadgeClass(t: EvidenceType): string {
     return `badge badge-${t}`;
@@ -74,6 +82,8 @@
     // Compare is available if the service layer allows it for the current phase
     isComparable = getComparablePerspectivesForCase(caseData.id, demoActorId).length > 0;
     selectionDisplay = getSelectionDisplayForActorFromPerspectives(perspectives, demoActorId);
+    postCommitExplorationDisplay = getPostCommitExplorationDisplayForActor(caseData.id, demoActorId);
+    ownCommittedPerspectiveId = getOwnCommittedPerspectiveForActor(caseData.id, demoActorId)?.id ?? '';
   }
 
   onMount(() => {
@@ -140,6 +150,14 @@
           <span style="font-size: 0.9rem; color: var(--color-success); display: inline-block; padding: 0.5rem 0;">
             Ihre Perspektive wurde sicher gespeichert. In der aktuellen Phase (Streng blind) sind andere Perspektiven nicht einsehbar, um unabhängige Beobachtungen zu gewährleisten.
           </span>
+          {#if ownCommittedPerspectiveId}
+            <div style="margin-top: 0.5rem;">
+              <a
+                href="/cases/{caseData.id}/perspectives/{ownCommittedPerspectiveId}/exploration?actor={demoActorId}"
+                class="btn"
+              >Explorationsraum öffnen (nach Abschluss möglich)</a>
+            </div>
+          {/if}
         {:else}
           {#if actorHasDraft}
             <a href="/cases/{caseData.id}/perspectives/new?actor={demoActorId}" class="btn btn-primary">Entwurf fortsetzen</a>
@@ -159,6 +177,46 @@
         <span class="badge badge-observational">📷 Kamerabeschreibbar</span>
       {/if}
     </section>
+
+    <!-- Nachgelagerte Exploration (eigene committete Perspektive) -->
+    {#if !postCommitExplorationDisplay.isEmpty}
+      <section class="card section">
+        <h2>Nachgelagerte Exploration</h2>
+        <p class="helper">
+          Reflexionsanker, die <strong>nach Abschluss</strong> der eigenen
+          Perspektive markiert wurden. Sie sind nicht Teil des ursprünglichen
+          epistemischen Kerns.
+        </p>
+
+        {#if postCommitExplorationDisplay.needs.length > 0}
+          <div class="selection-category">
+            <h3>Bedürfnisse ({postCommitExplorationDisplay.needs.length})</h3>
+            <div class="selection-list">
+              {#each postCommitExplorationDisplay.needs as need}
+                <div class="selection-item">
+                  <strong>{need.label}</strong>
+                  <p class="selection-desc">{need.description}</p>
+                </div>
+              {/each}
+            </div>
+          </div>
+        {/if}
+
+        {#if postCommitExplorationDisplay.determinants.length > 0}
+          <div class="selection-category">
+            <h3>Determinanten ({postCommitExplorationDisplay.determinants.length})</h3>
+            <div class="selection-list">
+              {#each postCommitExplorationDisplay.determinants as determinant}
+                <div class="selection-item">
+                  <strong>{determinant.label}</strong>
+                  <p class="selection-desc">{determinant.description}</p>
+                </div>
+              {/each}
+            </div>
+          </div>
+        {/if}
+      </section>
+    {/if}
 
     <!-- Explorations-Selektionen (eigene sichtbare Perspektive) -->
     {#if !selectionDisplay.isEmpty}
