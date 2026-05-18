@@ -153,7 +153,7 @@
           {#if ownCommittedPerspectiveId}
             <div style="margin-top: 0.5rem;">
               <a
-                href="/cases/{caseData.id}/perspectives/{ownCommittedPerspectiveId}/exploration?actor={demoActorId}"
+                href={`/cases/${encodeURIComponent(caseData.id)}/perspectives/${encodeURIComponent(ownCommittedPerspectiveId)}/exploration?actor=${encodeURIComponent(demoActorId)}`}
                 class="btn"
               >Explorationsraum öffnen (nach Abschluss möglich)</a>
             </div>

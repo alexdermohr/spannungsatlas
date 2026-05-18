@@ -43,6 +43,13 @@ describe('post-commit exploration route', () => {
     expect(src).toContain('Nachgelagerte Exploration');
   });
 
+  it('URL-encodes the actor id (and path segments) in the post-commit exploration link', () => {
+    const src = readFileSync(caseDetailFile, 'utf-8');
+    expect(src).toContain('encodeURIComponent(demoActorId)');
+    expect(src).toContain('encodeURIComponent(caseData.id)');
+    expect(src).toContain('encodeURIComponent(ownCommittedPerspectiveId)');
+  });
+
   it('reads the perspectiveId from the route parameter, not from the URL search', () => {
     const src = readFileSync(routeFile, 'utf-8');
     expect(src).toContain('page.params.perspectiveId');
