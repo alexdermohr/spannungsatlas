@@ -6,6 +6,7 @@ import {
   canComparePerspectives,
   getComparablePerspectives,
   filterVisiblePerspectives,
+  canWritePostCommitExploration,
 } from "../../src/domain/perspective-access.js";
 import type { PerspectiveRecord } from "../../src/domain/types.js";
 
@@ -84,6 +85,42 @@ describe("canWritePerspective", () => {
 
   it("denies writing to a committed perspective by non-owner", () => {
     expect(canWritePerspective(committedPerspective("actor-1"), "actor-2")).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// canWritePostCommitExploration (Phase 2b: exploration sidecar writes)
+// ---------------------------------------------------------------------------
+
+describe("canWritePostCommitExploration (Post-Commit Exploration Policy)", () => {
+  it("allows owner to write post-commit exploration on own committed perspective", () => {
+    const perspective = committedPerspective("actor-1");
+    expect(canWritePostCommitExploration(perspective, "actor-1")).toBe(true);
+  });
+
+  it("denies non-owner from writing post-commit exploration", () => {
+    const perspective = committedPerspective("actor-1");
+    expect(canWritePostCommitExploration(perspective, "actor-2")).toBe(false);
+  });
+
+  it("denies post-commit exploration write on a draft perspective", () => {
+    const perspective = draftPerspective("actor-1");
+    expect(canWritePostCommitExploration(perspective, "actor-1")).toBe(false);
+  });
+
+  it("is a type guard: returns committed perspective when true", () => {
+    const perspective = committedPerspective("actor-1");
+    if (canWritePostCommitExploration(perspective, "actor-1")) {
+      // TypeScript should narrow to PerspectiveCommittedRecord here
+      expect(perspective.status).toBe("committed");
+      expect(perspective.committedAt).toBeTruthy();
+    }
+  });
+
+  it("does not allow writes on committed core (canWritePerspective remains false)", () => {
+    const perspective = committedPerspective("actor-1");
+    expect(canWritePerspective(perspective, "actor-1")).toBe(false);
+    expect(canWritePostCommitExploration(perspective, "actor-1")).toBe(true);
   });
 });
 

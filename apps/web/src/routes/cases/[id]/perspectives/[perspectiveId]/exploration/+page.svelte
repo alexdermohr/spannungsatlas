@@ -44,14 +44,15 @@
     perspectiveId = page.params.perspectiveId ?? '';
     actorId = page.url.searchParams.get('actor') ?? '';
 
-    caseData = getCase(caseId);
-    if (!caseData) {
-      errorMsg = 'Fall nicht gefunden.';
+    if (!actorId) {
+      errorMsg = 'Kein Actor angegeben (?actor=…).';
       loaded = true;
       return;
     }
-    if (!actorId) {
-      errorMsg = 'Kein Actor angegeben (?actor=…).';
+
+    caseData = getCase(caseId);
+    if (!caseData) {
+      errorMsg = 'Fall nicht gefunden.';
       loaded = true;
       return;
     }

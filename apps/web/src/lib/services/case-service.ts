@@ -2,7 +2,7 @@ import type { Case, CaseParticipant, CatalogSelection, EvidenceType, Uncertainty
 import { guardPerspectiveExplorationSnapshot } from '$domain/guards.js';
 import type { CreateCaseInput } from '$domain/factories.js';
 import { createCase, createPerspectiveDraftRecord, commitPerspectiveRecord, type CreatePerspectiveDraftInput } from '$domain/factories.js';
-import { canReadPerspective, canWritePerspective, canComparePerspectives, getComparablePerspectives, filterVisiblePerspectives } from '$domain/perspective-access.js';
+import { canReadPerspective, canWritePerspective, canComparePerspectives, getComparablePerspectives, filterVisiblePerspectives, canWritePostCommitExploration } from '$domain/perspective-access.js';
 import { validateNewPerspectiveCatalogIds } from '$domain/exploration-catalog.js';
 import { formatSelectionsForDisplay, type FormattedSelectionsForDisplay } from '$lib/services/selection-display.js';
 import { localStorageStore, type PersistenceStore } from '$lib/persistence/store.js';
@@ -271,7 +271,7 @@ export interface SavePerspectiveExplorationInput {
  * committed perspective.
  *
  * Invariants:
- *   - Only the owning actor may write.
+ *   - Only the owning actor may write (canWritePostCommitExploration policy).
  *   - Only committed perspectives are eligible (drafts are rejected).
  *   - The committed epistemic core (observation, interpretation,
  *     counterInterpretations, uncertainties) and committedAt remain untouched.
@@ -287,11 +287,8 @@ export function savePerspectiveExploration(input: SavePerspectiveExplorationInpu
 
   const p = perspectives[index];
 
-  if (p.actorId !== input.requestingActorId) {
-    throw new Error("Access denied: Exploration is restricted to the owning actor.");
-  }
-  if (p.status !== 'committed') {
-    throw new Error("Post-commit exploration requires a committed perspective.");
+  if (!canWritePostCommitExploration(p, input.requestingActorId)) {
+    throw new Error("Access denied: Post-commit exploration is restricted to the owning actor's committed perspective.");
   }
 
   const catalogErrors = validateNewPerspectiveCatalogIds(input.selectedNeeds, input.selectedDeterminants);
