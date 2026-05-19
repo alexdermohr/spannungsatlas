@@ -1,7 +1,8 @@
-import type { Case, CaseParticipant, CatalogSelection, EvidenceType, UncertaintyLevel, PerspectiveRecord, PerspectiveCommittedRecord } from '$domain/types.js';
+import type { Case, CaseParticipant, CatalogSelection, EvidenceType, UncertaintyLevel, PerspectiveRecord, PerspectiveCommittedRecord, PerspectiveExplorationSnapshot } from '$domain/types.js';
+import { guardPerspectiveExplorationSnapshot } from '$domain/guards.js';
 import type { CreateCaseInput } from '$domain/factories.js';
 import { createCase, createPerspectiveDraftRecord, commitPerspectiveRecord, type CreatePerspectiveDraftInput } from '$domain/factories.js';
-import { canReadPerspective, canWritePerspective, canComparePerspectives, getComparablePerspectives, filterVisiblePerspectives } from '$domain/perspective-access.js';
+import { canReadPerspective, canWritePerspective, canComparePerspectives, getComparablePerspectives, filterVisiblePerspectives, canWritePostCommitExploration } from '$domain/perspective-access.js';
 import { validateNewPerspectiveCatalogIds } from '$domain/exploration-catalog.js';
 import { formatSelectionsForDisplay, type FormattedSelectionsForDisplay } from '$lib/services/selection-display.js';
 import { localStorageStore, type PersistenceStore } from '$lib/persistence/store.js';
@@ -255,6 +256,96 @@ export function getComparablePerspectivesForCase(caseId: string, requestingActor
   }
 
   return getComparablePerspectives(c.perspectives || []);
+}
+
+export interface SavePerspectiveExplorationInput {
+  caseId: string;
+  perspectiveId: string;
+  requestingActorId: string;
+  selectedNeeds?: readonly CatalogSelection[];
+  selectedDeterminants?: readonly CatalogSelection[];
+}
+
+/**
+ * Persists a post-commit exploration snapshot on the requesting actor's own
+ * committed perspective.
+ *
+ * Invariants:
+ *   - Only the owning actor may write (canWritePostCommitExploration policy).
+ *   - Only committed perspectives are eligible (drafts are rejected).
+ *   - The committed epistemic core (observation, interpretation,
+ *     counterInterpretations, uncertainties) and committedAt remain untouched.
+ *   - Catalog membership is enforced write-time strictly.
+ */
+export function savePerspectiveExploration(input: SavePerspectiveExplorationInput): Case {
+  const c = getCase(input.caseId);
+  if (!c) throw new Error("Case not found");
+
+  const perspectives = [...(c.perspectives || [])];
+  const index = perspectives.findIndex((p) => p.id === input.perspectiveId);
+  if (index === -1) throw new Error("Perspective not found");
+
+  const p = perspectives[index];
+
+  if (!canWritePostCommitExploration(p, input.requestingActorId)) {
+    throw new Error("Access denied: Post-commit exploration is restricted to the owning actor's committed perspective.");
+  }
+
+  const catalogErrors = validateNewPerspectiveCatalogIds(input.selectedNeeds, input.selectedDeterminants);
+  if (catalogErrors.length > 0) {
+    throw new Error(`Invalid catalog selections: ${catalogErrors.join('; ')}`);
+  }
+
+  const now = new Date().toISOString();
+  const existing = p.postCommitExploration;
+  const snapshot: PerspectiveExplorationSnapshot = {
+    ...(input.selectedNeeds && input.selectedNeeds.length > 0
+      ? { selectedNeeds: input.selectedNeeds.map((s) => ({ id: s.id })) }
+      : {}),
+    ...(input.selectedDeterminants && input.selectedDeterminants.length > 0
+      ? { selectedDeterminants: input.selectedDeterminants.map((s) => ({ id: s.id })) }
+      : {}),
+    exploredAt: existing?.exploredAt ?? now,
+    ...(existing ? { updatedAt: now } : {})
+  };
+
+  const guardErrors = guardPerspectiveExplorationSnapshot(snapshot);
+  if (guardErrors.length > 0) {
+    throw new Error(guardErrors.join(' | '));
+  }
+
+  const updated: PerspectiveCommittedRecord = {
+    ...p,
+    postCommitExploration: snapshot
+  };
+  perspectives[index] = updated;
+
+  const updatedCase = { ...c, perspectives };
+  store.saveCase(updatedCase);
+  return updatedCase;
+}
+
+export function getOwnCommittedPerspectiveForActor(
+  caseId: string,
+  requestingActorId: string
+): PerspectiveCommittedRecord | undefined {
+  const c = getCase(caseId);
+  if (!c) return undefined;
+  return (c.perspectives || []).find(
+    (p): p is PerspectiveCommittedRecord =>
+      p.actorId === requestingActorId && p.status === 'committed'
+  );
+}
+
+export function getPostCommitExplorationDisplayForActor(
+  caseId: string,
+  requestingActorId: string
+): FormattedSelectionsForDisplay {
+  const own = getOwnCommittedPerspectiveForActor(caseId, requestingActorId);
+  return formatSelectionsForDisplay(
+    own?.postCommitExploration?.selectedNeeds,
+    own?.postCommitExploration?.selectedDeterminants
+  );
 }
 
 export function getCommittedPerspectiveCount(caseId: string): number {

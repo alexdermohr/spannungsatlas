@@ -160,4 +160,44 @@ describe('export/import', () => {
     const reexport = parseCaseExportJson(serializeCases(imported, '0.1.0'));
     expect(reexport.cases[0].case.sources?.[0]?.type).toBe('icf-tool');
   });
+
+  it('keeps postCommitExploration through JSON export/import roundtrip', () => {
+    const base = buildCase('case-post-expl');
+    const committed = {
+      id: 'p-1',
+      caseId: base.id,
+      actorId: 'Anna',
+      status: 'committed' as const,
+      createdAt: '2026-03-01T10:00:00Z',
+      committedAt: '2026-03-01T11:00:00Z',
+      content: {
+        observation: { text: 'Anna schaut auf den Boden.', isCameraDescribable: true },
+        interpretation: { text: 'Anna wirkt gehemmt.', evidenceType: 'derived' as const },
+        counterInterpretations: [{ text: 'Anna ist müde.', evidenceType: 'speculative' as const }],
+        uncertainties: [{ level: 2 as const, rationale: 'Kurzer Beobachtungszeitraum.' }]
+      },
+      postCommitExploration: {
+        selectedNeeds: [{ id: 'need_phys' }],
+        selectedDeterminants: [{ id: 'det_env' }],
+        exploredAt: '2026-05-17T08:30:00Z',
+        updatedAt: '2026-05-17T09:30:00Z'
+      }
+    } satisfies import('$domain/types.js').PerspectiveCommittedRecord;
+    const withPerspective = { ...base, perspectives: [committed] } satisfies import('$domain/types.js').Case;
+
+    const json = serializeCases([withPerspective], '0.1.0');
+    const imported = importCases(json, [], 'replace');
+
+    expect(imported).toHaveLength(1);
+    expect(imported[0].perspectives).toHaveLength(1);
+    const importedP = imported[0].perspectives![0];
+    expect(importedP).toEqual(committed);
+    expect(importedP).toHaveProperty('postCommitExploration');
+    if (importedP.status === 'committed') {
+      expect(importedP.postCommitExploration?.selectedNeeds).toEqual([{ id: 'need_phys' }]);
+      expect(importedP.postCommitExploration?.selectedDeterminants).toEqual([{ id: 'det_env' }]);
+      expect(importedP.postCommitExploration?.exploredAt).toBe('2026-05-17T08:30:00Z');
+      expect(importedP.postCommitExploration?.updatedAt).toBe('2026-05-17T09:30:00Z');
+    }
+  });
 });

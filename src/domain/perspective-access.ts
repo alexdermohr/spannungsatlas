@@ -72,6 +72,30 @@ export function canWritePerspective(
 }
 
 // ---------------------------------------------------------------------------
+// Post-commit exploration write access (Phase 2b)
+// ---------------------------------------------------------------------------
+
+/**
+ * Returns true if the requesting actor may write post-commit exploration
+ * on the given perspective.
+ *
+ * Rules:
+ *   - Perspective must be committed (status === 'committed').
+ *   - Only the owning actor may write.
+ *   - This is the ONLY way to mutate a committed perspective: exploration
+ *     sidecar only, never the epistemic core.
+ *
+ * This function is a type guard: if it returns true, the perspective is
+ * guaranteed to be PerspectiveCommittedRecord.
+ */
+export function canWritePostCommitExploration(
+  perspective: PerspectiveRecord,
+  requestingActorId: string,
+): perspective is PerspectiveCommittedRecord {
+  return perspective.status === "committed" && perspective.actorId === requestingActorId;
+}
+
+// ---------------------------------------------------------------------------
 // Comparison access
 // ---------------------------------------------------------------------------
 

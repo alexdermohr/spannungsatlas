@@ -707,6 +707,52 @@ export function guardPerspectiveCommittedContent(content: unknown): readonly str
   return errors;
 }
 
+/**
+ * Structural guard for a post-commit exploration snapshot.
+ *
+ * Validates structure only:
+ *   - selectedNeeds/selectedDeterminants are optional arrays with non-empty, unique ids.
+ *   - exploredAt is an ISO date string.
+ *   - updatedAt is optional but must be ISO if present.
+ *
+ * Read-time tolerant: unknown catalog ids are NOT rejected here so that
+ * historical selections survive catalog evolution. Catalog membership is
+ * enforced write-time only via `validateNewPerspectiveCatalogIds`.
+ */
+export function guardPerspectiveExplorationSnapshot(snapshot: unknown): readonly string[] {
+  const errors: string[] = [];
+  const push = (r: GuardResult) => { if (r) errors.push(r); };
+
+  if (typeof snapshot !== 'object' || snapshot === null || Array.isArray(snapshot)) {
+    return ["PerspectiveExplorationSnapshot must be an object."];
+  }
+
+  const s = snapshot as Record<string, unknown>;
+
+  if (s.selectedNeeds !== undefined) {
+    validateCatalogSelectionsStructural(errors, s.selectedNeeds, "PerspectiveExplorationSnapshot.selectedNeeds");
+  }
+  if (s.selectedDeterminants !== undefined) {
+    validateCatalogSelectionsStructural(errors, s.selectedDeterminants, "PerspectiveExplorationSnapshot.selectedDeterminants");
+  }
+
+  if (typeof s.exploredAt !== 'string') {
+    errors.push("PerspectiveExplorationSnapshot.exploredAt must be a string.");
+  } else {
+    push(guardIsoDateString(s.exploredAt, "PerspectiveExplorationSnapshot.exploredAt"));
+  }
+
+  if (s.updatedAt !== undefined) {
+    if (typeof s.updatedAt !== 'string') {
+      errors.push("PerspectiveExplorationSnapshot.updatedAt must be a string if present.");
+    } else {
+      push(guardIsoDateString(s.updatedAt, "PerspectiveExplorationSnapshot.updatedAt"));
+    }
+  }
+
+  return errors;
+}
+
 export function guardPerspectiveRecord(record: unknown): readonly string[] {
   const errors: string[] = [];
   const push = (r: GuardResult) => { if (r) errors.push(r); };
@@ -740,9 +786,15 @@ export function guardPerspectiveRecord(record: unknown): readonly string[] {
       push(guardIsoDateString(rec.committedAt, "PerspectiveRecord.committedAt"));
     }
     errors.push(...guardPerspectiveCommittedContent(rec.content));
+    if (rec.postCommitExploration !== undefined) {
+      errors.push(...guardPerspectiveExplorationSnapshot(rec.postCommitExploration));
+    }
   } else if (rec.status === "draft") {
     if (rec.committedAt !== undefined) {
       errors.push("PerspectiveRecord committedAt must be absent when status is draft.");
+    }
+    if (rec.postCommitExploration !== undefined) {
+      errors.push("PerspectiveRecord postCommitExploration must be absent when status is draft.");
     }
     errors.push(...guardPerspectiveDraftContent(rec.content));
   }
