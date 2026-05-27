@@ -9,7 +9,7 @@ related_docs:
   - masterplan
   - deploy-blaupause
   - roadmap
-last_reviewed: "2026-03-29"
+last_reviewed: "2026-05-27"
 ---
 
 # Spannungsatlas
@@ -56,8 +56,11 @@ Noch **nicht** implementiert: zentrale Persistenz, API, Authentifizierung, Rolle
 ## Aktueller Implementationsstand
 
 - **Phase-1-Reflexionskern** ist implementiert: Domain-Typen, Guards und Factories in `src/domain/`.
-- **Phase-0/1-Webschicht** ist implementiert: SvelteKit-Anwendung unter `apps/web/` mit Vercel-Adapter, local-first (localStorage). Routen: Dashboard, Neuer Fall, Fallansicht, Katalog-Platzhalter, Vergleich-Platzhalter.
-- **Phase-2-Explorationsraum** ist noch nicht implementiert: Bedürfnis- und Determinantenkatalog, Clusterstruktur, Selektionsfelder und UI-Schichten. Das Zieldatenmodell ist in [`docs/ux-ui-blaupause.md §7`](./docs/ux-ui-blaupause.md) beschrieben.
+- **Phase-0/1-Webschicht** ist implementiert: SvelteKit-Anwendung unter `apps/web/` mit Vercel-Adapter, local-first (localStorage). Routen: Dashboard, Neuer Fall, Fallansicht, Personenübersicht, Katalog, Vergleich-Platzhalter.
+- **Phase-2a-Perspektiven** (Blinddokumentation, „Modus A – streng blind") ist implementiert: pro Fall können getrennte `PerspectiveRecord`-Artefakte erstellt und committet werden. Fremde Perspektiven bleiben in dieser Phase unsichtbar; der Vergleich ist domänenseitig deaktiviert.
+- **Phase-2b-Explorationsraum** ist implementiert: Bedürfnis- und Determinantenkatalog mit Clusterstruktur (`/catalog`), Selektionsfelder pro Perspektive sowie ein nachgelagerter Explorationsraum nach Commit.
+- **Personenübersicht** (`/people`, `/people/[id]`) aggregiert Fälle pro beteiligter Person als Navigationshilfe — keine Verdichtung, kein Spannungsprofil.
+- **Phase 3 (Vergleich und Drift)** ist noch nicht freigegeben: solange die Perspektiven-Phase auf `phase-1-strict-blind` steht, bleibt der Vergleichsraum bewusst inaktiv.
 
 ## Entwicklung und Verifikation
 
