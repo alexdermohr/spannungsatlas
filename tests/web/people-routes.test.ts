@@ -56,4 +56,10 @@ describe('People route invariants', () => {
     expect(content).not.toContain('decodeURIComponent(raw)');
     expect(content).not.toContain('decodeURIComponent(page.params.id)');
   });
+
+  it('person detail links cases with encoded case ids', () => {
+    const content = readFileSync(personDetailPage, 'utf-8');
+    expect(content).toContain('href={`/cases/${encodeURIComponent(c.id)}`}');
+    expect(content).not.toContain('href="/cases/{c.id}"');
+  });
 });

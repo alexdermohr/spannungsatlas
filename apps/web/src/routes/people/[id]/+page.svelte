@@ -98,7 +98,7 @@
       <h2>Fälle</h2>
       <div class="case-list">
         {#each cases as c (c.id)}
-          <a href="/cases/{c.id}" class="case-card">
+          <a href={`/cases/${encodeURIComponent(c.id)}`} class="case-card">
             <div class="case-header">
               <span class="case-role">{roleLabel(findRoleForPersonInCase(summary.id, c))}</span>
               <span class="case-date">{formatDate(c.currentReflection.reflectedAt)}</span>
