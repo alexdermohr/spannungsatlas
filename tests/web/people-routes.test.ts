@@ -37,14 +37,12 @@ describe('People route invariants', () => {
 
   it('person detail page mentions keine Verdichtung', () => {
     const content = readFileSync(personDetailPage, 'utf-8');
-    expect(content).toContain('keine');
-    expect(content).toContain('Verdichtung');
+    expect(content).toMatch(/keine.*Verdichtung/);
   });
 
   it('person detail page declares kein Spannungsprofil', () => {
     const content = readFileSync(personDetailPage, 'utf-8');
-    expect(content).toContain('kein');
-    expect(content).toContain('Spannungsprofil');
+    expect(content).toMatch(/kein.*Spannungsprofil/);
   });
 
   it('person detail route does not double-decode the route param', () => {
