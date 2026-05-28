@@ -25,6 +25,12 @@ describe('People route invariants', () => {
     expect(content).toContain('/people/');
   });
 
+  it('people list links person cards with encodeURIComponent', () => {
+    const content = readFileSync(peoplePage, 'utf-8');
+    expect(content).toContain('href={`/people/${encodeURIComponent(person.id)}`}');
+    expect(content).not.toContain('href="/people/{encodeURIComponent(person.id)}"');
+  });
+
   it('people list page mentions Navigationsaggregation', () => {
     const content = readFileSync(peoplePage, 'utf-8');
     expect(content).toContain('Navigationsaggregation');

@@ -57,7 +57,7 @@
   {:else}
     <div class="person-list">
       {#each people as person (person.id)}
-        <a href="/people/{encodeURIComponent(person.id)}" class="card person-card">
+        <a href={`/people/${encodeURIComponent(person.id)}`} class="card person-card">
           <div class="person-header">
             <span class="person-id">{person.id}</span>
             <span class="person-count">
