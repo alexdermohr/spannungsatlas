@@ -122,7 +122,7 @@
       <div class="participants">
         <strong>Beteiligte:</strong>
         {#each caseData.participants as p}
-          <span class="participant">{p.id}{#if p.role} ({roleLabels[p.role] ?? p.role}){/if}</span>
+          <a class="participant" href={`/people/${encodeURIComponent(p.id)}`}>{p.id}{#if p.role} ({roleLabels[p.role] ?? p.role}){/if}</a>
         {/each}
       </div>
     </section>
@@ -387,6 +387,11 @@
   }
   .participant {
     margin-left: 0.3rem;
+    color: var(--color-accent);
+    text-decoration: none;
+  }
+  .participant:hover {
+    text-decoration: underline;
   }
   .uncertainty-level {
     font-size: 0.95rem;
