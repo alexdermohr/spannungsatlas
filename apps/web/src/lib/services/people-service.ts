@@ -53,6 +53,7 @@ export function aggregatePeopleFromCases(cases: readonly Case[]): readonly Perso
 
   for (const c of cases) {
     const reflectedAt = c.currentReflection?.reflectedAt ?? null;
+    const seenInCase = new Set<string>();
     for (const p of c.participants) {
       const existing = byId.get(p.id) ?? {
         roles: new Set<ParticipantRole>(),
@@ -60,7 +61,10 @@ export function aggregatePeopleFromCases(cases: readonly Case[]): readonly Perso
         lastActivity: null
       };
       if (p.role) existing.roles.add(p.role);
-      existing.caseCount += 1;
+      if (!seenInCase.has(p.id)) {
+        existing.caseCount += 1;
+        seenInCase.add(p.id);
+      }
       if (reflectedAt && (!existing.lastActivity || reflectedAt > existing.lastActivity)) {
         existing.lastActivity = reflectedAt;
       }

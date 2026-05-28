@@ -17,8 +17,7 @@
   let loaded = $state(false);
 
   onMount(() => {
-    const raw = page.params.id ?? '';
-    personId = raw ? decodeURIComponent(raw) : '';
+    personId = page.params.id ?? '';
     const allCases = getAllCases();
     summary = findPersonSummary(personId, allCases);
     cases = findCasesForPerson(personId, allCases);

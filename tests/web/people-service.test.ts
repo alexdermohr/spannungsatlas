@@ -107,6 +107,22 @@ describe('aggregatePeopleFromCases', () => {
     expect(anna?.lastActivity).toBe('2026-04-09T10:00:00Z');
   });
 
+  it('counts a person only once per case even if duplicated in participants', () => {
+    const cases: Case[] = [
+      buildCase({
+        id: 'c1',
+        participants: [
+          { id: 'Anna', role: 'primary' },
+          { id: 'Anna', role: 'secondary' }
+        ]
+      })
+    ];
+    const anna = aggregatePeopleFromCases(cases).find((s) => s.id === 'Anna');
+    expect(anna?.caseCount).toBe(1);
+    const expectedRoles: ParticipantRole[] = ['primary', 'secondary'];
+    expect(anna?.roles).toEqual(expectedRoles);
+  });
+
   it('sorts persons by lastActivity descending, then by id', () => {
     const cases: Case[] = [
       buildCase({
