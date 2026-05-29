@@ -223,6 +223,108 @@ export interface PerspectiveCommittedRecord {
 
 export type PerspectiveRecord = PerspectiveDraftRecord | PerspectiveCommittedRecord;
 
+// ---------------------------------------------------------------------------
+// Spannungsprofil (Tension Profile) — MASTERPLAN §3.2
+// ---------------------------------------------------------------------------
+
+/**
+ * Evidence level of a tension-profile entry (MASTERPLAN §3.2):
+ * weak (schwach) | moderate (moderat) | strong (stark).
+ *
+ * These stages are a Schutzmechanismus gegen vorschnelle Verdichtung — a
+ * protection mechanism against premature condensation — NOT a measurement
+ * system. See `tension-profile.ts` for the threshold logic.
+ */
+export type EvidenceLevel = "weak" | "moderate" | "strong";
+
+/**
+ * Epistemic marking of a condensation (MASTERPLAN §10.2):
+ * observational (beobachtungsnah) | plausible (plausibel) | speculative (spekulativ).
+ *
+ * This is DISTINCT from `EvidenceType` (§2 #17, used per single interpretation).
+ * `EpistemicMarking` classifies a *condensed* profile/constellation entry.
+ * A strong profile entry must NOT be speculative (§10.2).
+ */
+export type EpistemicMarking = "observational" | "plausible" | "speculative";
+
+/**
+ * A counter-evidence record (Gegenbeleg) for a tension profile (MASTERPLAN §3.2).
+ *
+ * Two faithful forms:
+ *   - "documented": an actually documented counter-observation or -result.
+ *   - "checked_none": an explicit marker that counter-evidence was sought but
+ *     none was found at a given date ("kein Gegenbeleg nach Prüfung am [Datum]").
+ *
+ * A strong entry requires at least one of these (§3.2). Missing documentation
+ * is NOT itself a counter-evidence and never substitutes for this marker.
+ */
+export type CounterEvidence =
+  | { readonly kind: "documented"; readonly text: string; readonly recordedAt: string }
+  | { readonly kind: "checked_none"; readonly checkedAt: string };
+
+/**
+ * The factual evidence base a tension profile rests on (MASTERPLAN §3.2 / §5).
+ *
+ * These values are ASSERTED by the formulating practitioner from documented
+ * cases. The domain layer validates internal consistency and threshold
+ * sufficiency but does NOT infer patterns from case content — the system is
+ * "kein Wahrheitsautomat" (MASTERPLAN §1, §11.6).
+ */
+export interface TensionProfileSupport {
+  /** Ids of the documented cases this profile rests on (MASTERPLAN §5: no
+   *  condensation level without a documented case base). */
+  readonly caseIds: readonly string[];
+  /** Distinct points in time the dynamic was observed across (1..caseIds.length). */
+  readonly distinctTimepoints: number;
+  /** Distinct contexts the dynamic was observed across (1..caseIds.length). */
+  readonly distinctContexts: number;
+  /** Whether a robust multi-source corroboration (belastbare Mehrquellenlage) exists. */
+  readonly multiSourceCorroboration: boolean;
+  /** Date of the most recent supporting case — basis for 180-day decay (§3.2). */
+  readonly lastSupportingCaseAt: string;
+}
+
+/**
+ * Spannungsprofil — an aggregated, revisable working condensation for ONE
+ * person across multiple cases (MASTERPLAN §3.2).
+ *
+ * It is NOT a truth judgement about a person; it is a revisable working
+ * hypothesis that may exist only under the §3.2 protection rules. In V1 a single
+ * `TensionProfile` object carries one verdichtete Musterbeschreibung (the
+ * "Profileintrag" granularity); multiple patterns for a person are multiple
+ * objects (Profilhistorie is SOLL-später, MASTERPLAN §3.2).
+ *
+ * The cluster fields (needPressures, determinants, expressionForms,
+ * reliefConditions) are the §3.2 MUSS sub-fields. They may be empty arrays as
+ * honest "Leerstellen" — content must never be fabricated to fill a MUSS field
+ * (AGENTS.md: lieber explizite Leerstelle als Fantasie-Ergänzung).
+ */
+export interface TensionProfile {
+  readonly id: string;
+  readonly personId: string;
+  /** verdichtete Musterbeschreibung (MUSS). */
+  readonly patternDescription: string;
+  /** häufige Bedürfnisdrucke (MUSS). */
+  readonly needPressures: readonly string[];
+  /** häufige Determinanten (MUSS). */
+  readonly determinants: readonly string[];
+  /** typische Ausdrucksformen (MUSS). */
+  readonly expressionForms: readonly string[];
+  /** typische Entlastungsbedingungen (MUSS). */
+  readonly reliefConditions: readonly string[];
+  /** Evidenzstufe (MUSS). Gated by `support` via the §3.2 thresholds. */
+  readonly evidenceLevel: EvidenceLevel;
+  /** Epistemic marking (§10.2). A strong entry must not be speculative. */
+  readonly epistemicMarking: EpistemicMarking;
+  /** Gegenbelege (MUSS). A strong entry requires at least one. */
+  readonly counterEvidence: readonly CounterEvidence[];
+  /** The factual evidence base; gates the evidence level. */
+  readonly support: TensionProfileSupport;
+  /** Revisionsdatum (MUSS). */
+  readonly revisedAt: string;
+  readonly createdAt: string;
+}
+
 export interface CaseSource {
   readonly type: string;
   readonly payload: unknown;

@@ -9,6 +9,7 @@
     type PersonSummary
   } from '$lib/services/people-service.js';
   import { roleLabels } from '$lib/ui/labels.js';
+  import { meetsProfileCaseThreshold, MIN_CASES_FOR_PROFILE } from '$domain/tension-profile.js';
   import type { Case, ParticipantRole } from '$domain/types.js';
 
   let personId = $state('');
@@ -77,9 +78,21 @@
         <strong>Fallübersicht.</strong> Diese Seite listet alle Fälle, in denen
         <code>{summary.id}</code> als Beteiligte vorkommt. Sie ist eine
         Navigationsaggregation — <strong>keine</strong> Verdichtung und
-        <strong>kein</strong> Spannungsprofil. Spannungsprofile entstehen erst, wenn
-        eine Verdichtungslogik nach den Schutzregeln in MASTERPLAN §3.2 implementiert
-        ist; dieser Schritt ist in der aktuellen Phase noch nicht umgesetzt.
+        <strong>kein</strong> Spannungsprofil.
+      </p>
+      <p class="threshold">
+        {#if meetsProfileCaseThreshold(summary.caseCount)}
+          <strong>Schwellenstatus:</strong> {summary.caseCount} Fälle dokumentiert — die
+          Mindestfallzahl ({MIN_CASES_FOR_PROFILE}) für ein Spannungsprofil ist erreicht.
+          Die Verdichtungs- und Evidenzregeln nach MASTERPLAN §3.2 sind im Domänenkern
+          hinterlegt; die Formulierung eines Spannungsprofils ist in der Oberfläche
+          noch nicht verfügbar.
+        {:else}
+          <strong>Schwellenstatus:</strong> {summary.caseCount}
+          {summary.caseCount === 1 ? 'Fall' : 'Fälle'} dokumentiert — die Mindestfallzahl
+          ({MIN_CASES_FOR_PROFILE}) für ein Spannungsprofil ist noch nicht erreicht
+          (MASTERPLAN §3.2).
+        {/if}
       </p>
     </div>
 
@@ -143,6 +156,11 @@
     margin: 0;
     font-size: 0.9rem;
     color: var(--color-text-muted);
+  }
+  .scope-notice .threshold {
+    margin-top: 0.6rem;
+    padding-top: 0.6rem;
+    border-top: 1px solid var(--color-border);
   }
   .scope-notice code {
     font-family: var(--font-mono);
