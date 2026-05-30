@@ -4,6 +4,7 @@ import {
   EPISTEMIC_MARKINGS,
   MIN_CASES_FOR_PROFILE,
   PROFILE_DECAY_DAYS,
+  meetsDefaultProfileCaseThreshold,
   meetsProfileCaseThreshold,
   evidenceLevelRequirementsMet,
   counterEvidenceSatisfiesStrong,
@@ -103,15 +104,32 @@ describe("guardEvidenceLevel / guardEpistemicMarking", () => {
 // Existence gate
 // ---------------------------------------------------------------------------
 
-describe("meetsProfileCaseThreshold", () => {
+describe("meetsDefaultProfileCaseThreshold", () => {
   it("is false below 2 cases", () => {
-    expect(meetsProfileCaseThreshold(0)).toBe(false);
-    expect(meetsProfileCaseThreshold(1)).toBe(false);
+    expect(meetsDefaultProfileCaseThreshold(0)).toBe(false);
+    expect(meetsDefaultProfileCaseThreshold(1)).toBe(false);
   });
 
   it("is true at or above 2 cases", () => {
-    expect(meetsProfileCaseThreshold(2)).toBe(true);
-    expect(meetsProfileCaseThreshold(5)).toBe(true);
+    expect(meetsDefaultProfileCaseThreshold(2)).toBe(true);
+    expect(meetsDefaultProfileCaseThreshold(5)).toBe(true);
+  });
+
+  it("returns false for 1 case even though 1 case + multiSourceCorroboration satisfies weak (§3.2 Mehrquellen-Ausnahme)", () => {
+    // The two-case threshold is the Regelfall gate only.
+    // evidenceLevelRequirementsMet("weak", { caseIds: ["c1"], multiSourceCorroboration: true, ... })
+    // passes on its own — this function intentionally does NOT model that exception,
+    // since it has no access to the support object.
+    expect(meetsDefaultProfileCaseThreshold(1)).toBe(false);
+    expect(
+      evidenceLevelRequirementsMet("weak", support({ caseIds: caseIds(1), multiSourceCorroboration: true })),
+    ).toBeUndefined(); // the domain path IS open for 1 case + multi-source
+  });
+});
+
+describe("meetsProfileCaseThreshold (deprecated alias)", () => {
+  it("is the same function as meetsDefaultProfileCaseThreshold", () => {
+    expect(meetsProfileCaseThreshold).toBe(meetsDefaultProfileCaseThreshold);
   });
 });
 
@@ -323,6 +341,12 @@ describe("evaluateProfileDecay", () => {
     expect(status.status).toBe("revision_due");
     expect(status.reason).toMatch(/revision-due/);
     expect(status.reason).toMatch(/does not count as counter-evidence/);
+  });
+
+  it("treats an unparseable asOfIso as revision-due rather than silently returning current", () => {
+    const status = evaluateProfileDecay(profile, "not-a-date");
+    expect(status.status).toBe("revision_due");
+    expect(status.reason).toMatch(/not a parseable date/);
   });
 });
 

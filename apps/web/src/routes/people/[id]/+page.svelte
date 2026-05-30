@@ -9,7 +9,7 @@
     type PersonSummary
   } from '$lib/services/people-service.js';
   import { roleLabels } from '$lib/ui/labels.js';
-  import { meetsProfileCaseThreshold, MIN_CASES_FOR_PROFILE } from '$domain/tension-profile.js';
+  import { meetsDefaultProfileCaseThreshold, MIN_CASES_FOR_PROFILE } from '$domain/tension-profile.js';
   import type { Case, ParticipantRole } from '$domain/types.js';
 
   let personId = $state('');
@@ -81,17 +81,18 @@
         <strong>kein</strong> Spannungsprofil.
       </p>
       <p class="threshold">
-        {#if meetsProfileCaseThreshold(summary.caseCount)}
+        {#if meetsDefaultProfileCaseThreshold(summary.caseCount)}
           <strong>Schwellenstatus:</strong> {summary.caseCount} Fälle dokumentiert — die
-          Mindestfallzahl ({MIN_CASES_FOR_PROFILE}) für ein Spannungsprofil ist erreicht.
+          Regelschwelle ({MIN_CASES_FOR_PROFILE} Fälle) für ein Spannungsprofil ist erreicht.
           Die Verdichtungs- und Evidenzregeln nach MASTERPLAN §3.2 sind im Domänenkern
           hinterlegt; die Formulierung eines Spannungsprofils ist in der Oberfläche
           noch nicht verfügbar.
         {:else}
           <strong>Schwellenstatus:</strong> {summary.caseCount}
-          {summary.caseCount === 1 ? 'Fall' : 'Fälle'} dokumentiert — die Mindestfallzahl
-          ({MIN_CASES_FOR_PROFILE}) für ein Spannungsprofil ist noch nicht erreicht
-          (MASTERPLAN §3.2).
+          {summary.caseCount === 1 ? 'Fall' : 'Fälle'} dokumentiert — die Regelschwelle
+          ({MIN_CASES_FOR_PROFILE} Fälle) für ein Spannungsprofil ist noch nicht erreicht
+          (MASTERPLAN §3.2). Eine mögliche Mehrquellen-Ausnahme wird in dieser
+          Fallübersicht nicht bewertet.
         {/if}
       </p>
     </div>

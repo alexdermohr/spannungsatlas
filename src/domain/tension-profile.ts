@@ -96,15 +96,25 @@ export function guardEpistemicMarking(value: string): GuardResult {
 // ---------------------------------------------------------------------------
 
 /**
- * Whether a person with `caseCount` documented cases meets the bare minimum
- * case threshold for a tension profile to exist at all (MASTERPLAN §3.2).
+ * Whether a person with `caseCount` documented cases meets the standard
+ * two-case threshold for a tension profile to exist (MASTERPLAN §3.2).
  *
- * This is ONLY the existence gate. It implies no particular evidence level and
- * performs no condensation, inference or judgement.
+ * This is the REGELFALL threshold only. It does NOT evaluate the alternative
+ * path allowed by `evidenceLevelRequirementsMet("weak", ...)`: 1 case with
+ * robust multi-source corroboration (`multiSourceCorroboration: true`) can
+ * satisfy a weak entry even though this function returns false. The function
+ * is intentionally conservative for use in navigation/status displays that
+ * do not have access to the full support object.
  */
-export function meetsProfileCaseThreshold(caseCount: number): boolean {
+export function meetsDefaultProfileCaseThreshold(caseCount: number): boolean {
   return caseCount >= MIN_CASES_FOR_PROFILE;
 }
+
+/**
+ * @deprecated Use `meetsDefaultProfileCaseThreshold`. Kept for backwards
+ * compatibility until all call sites are updated.
+ */
+export const meetsProfileCaseThreshold = meetsDefaultProfileCaseThreshold;
 
 // ---------------------------------------------------------------------------
 // Evidence-level thresholds (the protection floors)
@@ -181,7 +191,9 @@ export interface ProfileDecayStatus {
  * counter-evidence and never silently invalidates the entry.
  *
  * `asOfIso` and `profile.support.lastSupportingCaseAt` must be valid ISO date
- * strings (the factory guarantees the latter).
+ * strings (the factory guarantees the latter). An unparseable `asOfIso` is
+ * treated as revision-due with daysSinceLastSupport = NaN to surface the
+ * invalid input rather than silently returning "current".
  */
 export function evaluateProfileDecay(
   profile: TensionProfile,
@@ -189,6 +201,13 @@ export function evaluateProfileDecay(
 ): ProfileDecayStatus {
   const last = Date.parse(profile.support.lastSupportingCaseAt);
   const asOf = Date.parse(asOfIso);
+  if (Number.isNaN(asOf)) {
+    return {
+      status: "revision_due",
+      daysSinceLastSupport: NaN,
+      reason: `evaluateProfileDecay: asOfIso "${asOfIso}" is not a parseable date; treating as revision-due.`,
+    };
+  }
   const days = Math.floor((asOf - last) / MS_PER_DAY);
 
   if (days > PROFILE_DECAY_DAYS) {
