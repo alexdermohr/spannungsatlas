@@ -51,7 +51,7 @@ export const EPISTEMIC_MARKINGS: readonly EpistemicMarking[] = [
   "speculative",
 ];
 
-/** Minimum documented cases for a tension profile to exist at all (MASTERPLAN §3.2). */
+/** Standard documented-case threshold for the regular profile path (MASTERPLAN §3.2). */
 export const MIN_CASES_FOR_PROFILE = 2;
 
 /** Days without a supporting case after which an entry becomes revision-due (§3.2). */
@@ -204,7 +204,7 @@ export function evaluateProfileDecay(
   if (Number.isNaN(asOf)) {
     return {
       status: "revision_due",
-      daysSinceLastSupport: NaN,
+      daysSinceLastSupport: -1,
       reason: `evaluateProfileDecay: asOfIso "${asOfIso}" is not a parseable date; treating as revision-due.`,
     };
   }

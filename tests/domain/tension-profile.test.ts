@@ -346,6 +346,7 @@ describe("evaluateProfileDecay", () => {
   it("treats an unparseable asOfIso as revision-due rather than silently returning current", () => {
     const status = evaluateProfileDecay(profile, "not-a-date");
     expect(status.status).toBe("revision_due");
+    expect(status.daysSinceLastSupport).toBe(-1);
     expect(status.reason).toMatch(/not a parseable date/);
   });
 });
