@@ -215,6 +215,15 @@ describe("evidenceLevelRequirementsMet — strong", () => {
     ).toBeUndefined();
   });
 
+  it("rejects strong from 1 case even with multi-source corroboration", () => {
+    expect(
+      evidenceLevelRequirementsMet(
+        "strong",
+        support({ caseIds: caseIds(1), multiSourceCorroboration: true }),
+      ),
+    ).toMatch(/strong profile entry/);
+  });
+
   it("rejects 4 cases over only 1 context without corroboration", () => {
     expect(
       evidenceLevelRequirementsMet(

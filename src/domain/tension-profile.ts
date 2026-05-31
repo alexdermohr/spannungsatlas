@@ -153,7 +153,7 @@ export function evidenceLevelRequirementsMet(
       if (n >= 4 && support.distinctTimepoints >= 2 && support.distinctContexts >= 2) {
         return undefined;
       }
-      if (support.multiSourceCorroboration) return undefined;
+      if (n >= MIN_CASES_FOR_PROFILE && support.multiSourceCorroboration) return undefined;
       return "A strong profile entry requires at least 4 cases across at least 2 timepoints and 2 contexts, or robust multi-source corroboration (MASTERPLAN §3.2).";
     default:
       return guardEvidenceLevel(level);
@@ -192,7 +192,7 @@ export interface ProfileDecayStatus {
  *
  * `asOfIso` and `profile.support.lastSupportingCaseAt` must be valid ISO date
  * strings (the factory guarantees the latter). An unparseable `asOfIso` is
- * treated as revision-due with daysSinceLastSupport = NaN to surface the
+ * treated as revision-due with daysSinceLastSupport = -1 to surface the
  * invalid input rather than silently returning "current".
  */
 export function evaluateProfileDecay(
@@ -208,7 +208,7 @@ export function evaluateProfileDecay(
       reason: `evaluateProfileDecay: asOfIso "${asOfIso}" is not a parseable date; treating as revision-due.`,
     };
   }
-  const days = Math.floor((asOf - last) / MS_PER_DAY);
+  const days = Math.max(0, Math.floor((asOf - last) / MS_PER_DAY));
 
   if (days > PROFILE_DECAY_DAYS) {
     return {
