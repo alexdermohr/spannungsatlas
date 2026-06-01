@@ -154,7 +154,7 @@ export function evidenceLevelRequirementsMet(
         return undefined;
       }
       if (n >= MIN_CASES_FOR_PROFILE && support.multiSourceCorroboration) return undefined;
-      return "A strong profile entry requires at least 4 cases across at least 2 timepoints and 2 contexts, or robust multi-source corroboration (MASTERPLAN §3.2).";
+      return "A strong profile entry requires either at least 4 cases across at least 2 timepoints and 2 contexts, or robust multi-source corroboration with at least 2 supporting cases (MASTERPLAN §3.2).";
     default:
       return guardEvidenceLevel(level);
   }
