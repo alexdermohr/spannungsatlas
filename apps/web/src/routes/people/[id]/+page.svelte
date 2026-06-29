@@ -85,7 +85,7 @@
       .filter((c) => caseIds.includes(c.id))
       .map((c) => c.observedAt ?? c.currentReflection.reflectedAt)
       .sort();
-    return (selectedDates.at(-1) ?? new Date().toISOString()).slice(0, 10);
+    return selectedDates.at(-1)?.slice(0, 10) ?? '';
   }
 
   function toggleSupportCase(caseId: string): void {
@@ -124,6 +124,9 @@
     profileError = '';
     profileSuccess = '';
     try {
+      if (supportCaseIds.length === 0) {
+        throw new Error('Mindestens ein stützender Fall muss ausgewählt sein.');
+      }
       const counterEvidence: CounterEvidence[] =
         counterEvidenceMode === 'documented'
           ? [{ kind: 'documented', text: counterEvidenceText, recordedAt: new Date(counterEvidenceDate).toISOString() }]
@@ -188,10 +191,12 @@
 
     <div class="card scope-notice">
       <p>
-        <strong>Fallübersicht.</strong> Diese Seite listet alle Fälle, in denen
-        <code>{summary.id}</code> als Beteiligte vorkommt. Sie ist eine
+        <strong>Fallübersicht.</strong> Dieser Abschnitt listet alle Fälle, in denen
+        <code>{summary.id}</code> als Beteiligte vorkommt. Die Fallliste selbst ist eine
         Navigationsaggregation — <strong>keine</strong> Verdichtung und
-        <strong>kein</strong> Spannungsprofil.
+        <strong>kein</strong> Spannungsprofil. Eine manuell formulierte, domänenseitig
+        geprüfte Arbeitsverdichtung befindet sich im separaten Abschnitt
+        <strong>Spannungsprofil</strong>.
       </p>
       <p class="threshold">
         {#if meetsDefaultProfileCaseThreshold(summary.caseCount)}
